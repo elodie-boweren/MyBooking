@@ -21,3 +21,11 @@
 - Notes d’implémentation:
   - Index sur `status` et critères fréquents; pagination par défaut.
   - `availability` calculée côté service (chevauchements de réservations).
+
+## TODO checklist
+- [ ] Entités JPA: `Room`, `Equipment`, `RoomPhoto`, `RoomStatusUpdate` + enums.
+- [ ] Repositories: filtres (specifications) et pagination; index via Flyway.
+- [ ] Services: `RoomService` (recherche/détail), `RoomStatusService` (updates + journal).
+- [ ] Controllers: `RoomController`, `EmployeeRoomOpsController`, `AdminRoomController` (si nécessaire).
+- [ ] DTOs: `RoomDto`, `RoomSearchCriteria`, `CreateOrUpdateRoomRequest`, `UpdateRoomStatusRequest`.
+- [ ] Tests: overlap availability (mock reservation repo), filtres, sécurité.

@@ -15,3 +15,9 @@
 
 - Notes d’implémentation:
   - Optimiser par index; éventuellement vues matérialisées si nécessaire (via Flyway repeatables).
+
+## TODO checklist
+- [ ] DTOs: `MetricsDto`, `KpisDto`.
+- [ ] Service: requêtes d’agrégation (occupation jour, réservations semaine, revenu mois, commentaires reçus, avg rating 1–5, CA mensuel).
+- [ ] Controller: `AnalyticsController` (GET `/metrics`, `/kpis`).
+- [ ] Tests: données seed en @Sql / Testcontainers, vérifier agrégations.

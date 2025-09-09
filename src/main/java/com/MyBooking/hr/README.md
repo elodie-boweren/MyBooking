@@ -20,3 +20,10 @@
 - Notes d’implémentation:
   - Guards: seules les actions employé sont autorisées pour `EmployeeStatus=ACTIVE`.
   - Horodatage en UTC (timestamptz), index sur `(start_at, end_at)`.
+
+## TODO checklist
+- [ ] Entités: `Shift`, `LeaveRequest`, `Training`, `EmployeeTraining`, `EmployeeTask`.
+- [ ] Repositories: par employé, par période; status tasks.
+- [ ] Services: shifts (création/maj), clock-in/out, congés (approve/reject), formations, tâches (todo/in_progress/done).
+- [ ] Controllers: admin & employé; DTOs; validations & guards ACTIVE.
+- [ ] Tests: transitions (tasks), horodatage, autorisations, clock.

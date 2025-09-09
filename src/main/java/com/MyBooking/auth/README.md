@@ -23,3 +23,13 @@
   - JWT stateless, refresh token optionnel.
   - Email unique, contraintes et index alignés sur MPD.
   - Prévoir semences de rôles (CLIENT, EMPLOYE, ADMIN) via Flyway.
+
+## TODO checklist
+- [ ] Entités: `User`, `Role`, `UserRole`, `NotificationPreference` (mapping JPA conforme MPD).
+- [ ] Repositories: `UserRepository` (findByEmail), `RoleRepository`.
+- [ ] Services: `AuthService` (register, login, profile), `PasswordService` (reset flow), `TokenService`.
+- [ ] Controllers: `AuthController` (register/login/logout/profile/forgot/reset).
+- [ ] DTOs: Register/Login/Profile/Forgot/Reset/NotificationPreferences + validations Bean Validation.
+- [ ] Sécurité: intégration avec `SecurityConfig` (providers, filters).
+- [ ] Flyway: V1 seeds rôles (CLIENT, EMPLOYE, ADMIN).
+- [ ] Tests: unitaires services (hash, jwt), web layer (status codes), intégration (register/login/profile).

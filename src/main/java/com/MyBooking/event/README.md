@@ -20,3 +20,10 @@
 - Notes d’implémentation:
   - Filtre par fenêtre temporelle (index sur start_at, end_at) et `event_type`.
   - Calcul `totalPrice = participants * price` (en devise de l’événement).
+
+## TODO checklist
+- [ ] Entités: `Event`, `EventBooking`, `EventNotification` + enums.
+- [ ] Repositories: filtres par fenêtre et type; bookings par user/event.
+- [ ] Services: création/maj événement, booking (capacité, total), notifications.
+- [ ] Controllers: public + admin + bookings; DTOs; validations.
+- [ ] Tests: fenêtre temporelle, capacité, totalPrice, envoi notification (mock).

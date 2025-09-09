@@ -18,3 +18,9 @@
 - Notes d’implémentation:
   - Vérifier l’unicité email; gérer soft delete via désactivation si nécessaire (sinon suppression réelle).
   - MapStruct pour projection `User` -> `ClientDto`.
+
+## TODO checklist
+- [ ] DTOs: `ClientDto`, `CreateClientRequest`, `UpdateClientRequest` (+ validations).
+- [ ] Service: `ClientAdminService` (CRUD, gestion rôle CLIENT, contraintes d’unicité).
+- [ ] Controller: `AdminClientController` (REST conforme endpoints).
+- [ ] Tests: web slice (403/200), service (CRUD + règles), intégration (Flyway + JPA).

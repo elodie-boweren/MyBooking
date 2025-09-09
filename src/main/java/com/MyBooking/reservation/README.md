@@ -21,3 +21,11 @@
 - Notes d’implémentation:
   - Validation dates (checkIn < checkOut), capacité chambre, overlap.
   - Annulation: passer à CANCELLED, conserver historique; réassignation = annuler puis créer une nouvelle.
+
+## TODO checklist
+- [ ] Entité `Reservation` + enum `ReservationStatus` (CONFIRMED/CANCELLED).
+- [ ] Repository: requêtes par utilisateur, plage de dates, pagination.
+- [ ] Service: création (règles d’overlap), annulation, réassignation.
+- [ ] Controllers: client/admin/employé (RO) selon endpoints.
+- [ ] DTOs: create/update/search/response + validations.
+- [ ] Tests: règles d’overlap, transitions de statut, reassign.

@@ -20,3 +20,12 @@
 - Notes d’implémentation:
   - Les actions du workspace (tâches, shifts, etc.) doivent vérifier `EmployeeStatus=ACTIVE`.
   - L’entité `Employee` référence le `User` (1–1); la suppression doit préserver l’historique.
+
+## TODO checklist
+- [ ] Entité JPA `Employee` + enum `EmployeeStatus` (ACTIVE/INACTIVE).
+- [ ] Repository: `EmployeeRepository` (findByUserId, filters par statut).
+- [ ] Services: `EmployeeService` (CRUD admin, update profile employé).
+- [ ] Controllers: `AdminEmployeeController`, `EmployeeProfileController`.
+- [ ] DTOs: `EmployeeDto`, `UpdateEmployeeRequest`.
+- [ ] Guards: vérifier statut ACTIVE dans endpoints workspace (via aspect ou service).
+- [ ] Tests: web (403 si INACTIVE), service (transitions), intégration.

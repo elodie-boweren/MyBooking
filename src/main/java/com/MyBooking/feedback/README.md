@@ -19,3 +19,10 @@
 
 - Notes d’implémentation:
   - Rating 1..5 (validation); un avis par séjour logique (à décider: contrainte unique reservation_id + user_id).
+
+## TODO checklist
+- [ ] Entités: `Feedback`, `FeedbackReply` (mappages JPA).
+- [ ] Repositories: feedbacks par user, par réservation; replies par feedback.
+- [ ] Services: création d’un feedback (vérifier propriétaire de la réservation), réponse admin.
+- [ ] Controllers: client/admin; DTOs request/response; validations.
+- [ ] Tests: contraintes (1..5), autorisations (seulement propriétaire), réponses admin.

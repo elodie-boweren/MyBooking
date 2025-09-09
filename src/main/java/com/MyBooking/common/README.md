@@ -26,3 +26,13 @@
 - Tests à prévoir:
   - Tests de sécurité (WebMvc slice) pour vérifier l’accès/403.
   - Tests de contrôleur d’erreurs (validation -> 400, introuvable -> 404).
+
+## TODO checklist (à faire dans ce package)
+- [ ] Créer `SecurityConfig` (stateless JWT), configurer antMatchers par ressource et rôles.
+- [ ] Implémenter `JwtAuthenticationFilter` et `TokenService` (sign/verify, expiry).
+- [ ] Exposer `PasswordEncoder` (BCrypt, strength >= 10).
+- [ ] Ajouter `OpenApiConfig` (groupes par package, `servers`), activer Swagger UI.
+- [ ] Mettre en place `GlobalExceptionHandler` + format Problem JSON.
+- [ ] Configurer Jackson (module JavaTime), CORS (Angular origin), Pageable par défaut.
+- [ ] Ajout properties `application.yml` (profiles dev/test/prod).
+- [ ] Tests: sécurité (403/401), mapping erreurs, CORS.

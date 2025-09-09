@@ -19,3 +19,10 @@
 - Notes d’implémentation:
   - Transactions DB (SERIALIZABLE/optimistic) pour éviter le double spending.
   - Publishing d’événements de domaine optionnel (`PointsRedeemedEvent`).
+
+## TODO checklist
+- [ ] Entités: `LoyaltyAccount`, `LoyaltyTransaction` + enum `LoyaltyTxType`.
+- [ ] Repositories: lecture solde, historique paginé.
+- [ ] Service: earn/redeem atomique; intégrité avec `reservation.used_points`.
+- [ ] Controller: endpoints balance/history/redeem; DTOs; validations.
+- [ ] Tests: débit > solde (rejet), earn sur confirmation, idempotence.
