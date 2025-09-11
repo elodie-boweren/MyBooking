@@ -1,23 +1,24 @@
-package com.MyBooking.event.domain;
+package com.MyBooking.installation.domain;
 
-import com.MyBooking.installation.domain.Installation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
-@Table(name = "event")
-public class Event {
+@Table(name = "installation")
+public class Installation {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @NotBlank(message = "Event name is required")
-    @Size(max = 100, message = "Event name must not exceed 100 characters")
+    @NotBlank(message = "Installation name is required")
+    @Size(max = 100, message = "Installation name must not exceed 100 characters")
     @Column(name = "name", nullable = false, length = 100)
     private String name;
     
@@ -25,39 +26,33 @@ public class Event {
     @Column(name = "description", length = 500)
     private String description;
     
-    @NotNull(message = "Event type is required")
+    @NotNull(message = "Installation type is required")
     @Enumerated(EnumType.STRING)
-    @Column(name = "event_type", nullable = false, length = 32)
-    private EventType eventType;
-    
-    @NotNull(message = "Start time is required")
-    @Column(name = "start_at", nullable = false)
-    private LocalDateTime startAt;
-    
-    @NotNull(message = "End time is required")
-    @Column(name = "end_at", nullable = false)
-    private LocalDateTime endAt;
+    @Column(name = "installation_type", nullable = false, length = 32)
+    private InstallationType installationType;
     
     @NotNull(message = "Capacity is required")
     @Min(value = 1, message = "Capacity must be at least 1")
-    @Max(value = 100, message = "Capacity must not exceed 100")
+    @Max(value = 200, message = "Capacity must not exceed 200")
     @Column(name = "capacity", nullable = false)
     private Integer capacity;
     
-    @NotNull(message = "Price is required")
-    @DecimalMin(value = "0.0", inclusive = false, message = "Price must be greater than 0")
-    @Column(name = "price", nullable = false, precision = 12, scale = 2)
-    private BigDecimal price;
+    @NotNull(message = "Hourly rate is required")
+    @DecimalMin(value = "0.1", inclusive = false, message = "Hourly rate must be greater than 0")
+    @Column(name = "hourly_rate", nullable = false, precision = 12, scale = 2)
+    private BigDecimal hourlyRate;
     
     @NotBlank(message = "Currency is required")
     @Size(min = 3, max = 3, message = "Currency must be exactly 3 characters")
     @Column(name = "currency", nullable = false, length = 3)
     private String currency;
     
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "installation_id", nullable = false)
-    @NotNull(message = "Installation is required")
-    private Installation installation;
+    @Size(max = 255, message = "Equipment must not exceed 255 characters")
+    @Column(name = "equipment", length = 255)
+    private String equipment;
+    
+    @OneToMany(mappedBy = "installation", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<com.MyBooking.event.domain.Event> events = new ArrayList<>();
     
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -68,18 +63,15 @@ public class Event {
     private LocalDateTime updatedAt;
     
     // Constructors
-    public Event() {}
+    public Installation() {}
     
-    public Event(String name, EventType eventType, LocalDateTime startAt, LocalDateTime endAt,
-                Integer capacity, BigDecimal price, String currency, Installation installation) {
+    public Installation(String name, InstallationType installationType, Integer capacity, 
+                       BigDecimal hourlyRate, String currency) {
         this.name = name;
-        this.eventType = eventType;
-        this.startAt = startAt;
-        this.endAt = endAt;
+        this.installationType = installationType;
         this.capacity = capacity;
-        this.price = price;
+        this.hourlyRate = hourlyRate;
         this.currency = currency;
-        this.installation = installation;
     }
     
     // Getters and Setters
@@ -92,26 +84,20 @@ public class Event {
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
     
-    public EventType getEventType() { return eventType; }
-    public void setEventType(EventType eventType) { this.eventType = eventType; }
-    
-    public LocalDateTime getStartAt() { return startAt; }
-    public void setStartAt(LocalDateTime startAt) { this.startAt = startAt; }
-    
-    public LocalDateTime getEndAt() { return endAt; }
-    public void setEndAt(LocalDateTime endAt) { this.endAt = endAt; }
+    public InstallationType getInstallationType() { return installationType; }
+    public void setInstallationType(InstallationType installationType) { this.installationType = installationType; }
     
     public Integer getCapacity() { return capacity; }
     public void setCapacity(Integer capacity) { this.capacity = capacity; }
     
-    public BigDecimal getPrice() { return price; }
-    public void setPrice(BigDecimal price) { this.price = price; }
+    public BigDecimal getHourlyRate() { return hourlyRate; }
+    public void setHourlyRate(BigDecimal hourlyRate) { this.hourlyRate = hourlyRate; }
     
     public String getCurrency() { return currency; }
     public void setCurrency(String currency) { this.currency = currency; }
     
-    public Installation getInstallation() { return installation; }
-    public void setInstallation(Installation installation) { this.installation = installation; }
+    public String getEquipment() { return equipment; }
+    public void setEquipment(String equipment) { this.equipment = equipment; }
     
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
@@ -119,8 +105,11 @@ public class Event {
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
     
+    public List<com.MyBooking.event.domain.Event> getEvents() { return events; }
+    public void setEvents(List<com.MyBooking.event.domain.Event> events) { this.events = events; }
+    
     // Simple utility methods
-    public String getFormattedPrice() {
-        return currency + " " + price;
+    public String getFormattedHourlyRate() {
+        return currency + " " + hourlyRate + "/hour";
     }
 }
