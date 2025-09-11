@@ -4,6 +4,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain; 
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter; 
 
@@ -25,7 +26,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/rooms").permitAll()
                 .requestMatchers("/api/v1/events").permitAll()
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                .requestMatchers("/api/v1/employee/**").hasRole("EMPLOYE")
+                .requestMatchers("/api/v1/employee/**").hasRole("EMPLOYEE")
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
