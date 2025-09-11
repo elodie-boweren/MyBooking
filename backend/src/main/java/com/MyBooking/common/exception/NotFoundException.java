@@ -1,3 +1,5 @@
+package com.MyBooking.common.exception;
+
 public class NotFoundException extends RuntimeException {
     // Error message only
     public NotFoundException(String message) {

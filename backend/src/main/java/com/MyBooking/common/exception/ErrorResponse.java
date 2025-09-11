@@ -1,3 +1,5 @@
+package com.MyBooking.common.exception;
+
 import java.time.LocalDateTime;
 
 public class ErrorResponse {
@@ -10,6 +12,14 @@ public class ErrorResponse {
     // Default constructor for JSON deserialization
     public ErrorResponse() {
         this.timestamp = LocalDateTime.now();
+    }
+
+    public ErrorResponse(int status, String error, String message, String path) {
+        this.timestamp = LocalDateTime.now();
+        this.status = status;
+        this.error = error;
+        this.message = message;
+        this.path = path;
     }
 
     public ErrorResponse(LocalDateTime timestamp, int status, String error, String message, String path) {

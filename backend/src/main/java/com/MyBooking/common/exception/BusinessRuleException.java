@@ -1,3 +1,5 @@
+package com.MyBooking.common.exception;
+
 public class BusinessRuleException extends RuntimeException {
    // Error message only
    public BusinessRuleException(String message) {
