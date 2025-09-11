@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MyBooking — Matrice de cohérence</title>
+  <style>
+    :root { --bg:#0f172a; --card:#111827; --text:#e5e7eb; --muted:#9ca3af; --accent:#60a5fa; }
+    html,body { margin:0; padding:0; font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Inter, Helvetica, Arial, sans-serif; background:#0b1020; color:var(--text); }
+    .container { max-width: 1400px; margin: 24px auto; padding: 0 16px; }
+    h1 { font-size: 20px; margin: 0 0 16px; color:#fafafa; }
+    h2 { font-size: 16px; margin: 28px 0 8px; color:#e2e8f0; border-left: 3px solid var(--accent); padding-left: 8px; }
+    .table-wrap { overflow:auto; border:1px solid #1f2937; border-radius: 8px; background:#0b1222; }
+    table { width: 100%; border-collapse: collapse; min-width: 1100px; }
+    thead th { position: sticky; top: 0; background:#0e152a; color:#cbd5e1; font-weight: 600; text-align: left; font-size: 12px; border-bottom:1px solid #1f2937; padding:10px; white-space: nowrap; }
+    tbody td { font-size: 12px; color:#e5e7eb; padding:10px; border-bottom:1px solid #111827; vertical-align: top; }
+    tbody tr:nth-child(odd) td { background: #0b1326; }
+    code { background:#0f172a; color:#93c5fd; padding:2px 6px; border-radius:6px; }
+    .muted { color:#9ca3af; }
+    .status-ok { color:#10b981; font-weight:600; }
+    .notes { color:#cbd5e1; }
+    .section { margin-bottom: 28px; }
+  </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>MyBooking — Matrice de cohérence</h1>
+
+      <!-- Auth & Profils -->
+      <div class="section">
+        <h2>Auth & Profils</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th><th>Feature</th><th>Acteurs</th><th>Réf. fonctionnalités</th><th>APIs</th><th>MCD</th><th>MPD</th><th>UML</th><th>Statut</th><th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>FR-AUTH-01</td><td>Inscription client</td><td>Client</td><td>Compte & Auth</td><td><code>POST /api/v1/auth/register</code></td><td>USER</td><td>app_user</td><td>User</td><td class="status-ok">OK</td><td class="notes">birthdate</td></tr>
+              <tr><td>FR-AUTH-02</td><td>Connexion</td><td>Client/Admin/Employé</td><td>Compte & Auth</td><td><code>POST /api/v1/auth/login</code></td><td>USER, ROLE</td><td>app_user, role, user_role</td><td>User, Role</td><td class="status-ok">OK</td><td class="notes">JWT</td></tr>
+              <tr><td>FR-AUTH-03</td><td>Profil courant</td><td>Tous</td><td>Compte & Auth</td><td><code>GET /api/v1/auth/profile</code></td><td>USER</td><td>app_user</td><td>User</td><td class="status-ok">OK</td><td></td></tr>
+              <tr><td>FR-AUTH-04</td><td>Reset mot de passe</td><td>Tous</td><td>Compte & Auth</td><td><code>POST /api/v1/auth/password/forgot</code>, <code>/reset</code></td><td>USER</td><td>app_user</td><td>User</td><td class="status-ok">OK</td><td></td></tr>
+              <tr><td>FR-CLT-01</td><td>Profil client</td><td>Client</td><td>Profil</td><td><code>GET/PUT /api/v1/client/profile</code></td><td>USER</td><td>app_user</td><td>User</td><td class="status-ok">OK</td><td></td></tr>
+              <tr><td>FR-CLT-02</td><td>Préférences notif</td><td>Client</td><td>Compte & Auth</td><td><code>GET/PUT /api/v1/client/notifications/preferences</code></td><td>NOTIFICATION_PREFERENCE</td><td>notification_preference</td><td>NotificationPreference</td><td class="status-ok">OK</td><td class="notes">1–1</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Chambres -->
+      <div class="section">
+        <h2>Chambres</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>Feature</th><th>Acteurs</th><th>Réf.</th><th>APIs</th><th>MCD</th><th>MPD</th><th>UML</th><th>Statut</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td>FR-ROOM-01</td><td>Lister/filtrer</td><td>Client</td><td>Chambres</td><td><code>GET /api/v1/rooms</code></td><td>ROOM</td><td>room</td><td>Room</td><td class="status-ok">OK</td><td>roomType, currency</td></tr>
+              <tr><td>FR-ROOM-02</td><td>Détail</td><td>Client</td><td>Chambres</td><td><code>GET /api/v1/rooms/{id}</code></td><td>ROOM, ROOM_PHOTO, EQUIPMENT</td><td>room, room_photo, equipment, room_equipment</td><td>Room, RoomPhoto, Equipment</td><td class="status-ok">OK</td><td></td></tr>
+              <tr><td>FR-ROOM-03</td><td>Disponibilités</td><td>Client</td><td>Chambres</td><td><code>GET /api/v1/rooms/{id}/availability</code></td><td>ROOM</td><td>room</td><td>Room</td><td class="status-ok">OK</td><td class="muted">calcul service</td></tr>
+              <tr><td>FR-ROOM-ADM-01</td><td>CRUD chambre</td><td>Admin</td><td>Chambres</td><td><code>POST/PUT/DELETE /api/v1/rooms</code></td><td>ROOM</td><td>room</td><td>Room</td><td class="status-ok">OK</td><td></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Réservations -->
+      <div class="section">
+        <h2>Réservations</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>Feature</th><th>Acteurs</th><th>Réf.</th><th>APIs</th><th>MCD</th><th>MPD</th><th>UML</th><th>Statut</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td>FR-RES-01</td><td>Créer réservation</td><td>Client</td><td>Réservations</td><td><code>POST /api/v1/reservations</code></td><td>USER–RESERVATION–ROOM</td><td>reservation</td><td>Reservation</td><td class="status-ok">OK</td><td>status=CONFIRMED</td></tr>
+              <tr><td>FR-RES-02</td><td>Mes réservations</td><td>Client</td><td>Réservations</td><td><code>GET /api/v1/client/reservations</code></td><td>USER–RESERVATION</td><td>reservation</td><td>Reservation</td><td class="status-ok">OK</td><td>scope, currency</td></tr>
+              <tr><td>FR-RES-03</td><td>Détail/Modif/Annul</td><td>Client</td><td>Réservations</td><td><code>GET/PUT/DELETE /api/v1/reservations/{id}</code></td><td>USER–RESERVATION</td><td>reservation</td><td>Reservation</td><td class="status-ok">OK</td><td>CANCELLED</td></tr>
+              <tr><td>FR-RES-ADM-01</td><td>Gestion réservations</td><td>Admin</td><td>Réservations</td><td><code>GET/POST/PUT/DELETE /api/v1/admin/reservations</code>, <code>/reassign</code></td><td>RESERVATION</td><td>reservation</td><td>Reservation</td><td class="status-ok">OK</td><td>reassign = annuler+créer</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Clients & Employés (Admin) -->
+      <div class="section">
+        <h2>Clients & Employés (Admin)</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>Feature</th><th>Acteurs</th><th>Réf.</th><th>APIs</th><th>MCD</th><th>MPD</th><th>UML</th><th>Statut</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td>FR-CLTS-ADM-01</td><td>CRUD clients</td><td>Admin</td><td>Clients & Employés</td><td><code>/api/v1/admin/clients</code></td><td>USER</td><td>app_user</td><td>User</td><td class="status-ok">OK</td><td></td></tr>
+              <tr><td>FR-EMPS-ADM-01</td><td>CRUD employés</td><td>Admin</td><td>Clients & Employés</td><td><code>/api/v1/admin/employees</code></td><td>EMPLOYEE</td><td>employee</td><td>Employee</td><td class="status-ok">OK</td><td>ACTIVE/INACTIVE</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Feedback & Fidélité -->
+      <div class="section">
+        <h2>Feedback & Fidélité</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>Feature</th><th>Acteurs</th><th>Réf.</th><th>APIs</th><th>MCD</th><th>MPD</th><th>UML</th><th>Statut</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td>FR-FB-01</td><td>Créer feedback</td><td>Client</td><td>Feedback</td><td><code>POST /api/v1/feedbacks</code></td><td>FEEDBACK, RESERVATION</td><td>feedback</td><td>Feedback</td><td class="status-ok">OK</td><td>rating 1–5</td></tr>
+              <tr><td>FR-FB-02</td><td>Mes feedbacks</td><td>Client</td><td>Feedback</td><td><code>GET /api/v1/client/feedbacks</code></td><td>FEEDBACK</td><td>feedback</td><td>Feedback</td><td class="status-ok">OK</td><td></td></tr>
+              <tr><td>FR-FB-ADM-01</td><td>Répondre feedback</td><td>Admin</td><td>Feedback</td><td><code>POST /api/v1/admin/feedbacks/{id}/reply</code></td><td>FEEDBACK_REPLY</td><td>feedback_reply</td><td>FeedbackReply</td><td class="status-ok">OK</td><td>auteur = User</td></tr>
+              <tr><td>FR-LYT-01</td><td>Solde points</td><td>Client</td><td>Fidélité</td><td><code>GET /api/v1/loyalty/balance</code></td><td>LOYALTY_ACCOUNT</td><td>loyalty_account</td><td>LoyaltyAccount</td><td class="status-ok">OK</td><td>1–1</td></tr>
+              <tr><td>FR-LYT-02</td><td>Historique points</td><td>Client</td><td>Fidélité</td><td><code>GET /api/v1/loyalty/history</code></td><td>LOYALTY_TRANSACTION</td><td>loyalty_transaction</td><td>LoyaltyTransaction</td><td class="status-ok">OK</td><td>EARN/REDEEM</td></tr>
+              <tr><td>FR-LYT-03</td><td>Utiliser points</td><td>Client</td><td>Fidélité</td><td><code>POST /api/v1/loyalty/redeem</code></td><td>LOYALTY_TRANSACTION, RESERVATION</td><td>loyalty_transaction, reservation</td><td>LoyaltyTransaction</td><td class="status-ok">OK</td><td></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Événements -->
+      <div class="section">
+        <h2>Événements</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>Feature</th><th>Acteurs</th><th>Réf.</th><th>APIs</th><th>MCD</th><th>MPD</th><th>UML</th><th>Statut</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td>FR-EVT-01</td><td>Lister/filtrer</td><td>Client</td><td>Événements</td><td><code>GET /api/v1/events?from&to&eventType</code></td><td>EVENT</td><td>event</td><td>Event, EventType</td><td class="status-ok">OK</td><td>incl. WEDDING</td></tr>
+              <tr><td>FR-EVT-02</td><td>Détail</td><td>Client</td><td>Événements</td><td><code>GET /api/v1/events/{id}</code></td><td>EVENT</td><td>event</td><td>Event</td><td class="status-ok">OK</td><td>price/currency</td></tr>
+              <tr><td>FR-EVT-03</td><td>Réserver</td><td>Client</td><td>Événements</td><td><code>POST /api/v1/events/{id}/bookings</code></td><td>EVENT_BOOKING</td><td>event_booking</td><td>EventBooking</td><td class="status-ok">OK</td><td>totalPrice/currency</td></tr>
+              <tr><td>FR-EVT-ADM-01</td><td>CRUD événements</td><td>Admin</td><td>Événements</td><td><code>/api/v1/admin/events</code> (GET/POST/PUT/DELETE/open/close)</td><td>EVENT</td><td>event</td><td>Event</td><td class="status-ok">OK</td><td></td></tr>
+              <tr><td>FR-EVT-ADM-02</td><td>Notifications</td><td>Admin</td><td>Événements</td><td><code>POST /api/v1/admin/events/{id}/notifications</code></td><td>EVENT_NOTIFICATION</td><td>event_notification</td><td>EventNotification</td><td class="status-ok">OK</td><td>createdBy user</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Analyses & Rapports -->
+      <div class="section">
+        <h2>Analyses & Rapports</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>Feature</th><th>Acteurs</th><th>Réf.</th><th>APIs</th><th>MCD</th><th>MPD</th><th>UML</th><th>Statut</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td>FR-ANL-01</td><td>Métriques</td><td>Admin</td><td>Analyses</td><td><code>GET /api/v1/admin/analytics/metrics</code></td><td class="muted">dérivé</td><td class="muted">requêtes</td><td class="muted">services</td><td class="status-ok">OK</td><td></td></tr>
+              <tr><td>FR-ANL-02</td><td>KPIs</td><td>Admin</td><td>Analyses</td><td><code>GET /api/v1/admin/analytics/kpis</code></td><td>FEEDBACK, RESERVATION</td><td>feedback, reservation</td><td class="muted">services</td><td class="status-ok">OK</td><td>avg rating 1–5</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- RH & Espace Employé -->
+      <div class="section">
+        <h2>RH & Espace Employé</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>Feature</th><th>Acteurs</th><th>Réf.</th><th>APIs</th><th>MCD</th><th>MPD</th><th>UML</th><th>Statut</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td>FR-RH-01</td><td>Shifts (admin)</td><td>Admin</td><td>RH</td><td><code>POST/PUT/DELETE /api/v1/admin/shifts</code></td><td>SHIFT</td><td>shift</td><td>Shift</td><td class="status-ok">OK</td><td></td></tr>
+              <tr><td>FR-RH-02</td><td>Congés (admin)</td><td>Admin</td><td>RH</td><td><code>GET /api/v1/admin/leaves</code> + approve/reject</td><td>LEAVE_REQUEST</td><td>leave_request</td><td>LeaveRequest</td><td class="status-ok">OK</td><td></td></tr>
+              <tr><td>FR-RH-03</td><td>Formations</td><td>Admin</td><td>RH</td><td><code>/api/v1/admin/trainings</code> (CRUD)</td><td>TRAINING, EMPLOYEE_TRAINING</td><td>training, employee_training</td><td>Training, EmployeeTraining</td><td class="status-ok">OK</td><td></td></tr>
+              <tr><td>FR-EMP-01</td><td>Profil employé</td><td>Employé</td><td>Espace Employé</td><td><code>GET/PUT /api/v1/employee/profile</code></td><td>EMPLOYEE–USER</td><td>employee, app_user</td><td>Employee</td><td class="status-ok">OK</td><td></td></tr>
+              <tr><td>FR-EMP-02</td><td>Mes shifts</td><td>Employé</td><td>Espace Employé</td><td><code>GET /api/v1/employee/shifts</code></td><td>SHIFT</td><td>shift</td><td>Shift</td><td class="status-ok">OK</td><td></td></tr>
+              <tr><td>FR-EMP-03</td><td>Pointer</td><td>Employé</td><td>Espace Employé</td><td><code>POST /api/v1/employee/shifts/clock-in|out</code></td><td>SHIFT</td><td>shift</td><td>Shift</td><td class="status-ok">OK</td><td>guard ACTIVE</td></tr>
+              <tr><td>FR-EMP-04</td><td>Demande de congé</td><td>Employé</td><td>Espace Employé</td><td><code>POST /api/v1/employee/leaves</code></td><td>LEAVE_REQUEST</td><td>leave_request</td><td>LeaveRequest</td><td class="status-ok">OK</td><td></td></tr>
+              <tr><td>FR-EMP-05</td><td>Tâches</td><td>Employé</td><td>Espace Employé</td><td><code>GET/POST/PUT /api/v1/employee/tasks</code></td><td>EMPLOYEE_TASK</td><td>employee_task</td><td>EmployeeTask</td><td class="status-ok">OK</td><td></td></tr>
+              <tr><td>FR-EMP-06</td><td>Statut chambre</td><td>Employé</td><td>Espace Employé</td><td><code>PUT /api/v1/employee/rooms/{id}/status</code></td><td>ROOM_STATUS_UPDATE</td><td>room_status_update</td><td>RoomStatusUpdate</td><td class="status-ok">OK</td><td></td></tr>
+              <tr><td>FR-EMP-07</td><td>Annonces</td><td>Employé</td><td>Espace Employé</td><td><code>GET /api/v1/employee/announcements</code>; <code>POST .../reply</code></td><td>ANNOUNCEMENT, ANNOUNCEMENT_REPLY</td><td>announcement, announcement_reply</td><td>Announcement, AnnouncementReply</td><td class="status-ok">OK</td><td></td></tr>
+              <tr><td>FR-EMP-08</td><td>Recherche réservations</td><td>Employé</td><td>Espace Employé</td><td><code>GET /api/v1/employee/reservations/search</code></td><td>RESERVATION</td><td>reservation</td><td>Reservation</td><td class="status-ok">OK</td><td>read-only</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </body>
+  </html>
+

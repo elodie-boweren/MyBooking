@@ -1,0 +1,192 @@
+%% MyBooking — MCD (Modèle Conceptuel de Données)
+%% Notation Mermaid ER
+
+erDiagram
+  USER ||--o{ USER_ROLE : "possède"
+  ROLE ||--o{ USER_ROLE : "attribué à"
+  USER ||--o| EMPLOYEE : "est profil de"
+  USER ||--|| NOTIFICATION_PREFERENCE : "configure"
+  USER ||--o{ RESERVATION : "effectue"
+  USER ||--o{ FEEDBACK : "émet"
+  USER ||--o{ FEEDBACK_REPLY : "répond"
+  USER ||--|| LOYALTY_ACCOUNT : "détient"
+  USER ||--o{ EVENT_BOOKING : "réserve"
+  EMPLOYEE ||--o{ ANNOUNCEMENT_REPLY : "répond"
+  USER ||--o{ EVENT_NOTIFICATION : "diffuse"
+  USER ||--o{ ROOM_STATUS_UPDATE : "met à jour"
+  EMPLOYEE ||--o{ EMPLOYEE_TASK : "réalise"
+  EMPLOYEE ||--o{ SHIFT : "travaille"
+  EMPLOYEE ||--o{ LEAVE_REQUEST : "demande congé"
+  EMPLOYEE ||--o{ EMPLOYEE_TRAINING : "suit formation"
+
+  ROOM ||--o{ RESERVATION : "est réservé dans"
+  ROOM ||--o{ ROOM_EQUIPMENT : "a"
+  EQUIPMENT ||--o{ ROOM_EQUIPMENT : "équipe"
+  ROOM ||--o{ ROOM_PHOTO : "illustre"
+  ROOM ||--o{ ROOM_STATUS_UPDATE : "change de statut"
+
+  RESERVATION ||--o{ FEEDBACK : "donne lieu à"
+  FEEDBACK ||--o{ FEEDBACK_REPLY : "reçoit"
+  LOYALTY_ACCOUNT ||--o{ LOYALTY_TRANSACTION : "enregistre"
+  RESERVATION ||--o{ LOYALTY_TRANSACTION : "peut concerner"
+
+  EVENT ||--o{ EVENT_BOOKING : "est réservé par"
+  EVENT ||--o{ EVENT_NOTIFICATION : "notifie"
+  ANNOUNCEMENT ||--o{ ANNOUNCEMENT_REPLY : "reçoit"
+  TRAINING ||--o{ EMPLOYEE_TRAINING : "est suivi par"
+
+  USER {
+    string firstName
+    string lastName
+    string email
+    string passwordHash
+    date birthdate
+    string phone
+    string address
+  }
+
+  ROLE {
+    string code
+    string label
+  }
+
+  USER_ROLE {
+  }
+
+  NOTIFICATION_PREFERENCE {
+    boolean emailEnabled
+    boolean smsEnabled
+  }
+
+  EMPLOYEE {
+    string status
+    string jobTitle
+  }
+
+  ROOM {
+    string number
+    string roomType
+    int capacity
+    decimal price
+    string status
+    string description
+    string currency
+  }
+
+  EQUIPMENT {
+    string name
+  }
+
+  ROOM_EQUIPMENT {
+  }
+
+  ROOM_PHOTO {
+    string url
+  }
+
+  ROOM_STATUS_UPDATE {
+    string status
+    string note
+    datetime at
+  }
+
+  RESERVATION {
+    date checkIn
+    date checkOut
+    string status
+    int guests
+    decimal total
+    int usedPoints
+    string currency
+  }
+
+  FEEDBACK {
+    int rating
+    string comment
+    datetime createdAt
+  }
+
+  FEEDBACK_REPLY {
+    string message
+    datetime createdAt
+  }
+
+  LOYALTY_ACCOUNT {
+    int balance
+  }
+
+  LOYALTY_TRANSACTION {
+    string type
+    int points
+    datetime createdAt
+  }
+
+  EVENT {
+    string title
+    string eventType
+    datetime startAt
+    datetime endAt
+    int capacity
+    string description
+    decimal price
+    string currency
+  }
+
+  EVENT_BOOKING {
+    int participants
+    string status
+    datetime createdAt
+    decimal totalPrice
+    string currency
+  }
+
+  ANNOUNCEMENT {
+    string title
+    string body
+    datetime createdAt
+  }
+
+  ANNOUNCEMENT_REPLY {
+    string message
+    datetime createdAt
+  }
+
+  EVENT_NOTIFICATION {
+    string channel
+    string subject
+    string body
+    datetime createdAt
+  }
+
+  EMPLOYEE_TASK {
+    string title
+    string description
+    string status
+    string note
+    string photoUrl
+    datetime createdAt
+    datetime updatedAt
+  }
+
+  SHIFT {
+    datetime start
+    datetime end
+  }
+
+  LEAVE_REQUEST {
+    date from
+    date to
+    string status
+    string reason
+  }
+
+  TRAINING {
+    string title
+  }
+
+  EMPLOYEE_TRAINING {
+    string status
+    datetime assignedAt
+    datetime completedAt
+  }
+
