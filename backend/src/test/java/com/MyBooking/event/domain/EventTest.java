@@ -1,5 +1,7 @@
 package com.MyBooking.event.domain;
 
+import com.MyBooking.installation.domain.Installation;
+import com.MyBooking.installation.domain.InstallationType;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -22,6 +24,9 @@ class EventTest {
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         validator = factory.getValidator();
         
+        // Create a mock installation
+        Installation installation = new Installation("Yoga Studio", InstallationType.GYM, 20, new BigDecimal("30.00"), "EUR");
+        
         event = new Event();
         event.setName("Morning Yoga Session");
         event.setDescription("Relaxing yoga class for all levels");
@@ -31,6 +36,7 @@ class EventTest {
         event.setCapacity(20);
         event.setPrice(new BigDecimal("25.00"));
         event.setCurrency("EUR");
+        event.setInstallation(installation);
     }
 
     @Test
@@ -164,16 +170,20 @@ class EventTest {
 
     @Test
     void testConstructor() {
+        // Create a mock installation
+        Installation installation = new Installation("Spa Room", InstallationType.SPA_ROOM, 10, new BigDecimal("50.00"), "EUR");
+        
         Event newEvent = new Event("Spa Treatment", EventType.SPA, 
                 LocalDateTime.now().plusDays(2).withHour(14).withMinute(0),
                 LocalDateTime.now().plusDays(2).withHour(16).withMinute(0),
-                10, new BigDecimal("80.00"), "EUR");
+                10, new BigDecimal("80.00"), "EUR", installation);
         
         assertEquals("Spa Treatment", newEvent.getName());
         assertEquals(EventType.SPA, newEvent.getEventType());
         assertEquals(10, newEvent.getCapacity());
         assertEquals(new BigDecimal("80.00"), newEvent.getPrice());
         assertEquals("EUR", newEvent.getCurrency());
+        assertEquals(installation, newEvent.getInstallation());
     }
 
     @Test
