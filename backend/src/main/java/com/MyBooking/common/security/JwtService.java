@@ -2,10 +2,12 @@ package com.MyBooking.common.security;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.io.Decoders;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import java.util.Date;
-import java.security.Key; 
+import java.security.Key;
+import javax.crypto.SecretKey; 
 
 @Service
 public class JwtService {
@@ -26,25 +28,27 @@ public class JwtService {
     }
     public boolean validateToken(String token) {
         try {
-            Jwts.parseBuilder()
-            .setSigningKey(getSigningKey())
+            Jwts.parser()
+            .verifyWith(getSigningKey())
             .build()
-            .parseClaimsJws(token);
+            .parseSignedClaims(token);
             return true; 
         } catch (JwtException | IllegalArgumentException e) {
             return false;
         }
     }
+    
     public String extractUsername(String token) {
-        return Jwts.parseBuilder()
-        .setSigningKey(getSigningKey())
+        return Jwts.parser()
+        .verifyWith(getSigningKey())
         .build()
-        .parseClaimsJws(token)
-        .getBody()
+        .parseSignedClaims(token)
+        .getPayload()
         .getSubject();
     }
+    
     // Get signing key
-    private Key getSiпgingKey() {
+    private SecretKey getSigningKey() {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
