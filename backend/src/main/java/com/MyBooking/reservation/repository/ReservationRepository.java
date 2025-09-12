@@ -20,6 +20,12 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     // Get reservation for a certain date window (for employee/admin)
     List<Reservation> findByCheckInBetween(LocalDate start, LocalDate end);
 
+    // Get reservations in the past
+    List<Reservation> findByUserIdAndCheckOutDateBefore(Long userId, LocalDate now);
+
+    // Get reservations to come
+    List<Reservation> findByUserIdAndCheckOutDateAfter(Long userId, LocalDate now);
+
     // Check if there is a reservation overlap over a period of time
     @Query("""
         SELECT r FROM Reservation r

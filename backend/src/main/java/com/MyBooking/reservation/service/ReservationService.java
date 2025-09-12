@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.time.LocalDate;
 
 
 @Service
@@ -93,5 +94,21 @@ public class ReservationService {
     // Read reservation for one user (client)
     public List<Reservation> getReservationsByUser(Long userId) {
         return reservationRepository.findByUserId(userId);
+    }
+
+    // Get past reservations
+    public List<Reservation> getReservationsByCheckOutDate(Long userId) {
+        return reservationRepository.findByUserIdAndCheckOutDateBefore(
+                userId,
+                LocalDate.now()
+        );
+    }
+
+    // Get future reservations
+    public List<Reservation> getFutureReservations(Long userId) {
+        return reservationRepository.findByUserIdAndCheckOutDateAfter(
+                userId,
+                LocalDate.now()
+        );
     }
 }

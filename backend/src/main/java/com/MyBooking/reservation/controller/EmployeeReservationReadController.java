@@ -19,7 +19,7 @@ public class EmployeeReservationReadController {
     }
 
     // Search reservation by period
-    @GetMapping("/search")
+    @GetMapping("/api/v1/reservations/search")
     public ResponseEntity<List<Reservation>> search(
             @RequestParam LocalDate startDate,
             @RequestParam LocalDate endDate

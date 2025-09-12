@@ -25,14 +25,24 @@ public class AdminReservationController {
         return ResponseEntity.ok(reservationService.getAllReservations());
     }
 
+    // Show one particular reservation
+    @GetMapping("/api/v1/admin/reservations/{reservationId} ")
+    public ResponseEntity<Reservation> getById(@PathVariable Long id) {
+        return reservationService.getAllReservations().stream()
+                .filter(r -> r.getId().equals(id))
+                .findFirst()
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     // Create a reservation
-    @PostMapping
+    @PostMapping("/api/v1/admin/reservations")
     public ResponseEntity<Reservation> create(@RequestBody CreateReservationRequest request) {
         return ResponseEntity.ok(reservationService.createReservation(request));
     }
 
     // Update a reservation
-    @PutMapping("/{id}")
+    @PutMapping("/api/v1/admin/reservations/{reservationId}")
     public ResponseEntity<Reservation> update(
             @PathVariable Long id,
             @RequestBody UpdateReservationRequest request
@@ -41,13 +51,13 @@ public class AdminReservationController {
     }
 
     // Cancel a reservation
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/api/v1/admin/reservations/{reservationId}")
     public ResponseEntity<Reservation> cancel(@PathVariable Long id) {
         return ResponseEntity.ok(reservationService.cancelReservation(id));
     }
 
-    // Reassigna  reservation (cancel + re create)
-    @PostMapping("/{id}/reassign")
+    // Reassign a reservation (cancel + re create)
+    @PostMapping("/api/v1/admin/reservations/{reservationId}/reassign")
     public ResponseEntity<Reservation> reassign(
             @PathVariable Long id,
             @RequestBody CreateReservationRequest newRequest
