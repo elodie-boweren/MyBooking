@@ -3,29 +3,18 @@
 
 -- ENUM simulés via CHECK (pragmatisme portable). En prod, on peut créer des types ENUM.
 
-create table role (
-  id serial primary key,
-  code varchar(32) not null unique,
-  label varchar(64) not null
-);
-
 create table app_user (
   id bigserial primary key,
-  first_name varchar(100) not null,
-  last_name varchar(100) not null,
-  email varchar(255) not null unique,
-  password_hash varchar(255) not null,
-  birthdate date not null,
-  phone varchar(50),
-  address varchar(255),
+  first_name varchar(50) not null,
+  last_name varchar(50) not null,
+  email varchar(100) not null unique,
+  password varchar(255) not null,
+  phone varchar(20) not null,
+  address varchar(255) not null,
+  birth_date date not null,
+  role varchar(20) not null check (role in ('CLIENT','EMPLOYEE','ADMIN')),
   created_at timestamptz default now() not null,
   updated_at timestamptz default now() not null
-);
-
-create table user_role (
-  user_id bigint not null references app_user(id) on delete cascade,
-  role_id int not null references role(id) on delete restrict,
-  primary key (user_id, role_id)
 );
 
 create table notification_preference (
@@ -42,13 +31,16 @@ create table employee (
 
 create table room (
   id bigserial primary key,
-  number varchar(20),
-  room_type varchar(32) not null check (room_type in ('SINGLE','DOUBLE','SUITE','FAMILY')),
-  capacity int not null check (capacity > 0),
-  price numeric(12,2) not null check (price >= 0),
+  number varchar(20) not null,
+  room_type varchar(32) not null check (room_type in ('SINGLE','DOUBLE','DELUXE','FAMILY')),
+  capacity int not null check (capacity > 0 and capacity <= 10),
+  price numeric(12,2) not null check (price > 0),
   currency char(3) not null,
   status varchar(16) not null check (status in ('AVAILABLE','OCCUPIED','OUT_OF_SERVICE')),
-  description text
+  description text,
+  equipment varchar(255),
+  created_at timestamptz default now() not null,
+  updated_at timestamptz default now() not null
 );
 create index idx_room_status on room(status);
 
@@ -81,23 +73,24 @@ create index idx_room_status_update_room on room_status_update(room_id);
 
 create table reservation (
   id bigserial primary key,
-  user_id bigint not null references app_user(id) on delete restrict,
+  client_id bigint not null references app_user(id) on delete restrict,
   room_id bigint not null references room(id) on delete restrict,
   check_in date not null,
   check_out date not null,
-  status varchar(16) not null check (status in ('CONFIRMED','CANCELLED')),
-  guests int not null check (guests > 0),
-  total numeric(12,2) not null check (total >= 0),
+  number_of_guests int not null check (number_of_guests > 0 and number_of_guests <= 10),
+  total_price numeric(12,2) not null check (total_price > 0),
   currency char(3) not null,
-  used_points int not null default 0 check (used_points >= 0)
+  status varchar(20) not null check (status in ('CONFIRMED','CANCELLED')),
+  created_at timestamptz default now() not null,
+  updated_at timestamptz default now() not null
 );
-create index idx_reservation_user on reservation(user_id);
+create index idx_reservation_client on reservation(client_id);
 create index idx_reservation_room on reservation(room_id);
 create index idx_reservation_dates on reservation(check_in, check_out);
 
 create table feedback (
   id bigserial primary key,
-  reservation_id bigint not null references reservation(id) on delete cascade,
+  reservation_id bigint not null unique references reservation(id) on delete cascade,
   user_id bigint not null references app_user(id) on delete restrict,
   rating int not null check (rating between 1 and 5),
   comment text,
@@ -128,19 +121,37 @@ create table loyalty_transaction (
 );
 create index idx_loyalty_tx_account on loyalty_transaction(account_id);
 
+create table installation (
+  id bigserial primary key,
+  name varchar(100) not null,
+  description text,
+  installation_type varchar(32) not null check (installation_type in ('SPA_ROOM','CONFERENCE_ROOM','GYM','POOL','TENNIS_COURT','WEDDING_ROOM')),
+  capacity int not null check (capacity > 0 and capacity <= 200),
+  hourly_rate numeric(12,2) not null check (hourly_rate > 0),
+  currency char(3) not null,
+  equipment varchar(255),
+  created_at timestamptz default now() not null,
+  updated_at timestamptz default now() not null
+);
+create index idx_installation_type on installation(installation_type);
+
 create table event (
   id bigserial primary key,
-  title varchar(200) not null,
+  name varchar(100) not null,
+  description text,
   event_type varchar(32) not null check (event_type in ('SPA','CONFERENCE','YOGA_CLASS','FITNESS','WEDDING')),
   start_at timestamptz not null,
   end_at timestamptz not null,
-  capacity int not null check (capacity > 0),
-  description text,
-  price numeric(12,2) not null check (price >= 0),
-  currency char(3) not null
+  capacity int not null check (capacity > 0 and capacity <= 100),
+  price numeric(12,2) not null check (price > 0),
+  currency char(3) not null,
+  installation_id bigint not null references installation(id) on delete restrict,
+  created_at timestamptz default now() not null,
+  updated_at timestamptz default now() not null
 );
 create index idx_event_time on event(start_at, end_at);
 create index idx_event_type on event(event_type);
+create index idx_event_installation on event(installation_id);
 
 create table event_booking (
   id bigserial primary key,

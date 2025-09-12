@@ -1,89 +1,131 @@
 package com.MyBooking.reservation.domain;
 
+import com.MyBooking.auth.domain.User;
+import com.MyBooking.room.domain.Room;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
-import lombok.Data;
-
 @Entity
 @Table(name = "reservation")
-@Data
 public class Reservation {
+    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
+    
+    @NotNull(message = "Check-in date is required")
     @Column(name = "check_in", nullable = false)
     private LocalDate checkIn;
-
+    
+    @NotNull(message = "Check-out date is required")
     @Column(name = "check_out", nullable = false)
     private LocalDate checkOut;
-
-    @Column(nullable = false)
-    private Double total;
-
+    
+    @NotNull(message = "Number of guests is required")
+    @Min(value = 1, message = "Number of guests must be at least 1")
+    @Max(value = 10, message = "Number of guests must not exceed 10")
+    @Column(name = "number_of_guests", nullable = false)
+    private Integer numberOfGuests;
+    
+    @NotNull(message = "Total price is required")
+    @DecimalMin(value = "0.0", inclusive = false, message = "Total price must be greater than 0")
+    @Column(name = "total_price", nullable = false, precision = 12, scale = 2)
+    private BigDecimal totalPrice;
+    
     @NotBlank(message = "Currency is required")
     @Size(min = 3, max = 3, message = "Currency must be exactly 3 characters")
     @Column(name = "currency", nullable = false, length = 3)
     private String currency;
-
-    @Column(name = "used_points")
-    private Integer usedPoints;
-
+    
+    @NotNull(message = "Status is required")
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "status", nullable = false, length = 20)
     private ReservationStatus status;
-
-    // Relations User and Room
+    
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
-
+    @JoinColumn(name = "client_id", nullable = false)
+    @NotNull(message = "Client is required")
+    private User client;
+    
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "room_id")
+    @JoinColumn(name = "room_id", nullable = false)
+    @NotNull(message = "Room is required")
     private Room room;
-
-    // For tracking
+    
+    @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt = LocalDateTime.now();
-
-    // Getters et Setters
+    private LocalDateTime createdAt;
+    
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
+    
+    // Constructors
+    public Reservation() {}
+    
+    public Reservation(LocalDate checkIn, LocalDate checkOut, Integer numberOfGuests, 
+                      BigDecimal totalPrice, String currency, ReservationStatus status, 
+                      User client, Room room) {
+        this.checkIn = checkIn;
+        this.checkOut = checkOut;
+        this.numberOfGuests = numberOfGuests;
+        this.totalPrice = totalPrice;
+        this.currency = currency;
+        this.status = status;
+        this.client = client;
+        this.room = room;
+    }
+    
+    // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
-
+    
     public LocalDate getCheckIn() { return checkIn; }
     public void setCheckIn(LocalDate checkIn) { this.checkIn = checkIn; }
-
+    
     public LocalDate getCheckOut() { return checkOut; }
     public void setCheckOut(LocalDate checkOut) { this.checkOut = checkOut; }
-
-    public Double getTotal() { return total; }
-    public void setTotal(Double total) { this.total = total; }
-
+    
+    public Integer getNumberOfGuests() { return numberOfGuests; }
+    public void setNumberOfGuests(Integer numberOfGuests) { this.numberOfGuests = numberOfGuests; }
+    
+    public BigDecimal getTotalPrice() { return totalPrice; }
+    public void setTotalPrice(BigDecimal totalPrice) { this.totalPrice = totalPrice; }
+    
     public String getCurrency() { return currency; }
     public void setCurrency(String currency) { this.currency = currency; }
-
-    public Integer getUsedPoints() { return usedPoints; }
-    public void setUsedPoints(Integer usedPoints) { this.usedPoints = usedPoints; }
-
+    
     public ReservationStatus getStatus() { return status; }
     public void setStatus(ReservationStatus status) { this.status = status; }
-
-    public User getUser() { return user; }
-    public void setUser(User user) { this.user = user; }
-
+    
+    public User getClient() { return client; }
+    public void setClient(User client) { this.client = client; }
+    
     public Room getRoom() { return room; }
     public void setRoom(Room room) { this.room = room; }
-
+    
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-
+    
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    
+    // Utility methods
+    public boolean isConfirmed() {
+        return status == ReservationStatus.CONFIRMED;
+    }
+    
+    public boolean isCancelled() {
+        return status == ReservationStatus.CANCELLED;
+    }
+    
+    public String getFormattedPrice() {
+        return currency + " " + totalPrice;
+    }
+    
 }
