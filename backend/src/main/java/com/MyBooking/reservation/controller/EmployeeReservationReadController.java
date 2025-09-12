@@ -1,22 +1,29 @@
 package com.MyBooking.reservation.controller;
 
-import com.MyBooking.reservation.dto.*;
-import com.MyBooking.reservation.service.ReservationService;
+import com.MyBooking.reservation.domain.Reservation;
+import com.MyBooking.reservation.repository.ReservationRepository;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/employee/reservations")
 public class EmployeeReservationReadController {
 
-    private final ReservationService reservationService;
-    public EmployeeReservationReadController(ReservationService reservationService) {
-        this.reservationService = reservationService;
+    private final ReservationRepository reservationRepository;
+
+    public EmployeeReservationReadController(ReservationRepository reservationRepository) {
+        this.reservationRepository = reservationRepository;
     }
 
+    // Search reservation by period
     @GetMapping("/search")
-    public List<ReservationDto> search(ReservationSearchCriteria criteria) {
-        return reservationService.searchReservations(criteria);
+    public ResponseEntity<List<Reservation>> search(
+            @RequestParam LocalDate startDate,
+            @RequestParam LocalDate endDate
+    ) {
+        return ResponseEntity.ok(reservationRepository.findByCheckInBetween(startDate, endDate));
     }
 }

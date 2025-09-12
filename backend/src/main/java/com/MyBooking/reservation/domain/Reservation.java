@@ -2,9 +2,15 @@ package com.MyBooking.reservation.domain;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import lombok.Data;
 
 @Entity
 @Table(name = "reservation")
+@Data
 public class Reservation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,7 +25,9 @@ public class Reservation {
     @Column(nullable = false)
     private Double total;
 
-    @Column(length = 3, nullable = false)
+    @NotBlank(message = "Currency is required")
+    @Size(min = 3, max = 3, message = "Currency must be exactly 3 characters")
+    @Column(name = "currency", nullable = false, length = 3)
     private String currency;
 
     @Column(name = "used_points")
@@ -44,4 +52,38 @@ public class Reservation {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt = LocalDateTime.now();
+
+    // Getters et Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public LocalDate getCheckIn() { return checkIn; }
+    public void setCheckIn(LocalDate checkIn) { this.checkIn = checkIn; }
+
+    public LocalDate getCheckOut() { return checkOut; }
+    public void setCheckOut(LocalDate checkOut) { this.checkOut = checkOut; }
+
+    public Double getTotal() { return total; }
+    public void setTotal(Double total) { this.total = total; }
+
+    public String getCurrency() { return currency; }
+    public void setCurrency(String currency) { this.currency = currency; }
+
+    public Integer getUsedPoints() { return usedPoints; }
+    public void setUsedPoints(Integer usedPoints) { this.usedPoints = usedPoints; }
+
+    public ReservationStatus getStatus() { return status; }
+    public void setStatus(ReservationStatus status) { this.status = status; }
+
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
+
+    public Room getRoom() { return room; }
+    public void setRoom(Room room) { this.room = room; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }

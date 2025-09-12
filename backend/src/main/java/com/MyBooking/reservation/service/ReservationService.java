@@ -1,38 +1,97 @@
 package com.MyBooking.reservation.service;
 
-import com.MyBooking.reservation.dto.*;
 import com.MyBooking.reservation.domain.Reservation;
+import com.MyBooking.reservation.domain.ReservationStatus;
+import com.MyBooking.reservation.dto.CreateReservationRequest;
+import com.MyBooking.reservation.dto.UpdateReservationRequest;
+import com.MyBooking.reservation.repository.ReservationRepository;
+import jakarta.persistence.EntityNotFoundException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-public interface ReservationService {
 
+@Service
+public class ReservationService {
+
+    private final ReservationRepository reservationRepository;
+
+    public ReservationService(ReservationRepository reservationRepository) {
+        this.reservationRepository = reservationRepository;
+    }
+
+    // Create a reservation (with overlap rule)
     @Transactional
-    ReservationDto createReservation(CreateReservationRequest request) {
-        if (!req.getCheckIn().isBefore(req.getCheckOut())) throw new InvalidRequest("invalid dates");
+    public Reservation createReservation(CreateReservationRequest request) {
+        // 1. Vérifier cohérence des dates
+        if (request.getCheckIn().isAfter(request.getCheckOut())) {
+            throw new IllegalArgumentException("Check-in must be before check-out");
+        }
 
-        Room room = roomRepository.findById(req.getRoomId()).orElseThrow(...);
-        // overlap only on CONFIRMED reservations
-        List<Reservation> overlaps = reservationRepository.findOverlappingConfirmedReservations(room.getId(), req.getCheckIn(), req.getCheckOut());
-        if (!overlaps.isEmpty()) throw new OverlapException("dates busy");
+        // 2. Check for overlap
+        List<Reservation> overlaps = reservationRepository.findOverlappingReservations(
+                request.getRoomId(),
+                request.getCheckIn(),
+                request.getCheckOut()
+        );
 
-        Reservation r = new Reservation();
-        r.setCheckIn(req.getCheckIn());
-        r.setCheckOut(req.getCheckOut());
-        r.setRoom(room);
-        r.setUser(currentUser); // inject via SecurityContext
-        r.setStatus(ReservationStatus.CONFIRMED);
-        // calcul total possible ici
-        reservationRepository.save(r);
-        return mapToDto(r);
-    };
+        if (!overlaps.isEmpty()) {
+            throw new IllegalStateException("The room is already booked for these dates");
+        }
 
-    ReservationDto updateReservation(Long id, UpdateReservationRequest request);
-    void cancelReservation(Long id);
+        // 3. Create reservation
+        Reservation reservation = new Reservation();
+        reservation.setCheckIn(request.getCheckIn());
+        reservation.setCheckOut(request.getCheckOut());
+        reservation.setTotal(request.getTotal());
+        reservation.setCurrency(request.getCurrency());
+        reservation.setUsedPoints(request.getUsedPoints());
+        reservation.setStatus(ReservationStatus.CONFIRMED);
 
-    ReservationDto reassignReservation(Long id, CreateReservationRequest request);
+        // create setUser() and setRoom() when Room and User are created
+        return reservationRepository.save(reservation);
+    }
 
-    List<ReservationDto> getUserReservations(Long userId);
+    // Cancel a reservation
+    @Transactional
+    public Reservation cancelReservation(Long reservationId) {
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new EntityNotFoundException("Reservation cannot be found"));
 
-    List<ReservationDto> searchReservations(ReservationSearchCriteria criteria);
+        reservation.setStatus(ReservationStatus.CANCELLED);
+        return reservationRepository.save(reservation);
+    }
+
+    // Reassign reservation (cancel + create)
+    @Transactional
+    public Reservation reassignReservation(Long reservationId, CreateReservationRequest newRequest) {
+        cancelReservation(reservationId);
+        return createReservation(newRequest);
+    }
+
+    // Update reservation
+    @Transactional
+    public Reservation updateReservation(Long reservationId, UpdateReservationRequest request) {
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new EntityNotFoundException("Reservation cannot be found"));
+
+        reservation.setCheckIn(request.getCheckIn());
+        reservation.setCheckOut(request.getCheckOut());
+        reservation.setTotal(request.getTotal());
+        reservation.setCurrency(request.getCurrency());
+        reservation.setUsedPoints(request.getUsedPoints());
+
+        return reservationRepository.save(reservation);
+    }
+
+    // Read all reservations (admin)
+    public List<Reservation> getAllReservations() {
+        return reservationRepository.findAll();
+    }
+
+    // Read reservation for one user (client)
+    public List<Reservation> getReservationsByUser(Long userId) {
+        return reservationRepository.findByUserId(userId);
+    }
 }

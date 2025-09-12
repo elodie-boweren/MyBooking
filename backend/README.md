@@ -19,7 +19,7 @@ export DB_USER=mybooking DB_PASS=mybooking
 ### Option B — Local Postgres (no Docker)
 ```bash
 # 1) Create role and database (run once)
-psql -U postgres -c "CREATE ROLE mybooking WITH LOGIN PASSWORD 'mybooking';"
+psql -U postgres -c "CREATE ROLE mybooking WITH LOGIN PASSWORD 'mybooking'move;"
 psql -U postgres -c "CREATE DATABASE mybooking OWNER mybooking;"
 
 # 2) Run the app
