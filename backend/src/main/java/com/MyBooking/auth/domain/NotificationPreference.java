@@ -108,3 +108,4 @@ public class NotificationPreference {
         return isEmailEnabled() || isSmsEnabled() || isPushEnabled();
     }
 }
+
