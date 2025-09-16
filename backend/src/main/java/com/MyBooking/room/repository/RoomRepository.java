@@ -169,6 +169,31 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
     );
 
     /**
+     * Find available rooms for a specific date range with additional filters.
+     * Used for booking availability checks with room type and capacity filters.
+     * 
+     * @param checkIn check-in date
+     * @param checkOut check-out date
+     * @param roomType the room type (optional)
+     * @param minCapacity minimum capacity (optional)
+     * @return list of available rooms for the date range
+     */
+    @Query("SELECT r FROM Room r WHERE r.status = 'AVAILABLE' AND r.id NOT IN " +
+           "(SELECT res.room.id FROM Reservation res WHERE " +
+           "res.status = 'CONFIRMED' AND " +
+           "((res.checkIn <= :checkIn AND res.checkOut > :checkIn) OR " +
+           "(res.checkIn < :checkOut AND res.checkOut >= :checkOut) OR " +
+           "(res.checkIn >= :checkIn AND res.checkOut <= :checkOut))) AND " +
+           "(:roomType IS NULL OR r.roomType = :roomType) AND " +
+           "(:minCapacity IS NULL OR r.capacity >= :minCapacity)")
+    List<Room> findAvailableRooms(
+            @Param("checkIn") LocalDate checkIn,
+            @Param("checkOut") LocalDate checkOut,
+            @Param("roomType") RoomType roomType,
+            @Param("minCapacity") Integer minCapacity
+    );
+
+    /**
      * Find available rooms for a specific date range with pagination.
      * Used for booking availability checks with pagination.
      * 
