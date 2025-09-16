@@ -1,0 +1,206 @@
+package com.MyBooking.announcement.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Repository;
+import com.MyBooking.announcement.domain.Announcement;
+import com.MyBooking.announcement.domain.AnnouncementPriority;
+import com.MyBooking.announcement.domain.AnnouncementStatus;
+import com.MyBooking.auth.domain.User;
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Repository
+public interface AnnouncementRepository extends JpaRepository<Announcement, Long> {
+    
+    // ==================== BASIC QUERIES ====================
+    
+    // Find by created by user (entity-based)
+    List<Announcement> findByCreatedBy(User createdBy);
+    Page<Announcement> findByCreatedBy(User createdBy, Pageable pageable);
+    
+    // Find by created by user (ID-based)
+    List<Announcement> findByCreatedById(Long createdById);
+    Page<Announcement> findByCreatedById(Long createdById, Pageable pageable);
+    
+    // Find by priority
+    List<Announcement> findByPriority(AnnouncementPriority priority);
+    Page<Announcement> findByPriority(AnnouncementPriority priority, Pageable pageable);
+    
+    // Find by status
+    List<Announcement> findByStatus(AnnouncementStatus status);
+    Page<Announcement> findByStatus(AnnouncementStatus status, Pageable pageable);
+    
+    // ==================== DATE-BASED QUERIES ====================
+    
+    // Find by creation date range
+    List<Announcement> findByCreatedAtBetween(LocalDateTime startDate, LocalDateTime endDate);
+    Page<Announcement> findByCreatedAtBetween(LocalDateTime startDate, LocalDateTime endDate, Pageable pageable);
+    
+    // Find by creation date after
+    List<Announcement> findByCreatedAtAfter(LocalDateTime date);
+    Page<Announcement> findByCreatedAtAfter(LocalDateTime date, Pageable pageable);
+    
+    // Find by creation date before
+    List<Announcement> findByCreatedAtBefore(LocalDateTime date);
+    Page<Announcement> findByCreatedAtBefore(LocalDateTime date, Pageable pageable);
+    
+    // Find by expiration date range
+    List<Announcement> findByExpiresAtBetween(LocalDateTime startDate, LocalDateTime endDate);
+    Page<Announcement> findByExpiresAtBetween(LocalDateTime startDate, LocalDateTime endDate, Pageable pageable);
+    
+    // Find by expiration date after
+    List<Announcement> findByExpiresAtAfter(LocalDateTime date);
+    Page<Announcement> findByExpiresAtAfter(LocalDateTime date, Pageable pageable);
+    
+    // Find by expiration date before
+    List<Announcement> findByExpiresAtBefore(LocalDateTime date);
+    Page<Announcement> findByExpiresAtBefore(LocalDateTime date, Pageable pageable);
+    
+    // ==================== COMBINED QUERIES ====================
+    
+    // Find by priority and status
+    List<Announcement> findByPriorityAndStatus(AnnouncementPriority priority, AnnouncementStatus status);
+    Page<Announcement> findByPriorityAndStatus(AnnouncementPriority priority, AnnouncementStatus status, Pageable pageable);
+    
+    // Find by created by user and status
+    List<Announcement> findByCreatedByAndStatus(User createdBy, AnnouncementStatus status);
+    Page<Announcement> findByCreatedByAndStatus(User createdBy, AnnouncementStatus status, Pageable pageable);
+    List<Announcement> findByCreatedByIdAndStatus(Long createdById, AnnouncementStatus status);
+    Page<Announcement> findByCreatedByIdAndStatus(Long createdById, AnnouncementStatus status, Pageable pageable);
+    
+    // Find by created by user and priority
+    List<Announcement> findByCreatedByAndPriority(User createdBy, AnnouncementPriority priority);
+    Page<Announcement> findByCreatedByAndPriority(User createdBy, AnnouncementPriority priority, Pageable pageable);
+    List<Announcement> findByCreatedByIdAndPriority(Long createdById, AnnouncementPriority priority);
+    Page<Announcement> findByCreatedByIdAndPriority(Long createdById, AnnouncementPriority priority, Pageable pageable);
+    
+    // ==================== CUSTOM BUSINESS QUERIES ====================
+    
+    // Find recent announcements (business logic in repository - following current pattern)
+    @Query("SELECT a FROM Announcement a WHERE a.createdAt >= :since ORDER BY a.createdAt DESC")
+    List<Announcement> findRecentAnnouncements(@Param("since") LocalDateTime since);
+    
+    @Query("SELECT a FROM Announcement a WHERE a.createdAt >= :since ORDER BY a.createdAt DESC")
+    Page<Announcement> findRecentAnnouncements(@Param("since") LocalDateTime since, Pageable pageable);
+    
+    // Find published announcements ordered by priority and creation date (business logic in repository)
+    @Query("SELECT a FROM Announcement a WHERE a.status = 'PUBLISHED' ORDER BY " +
+           "CASE a.priority WHEN 'URGENT' THEN 1 WHEN 'HIGH' THEN 2 WHEN 'MEDIUM' THEN 3 WHEN 'LOW' THEN 4 END, " +
+           "a.createdAt DESC")
+    List<Announcement> findPublishedAnnouncementsOrderByPriorityAndDate();
+    
+    @Query("SELECT a FROM Announcement a WHERE a.status = 'PUBLISHED' ORDER BY " +
+           "CASE a.priority WHEN 'URGENT' THEN 1 WHEN 'HIGH' THEN 2 WHEN 'MEDIUM' THEN 3 WHEN 'LOW' THEN 4 END, " +
+           "a.createdAt DESC")
+    Page<Announcement> findPublishedAnnouncementsOrderByPriorityAndDate(Pageable pageable);
+    
+    // Find announcements by title containing text (business logic in repository)
+    @Query("SELECT a FROM Announcement a WHERE LOWER(a.title) LIKE LOWER(CONCAT('%', :title, '%'))")
+    List<Announcement> findByTitleContainingIgnoreCase(@Param("title") String title);
+    
+    @Query("SELECT a FROM Announcement a WHERE LOWER(a.title) LIKE LOWER(CONCAT('%', :title, '%'))")
+    Page<Announcement> findByTitleContainingIgnoreCase(@Param("title") String title, Pageable pageable);
+    
+    // Find announcements by content containing text (business logic in repository)
+    @Query("SELECT a FROM Announcement a WHERE LOWER(a.content) LIKE LOWER(CONCAT('%', :content, '%'))")
+    List<Announcement> findByContentContainingIgnoreCase(@Param("content") String content);
+    
+    @Query("SELECT a FROM Announcement a WHERE LOWER(a.content) LIKE LOWER(CONCAT('%', :content, '%'))")
+    Page<Announcement> findByContentContainingIgnoreCase(@Param("content") String content, Pageable pageable);
+    
+    // Find announcements by created by user ordered by creation date (business logic in repository)
+    @Query("SELECT a FROM Announcement a WHERE a.createdBy = :createdBy ORDER BY a.createdAt DESC")
+    List<Announcement> findByCreatedByOrderByCreatedAtDesc(@Param("createdBy") User createdBy);
+    
+    @Query("SELECT a FROM Announcement a WHERE a.createdBy = :createdBy ORDER BY a.createdAt DESC")
+    Page<Announcement> findByCreatedByOrderByCreatedAtDesc(@Param("createdBy") User createdBy, Pageable pageable);
+    
+    // Find announcements by created by user ID ordered by creation date (business logic in repository)
+    @Query("SELECT a FROM Announcement a WHERE a.createdBy.id = :createdById ORDER BY a.createdAt DESC")
+    List<Announcement> findByCreatedByIdOrderByCreatedAtDesc(@Param("createdById") Long createdById);
+    
+    @Query("SELECT a FROM Announcement a WHERE a.createdBy.id = :createdById ORDER BY a.createdAt DESC")
+    Page<Announcement> findByCreatedByIdOrderByCreatedAtDesc(@Param("createdById") Long createdById, Pageable pageable);
+    
+    // ==================== COUNT QUERIES ====================
+    
+    // Count by created by user
+    long countByCreatedBy(User createdBy);
+    long countByCreatedById(Long createdById);
+    
+    // Count by priority
+    long countByPriority(AnnouncementPriority priority);
+    
+    // Count by status
+    long countByStatus(AnnouncementStatus status);
+    
+    // Count by creation date range
+    long countByCreatedAtBetween(LocalDateTime startDate, LocalDateTime endDate);
+    long countByCreatedAtAfter(LocalDateTime date);
+    long countByCreatedAtBefore(LocalDateTime date);
+    
+    // Count by expiration date range
+    long countByExpiresAtBetween(LocalDateTime startDate, LocalDateTime endDate);
+    long countByExpiresAtAfter(LocalDateTime date);
+    long countByExpiresAtBefore(LocalDateTime date);
+    
+    // Count by priority and status
+    long countByPriorityAndStatus(AnnouncementPriority priority, AnnouncementStatus status);
+    
+    // Count by created by user and status
+    long countByCreatedByAndStatus(User createdBy, AnnouncementStatus status);
+    long countByCreatedByIdAndStatus(Long createdById, AnnouncementStatus status);
+    
+    // Count by created by user and priority
+    long countByCreatedByAndPriority(User createdBy, AnnouncementPriority priority);
+    long countByCreatedByIdAndPriority(Long createdById, AnnouncementPriority priority);
+    
+    // ==================== EXISTENCE QUERIES ====================
+    
+    // Check if announcement exists by created by user
+    boolean existsByCreatedBy(User createdBy);
+    boolean existsByCreatedById(Long createdById);
+    
+    // Check if announcement exists by priority
+    boolean existsByPriority(AnnouncementPriority priority);
+    
+    // Check if announcement exists by status
+    boolean existsByStatus(AnnouncementStatus status);
+    
+    // Check if announcement exists by priority and status
+    boolean existsByPriorityAndStatus(AnnouncementPriority priority, AnnouncementStatus status);
+    
+    // Check if announcement exists by created by user and status
+    boolean existsByCreatedByAndStatus(User createdBy, AnnouncementStatus status);
+    boolean existsByCreatedByIdAndStatus(Long createdById, AnnouncementStatus status);
+    
+    // Check if announcement exists by created by user and priority
+    boolean existsByCreatedByAndPriority(User createdBy, AnnouncementPriority priority);
+    boolean existsByCreatedByIdAndPriority(Long createdById, AnnouncementPriority priority);
+    
+    // ==================== AGGREGATION QUERIES ====================
+    
+    // Get latest announcement by created by user (business logic in repository)
+    @Query("SELECT a FROM Announcement a WHERE a.createdBy = :createdBy ORDER BY a.createdAt DESC")
+    List<Announcement> findLatestAnnouncementByCreatedBy(@Param("createdBy") User createdBy, Pageable pageable);
+    
+    // Get latest announcement by created by user ID (business logic in repository)
+    @Query("SELECT a FROM Announcement a WHERE a.createdBy.id = :createdById ORDER BY a.createdAt DESC")
+    List<Announcement> findLatestAnnouncementByCreatedById(@Param("createdById") Long createdById, Pageable pageable);
+    
+    // Get announcement count by priority
+    @Query("SELECT a.priority, COUNT(a) FROM Announcement a GROUP BY a.priority")
+    List<Object[]> getAnnouncementCountByPriority();
+    
+    // Get announcement count by status
+    @Query("SELECT a.status, COUNT(a) FROM Announcement a GROUP BY a.status")
+    List<Object[]> getAnnouncementCountByStatus();
+    
+    // Get announcement count by created by user
+    @Query("SELECT a.createdBy.id, COUNT(a) FROM Announcement a GROUP BY a.createdBy.id")
+    List<Object[]> getAnnouncementCountByCreatedBy();
+}

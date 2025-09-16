@@ -1,9 +1,10 @@
 package com.MyBooking.feedback.domain;
 
-import com.MyBooking.auth.domain.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+import com.MyBooking.auth.domain.User;
 import java.time.LocalDateTime;
 
 @Entity
@@ -24,14 +25,18 @@ public class FeedbackReply {
     @NotNull(message = "Admin user is required")
     private User adminUser;
     
-    @NotBlank(message = "Reply message is required")
-    @Size(max = 1000, message = "Reply message must not exceed 1000 characters")
-    @Column(name = "message", nullable = false, length = 1000)
+    @Column(nullable = false, columnDefinition = "TEXT")
+    @NotBlank(message = "Message is required")
+    @Size(max = 2000, message = "Message cannot exceed 2000 characters")
     private String message;
     
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+    
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
     
     // Constructors
     public FeedbackReply() {}
@@ -57,4 +62,7 @@ public class FeedbackReply {
     
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }
