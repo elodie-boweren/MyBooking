@@ -12,6 +12,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -25,7 +28,14 @@ import static org.assertj.core.api.Assertions.*;
  * Tests all repository methods with real database operations.
  */
 @DataJpaTest
-@ActiveProfiles("test")
+@ActiveProfiles("repository-test")
+@EntityScan(basePackages = {
+    "com.MyBooking.auth.domain"
+})
+@EnableJpaRepositories(basePackages = {
+    "com.MyBooking.auth.repository"
+})
+@ContextConfiguration(classes = com.MyBooking.hotel_management.HotelManagementApplication.class)
 class UserRepositoryTest {
 
     @Autowired
