@@ -90,7 +90,7 @@ create index idx_reservation_dates on reservation(check_in, check_out);
 
 create table feedback (
   id bigserial primary key,
-  reservation_id bigint not null references reservation(id) on delete cascade,
+  reservation_id bigint not null unique references reservation(id) on delete cascade,
   user_id bigint not null references app_user(id) on delete restrict,
   rating int not null check (rating between 1 and 5),
   comment text,
