@@ -190,6 +190,15 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
      * @return List of reservations with check-out on or before the date
      */
     List<Reservation> findByCheckOutLessThanEqual(LocalDate date);
+    
+    /**
+     * Find active reservations (where today is between check-in and check-out dates).
+     * 
+     * @param checkInDate Check-in date (today)
+     * @param checkOutDate Check-out date (today)
+     * @return List of active reservations
+     */
+    List<Reservation> findByCheckInLessThanEqualAndCheckOutGreaterThanEqual(LocalDate checkInDate, LocalDate checkOutDate);
 
     // ==================== AVAILABILITY QUERIES ====================
     
