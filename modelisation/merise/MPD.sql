@@ -81,6 +81,8 @@ create table reservation (
   total_price numeric(12,2) not null check (total_price > 0),
   currency char(3) not null,
   status varchar(20) not null check (status in ('CONFIRMED','CANCELLED')),
+  points_used int default 0,
+  points_discount numeric(12,2) default 0.00,
   created_at timestamptz default now() not null,
   updated_at timestamptz default now() not null
 );
@@ -216,13 +218,15 @@ create index idx_leave_user on leave_request(employee_user_id);
 
 create table training (
   id serial primary key,
-  title varchar(200) not null
+  title varchar(200) not null,
+  start_date date not null,
+  end_date date not null
 );
 
 create table employee_training (
   employee_user_id bigint not null references employee(user_id) on delete restrict,
   training_id int not null references training(id) on delete restrict,
-  status varchar(16) not null check (status in ('ASSIGNED','COMPLETED')),
+  status varchar(16) not null check (status in ('ASSIGNED','IN_PROGRESS','COMPLETED')),
   assigned_at timestamptz not null default now(),
   completed_at timestamptz,
   primary key (employee_user_id, training_id)
