@@ -65,6 +65,12 @@ public class Reservation {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
     
+    @Column(name = "points_used")
+    private Integer pointsUsed = 0;
+    
+    @Column(name = "points_discount", precision = 12, scale = 2)
+    private BigDecimal pointsDiscount = BigDecimal.ZERO;
+    
     // Constructors
     public Reservation() {}
     
@@ -114,6 +120,12 @@ public class Reservation {
     
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    
+    public Integer getPointsUsed() { return pointsUsed; }
+    public void setPointsUsed(Integer pointsUsed) { this.pointsUsed = pointsUsed; }
+    
+    public BigDecimal getPointsDiscount() { return pointsDiscount; }
+    public void setPointsDiscount(BigDecimal pointsDiscount) { this.pointsDiscount = pointsDiscount; }
     
     // Utility methods
     public boolean isConfirmed() {

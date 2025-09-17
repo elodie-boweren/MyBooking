@@ -16,6 +16,7 @@ import com.MyBooking.room.service.RoomService;
 import com.MyBooking.auth.domain.User;
 import com.MyBooking.auth.domain.Role;
 import com.MyBooking.auth.repository.UserRepository;
+import com.MyBooking.loyalty.service.LoyaltyService;
 import com.MyBooking.common.exception.BusinessRuleException;
 import com.MyBooking.common.exception.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,6 +47,9 @@ public class ReservationService {
     
     @Autowired
     private RoomService roomService;
+
+    @Autowired
+    private LoyaltyService loyaltyService;
 
     // ========== RESERVATION MANAGEMENT ==========
 
@@ -93,6 +97,133 @@ public class ReservationService {
             "Reservation created for " + checkIn + " to " + checkOut);
         
         return savedReservation;
+    }
+
+    /**
+     * Create a new reservation with loyalty points redemption
+     */
+    public Reservation createReservationWithPoints(Long clientId, Long roomId, LocalDate checkIn, 
+                                                 LocalDate checkOut, Integer numberOfGuests, 
+                                                 String currency, Integer pointsToRedeem) {
+        // Validate inputs
+        if (clientId == null || roomId == null || checkIn == null || checkOut == null || 
+            numberOfGuests == null || currency == null) {
+            throw new BusinessRuleException("All reservation parameters are required");
+        }
+
+        if (checkOut.isBefore(checkIn) || checkOut.isEqual(checkIn)) {
+            throw new BusinessRuleException("Check-out date must be after check-in date");
+        }
+
+        if (numberOfGuests < 1 || numberOfGuests > 10) {
+            throw new BusinessRuleException("Number of guests must be between 1 and 10");
+        }
+
+        if (currency.length() != 3) {
+            throw new BusinessRuleException("Currency must be exactly 3 characters");
+        }
+
+        // Get and validate room
+        Room room = roomRepository.findById(roomId)
+            .orElseThrow(() -> new NotFoundException("Room not found with ID: " + roomId));
+
+        if (numberOfGuests > room.getCapacity()) {
+            throw new BusinessRuleException("Number of guests (" + numberOfGuests + 
+                ") exceeds room capacity (" + room.getCapacity() + ")");
+        }
+
+        // Get and validate client
+        User client = userRepository.findById(clientId)
+            .orElseThrow(() -> new NotFoundException("Client not found with ID: " + clientId));
+
+        // Calculate base price
+        BigDecimal basePrice = calculateTotalPrice(room, checkIn, checkOut, numberOfGuests);
+        
+        // Handle points redemption
+        Integer actualPointsUsed = 0;
+        BigDecimal pointsDiscount = BigDecimal.ZERO;
+        BigDecimal finalPrice = basePrice;
+        
+        if (pointsToRedeem != null && pointsToRedeem > 0) {
+            // Validate points redemption
+            loyaltyService.validateReservationPointsRedemption(clientId, pointsToRedeem, basePrice);
+            
+            // Calculate discount
+            pointsDiscount = loyaltyService.calculatePointsDiscountAmount(pointsToRedeem);
+            finalPrice = basePrice.subtract(pointsDiscount).max(BigDecimal.ZERO);
+            actualPointsUsed = pointsToRedeem;
+        }
+        
+        // Create reservation
+        Reservation reservation = new Reservation();
+        reservation.setCheckIn(checkIn);
+        reservation.setCheckOut(checkOut);
+        reservation.setNumberOfGuests(numberOfGuests);
+        reservation.setTotalPrice(finalPrice);
+        reservation.setCurrency(currency);
+        reservation.setStatus(ReservationStatus.CONFIRMED);
+        reservation.setClient(client);
+        reservation.setRoom(room);
+        reservation.setPointsUsed(actualPointsUsed);
+        reservation.setPointsDiscount(pointsDiscount);
+        
+        Reservation savedReservation = reservationRepository.save(reservation);
+        
+        // Redeem points if any were used
+        if (actualPointsUsed > 0) {
+            loyaltyService.redeemPoints(clientId, actualPointsUsed, 
+                "Points redeemed for reservation #" + savedReservation.getId());
+        }
+        
+        // Update room status to occupied for the entire reservation period
+        roomService.updateRoomStatusAutomatically(roomId, RoomStatus.OCCUPIED, 
+            "Reservation created for " + checkIn + " to " + checkOut);
+        
+        return savedReservation;
+    }
+
+    /**
+     * Calculate final price with points discount
+     */
+    @Transactional(readOnly = true)
+    public BigDecimal calculateFinalPriceWithPoints(Long roomId, LocalDate checkIn, 
+                                                  LocalDate checkOut, Integer numberOfGuests, 
+                                                  Long clientId, Integer pointsToRedeem) {
+        // Get room
+        Room room = roomRepository.findById(roomId)
+            .orElseThrow(() -> new NotFoundException("Room not found with ID: " + roomId));
+
+        // Calculate base price
+        BigDecimal basePrice = calculateTotalPrice(room, checkIn, checkOut, numberOfGuests);
+        
+        // Calculate points discount if points are provided
+        if (pointsToRedeem != null && pointsToRedeem > 0) {
+            // Validate points redemption
+            loyaltyService.validateReservationPointsRedemption(clientId, pointsToRedeem, basePrice);
+            
+            // Calculate discount
+            BigDecimal pointsDiscount = loyaltyService.calculatePointsDiscountAmount(pointsToRedeem);
+            return basePrice.subtract(pointsDiscount).max(BigDecimal.ZERO);
+        }
+        
+        return basePrice;
+    }
+
+    /**
+     * Get maximum redeemable points for a reservation
+     */
+    @Transactional(readOnly = true)
+    public Integer getMaxRedeemablePoints(Long roomId, LocalDate checkIn, LocalDate checkOut, 
+                                        Integer numberOfGuests, Long clientId) {
+        // Get room
+        Room room = roomRepository.findById(roomId)
+            .orElseThrow(() -> new NotFoundException("Room not found with ID: " + roomId));
+
+        // Calculate base price
+        BigDecimal basePrice = calculateTotalPrice(room, checkIn, checkOut, numberOfGuests);
+        
+        // Get maximum redeemable points
+        return loyaltyService.calculateMaxRedeemablePoints(clientId, basePrice);
     }
 
     /**
@@ -237,6 +368,11 @@ public class ReservationService {
         LocalDate today = LocalDate.now();
         if (reservation.getCheckIn().isBefore(today)) {
             throw new BusinessRuleException("Cannot cancel reservation after check-in date has passed");
+        }
+        
+        // Refund points if any were used
+        if (reservation.getPointsUsed() != null && reservation.getPointsUsed() > 0) {
+            loyaltyService.refundReservationPoints(reservationId, reservation.getPointsUsed());
         }
         
         // Update reservation status
