@@ -171,16 +171,21 @@ create index idx_event_booking_user on event_booking(user_id);
 create table announcement (
   id bigserial primary key,
   title varchar(200) not null,
-  body text not null,
-  created_at timestamptz not null default now()
+  content text not null,
+  created_by_user_id bigint not null references app_user(id) on delete restrict,
+  priority varchar(16) not null check (priority in ('LOW','MEDIUM','HIGH','URGENT')),
+  status varchar(16) not null check (status in ('PUBLISHED','ARCHIVED')),
+  created_at timestamptz default now() not null,
+  updated_at timestamptz default now() not null
 );
 
 create table announcement_reply (
   id bigserial primary key,
   announcement_id bigint not null references announcement(id) on delete cascade,
-  employee_user_id bigint not null references employee(user_id) on delete restrict,
+  user_id bigint not null references app_user(id) on delete restrict,
   message text not null,
-  created_at timestamptz not null default now()
+  created_at timestamptz default now() not null,
+  updated_at timestamptz default now() not null
 );
 
 create table employee_task (

@@ -48,17 +48,6 @@ public interface AnnouncementRepository extends JpaRepository<Announcement, Long
     List<Announcement> findByCreatedAtBefore(LocalDateTime date);
     Page<Announcement> findByCreatedAtBefore(LocalDateTime date, Pageable pageable);
     
-    // Find by expiration date range
-    List<Announcement> findByExpiresAtBetween(LocalDateTime startDate, LocalDateTime endDate);
-    Page<Announcement> findByExpiresAtBetween(LocalDateTime startDate, LocalDateTime endDate, Pageable pageable);
-    
-    // Find by expiration date after
-    List<Announcement> findByExpiresAtAfter(LocalDateTime date);
-    Page<Announcement> findByExpiresAtAfter(LocalDateTime date, Pageable pageable);
-    
-    // Find by expiration date before
-    List<Announcement> findByExpiresAtBefore(LocalDateTime date);
-    Page<Announcement> findByExpiresAtBefore(LocalDateTime date, Pageable pageable);
     
     // ==================== COMBINED QUERIES ====================
     
@@ -143,10 +132,6 @@ public interface AnnouncementRepository extends JpaRepository<Announcement, Long
     long countByCreatedAtAfter(LocalDateTime date);
     long countByCreatedAtBefore(LocalDateTime date);
     
-    // Count by expiration date range
-    long countByExpiresAtBetween(LocalDateTime startDate, LocalDateTime endDate);
-    long countByExpiresAtAfter(LocalDateTime date);
-    long countByExpiresAtBefore(LocalDateTime date);
     
     // Count by priority and status
     long countByPriorityAndStatus(AnnouncementPriority priority, AnnouncementStatus status);

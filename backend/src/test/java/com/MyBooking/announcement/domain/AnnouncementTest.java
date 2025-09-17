@@ -50,7 +50,6 @@ class AnnouncementTest {
         assertNull(newAnnouncement.getCreatedBy());
         assertNull(newAnnouncement.getPriority());
         assertNull(newAnnouncement.getStatus());
-        assertNull(newAnnouncement.getExpiresAt());
     }
     
     @Test
@@ -153,13 +152,8 @@ class AnnouncementTest {
         assertEquals(AnnouncementPriority.URGENT, announcement.getPriority());
         
         // Test status
-        announcement.setStatus(AnnouncementStatus.DRAFT);
-        assertEquals(AnnouncementStatus.DRAFT, announcement.getStatus());
-        
-        // Test expiresAt
-        LocalDateTime expiresAt = LocalDateTime.now().plusDays(7);
-        announcement.setExpiresAt(expiresAt);
-        assertEquals(expiresAt, announcement.getExpiresAt());
+        announcement.setStatus(AnnouncementStatus.PUBLISHED);
+        assertEquals(AnnouncementStatus.PUBLISHED, announcement.getStatus());
     }
     
     @Test
@@ -178,9 +172,6 @@ class AnnouncementTest {
         assertEquals(AnnouncementPriority.URGENT, announcement.getPriority());
         
         // Test status enum values
-        announcement.setStatus(AnnouncementStatus.DRAFT);
-        assertEquals(AnnouncementStatus.DRAFT, announcement.getStatus());
-        
         announcement.setStatus(AnnouncementStatus.PUBLISHED);
         assertEquals(AnnouncementStatus.PUBLISHED, announcement.getStatus());
         

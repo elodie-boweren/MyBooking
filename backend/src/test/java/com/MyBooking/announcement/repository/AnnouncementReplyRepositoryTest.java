@@ -64,7 +64,7 @@ class AnnouncementReplyRepositoryTest {
         // Create test announcements
         announcement1 = new Announcement("Hotel Renovation", "The hotel will be renovated next month.", admin1, AnnouncementPriority.HIGH, AnnouncementStatus.PUBLISHED);
         announcement2 = new Announcement("New Services", "We are introducing new services.", admin2, AnnouncementPriority.MEDIUM, AnnouncementStatus.PUBLISHED);
-        announcement3 = new Announcement("Maintenance Notice", "Scheduled maintenance this weekend.", admin1, AnnouncementPriority.LOW, AnnouncementStatus.DRAFT);
+        announcement3 = new Announcement("Maintenance Notice", "Scheduled maintenance this weekend.", admin1, AnnouncementPriority.LOW, AnnouncementStatus.PUBLISHED);
 
         // Set base date time
         baseDateTime = LocalDateTime.now();
@@ -467,7 +467,7 @@ class AnnouncementReplyRepositoryTest {
 
     @Test
     void testFindByNonExistentAnnouncement() {
-        Announcement nonExistentAnnouncement = new Announcement("Non-existent", "This announcement doesn't exist.", admin1, AnnouncementPriority.LOW, AnnouncementStatus.DRAFT);
+        Announcement nonExistentAnnouncement = new Announcement("Non-existent", "This announcement doesn't exist.", admin1, AnnouncementPriority.LOW, AnnouncementStatus.PUBLISHED);
         entityManager.persistAndFlush(nonExistentAnnouncement);
         
         List<AnnouncementReply> replies = announcementReplyRepository.findByAnnouncement(nonExistentAnnouncement);
@@ -485,7 +485,7 @@ class AnnouncementReplyRepositoryTest {
 
     @Test
     void testCountByNonExistentAnnouncement() {
-        Announcement nonExistentAnnouncement = new Announcement("Non-existent", "This announcement doesn't exist.", admin1, AnnouncementPriority.LOW, AnnouncementStatus.DRAFT);
+        Announcement nonExistentAnnouncement = new Announcement("Non-existent", "This announcement doesn't exist.", admin1, AnnouncementPriority.LOW, AnnouncementStatus.PUBLISHED);
         entityManager.persistAndFlush(nonExistentAnnouncement);
         
         long count = announcementReplyRepository.countByAnnouncement(nonExistentAnnouncement);
@@ -494,7 +494,7 @@ class AnnouncementReplyRepositoryTest {
 
     @Test
     void testExistsByNonExistentAnnouncement() {
-        Announcement nonExistentAnnouncement = new Announcement("Non-existent", "This announcement doesn't exist.", admin1, AnnouncementPriority.LOW, AnnouncementStatus.DRAFT);
+        Announcement nonExistentAnnouncement = new Announcement("Non-existent", "This announcement doesn't exist.", admin1, AnnouncementPriority.LOW, AnnouncementStatus.PUBLISHED);
         entityManager.persistAndFlush(nonExistentAnnouncement);
         
         boolean exists = announcementReplyRepository.existsByAnnouncement(nonExistentAnnouncement);
