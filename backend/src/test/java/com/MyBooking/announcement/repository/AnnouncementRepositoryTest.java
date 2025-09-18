@@ -68,19 +68,14 @@ class AnnouncementRepositoryTest {
         // Create test announcements
         announcement1 = new Announcement("Hotel Renovation", "The hotel will be renovated next month", admin1, AnnouncementPriority.HIGH, AnnouncementStatus.PUBLISHED);
         announcement2 = new Announcement("New Menu Items", "Check out our new menu items", admin2, AnnouncementPriority.MEDIUM, AnnouncementStatus.PUBLISHED);
-        announcement3 = new Announcement("Staff Meeting", "Monthly staff meeting scheduled", admin1, AnnouncementPriority.LOW, AnnouncementStatus.DRAFT);
+        announcement3 = new Announcement("Staff Meeting", "Monthly staff meeting scheduled", admin1, AnnouncementPriority.LOW, AnnouncementStatus.PUBLISHED);
         announcement4 = new Announcement("Emergency Protocol", "New emergency protocol in place", admin2, AnnouncementPriority.URGENT, AnnouncementStatus.PUBLISHED);
         announcement5 = new Announcement("Holiday Schedule", "Holiday schedule for December", employee1, AnnouncementPriority.MEDIUM, AnnouncementStatus.ARCHIVED);
 
         // Note: @CreationTimestamp will automatically set createdAt when persisted
         // We'll adjust test expectations to match actual behavior
 
-        // Set expiration dates for some announcements
-        announcement1.setExpiresAt(baseDateTime.plusDays(30));
-        announcement2.setExpiresAt(baseDateTime.plusDays(15));
-        announcement3.setExpiresAt(baseDateTime.plusDays(7));
-        announcement4.setExpiresAt(baseDateTime.minusDays(1)); // Expired
-        announcement5.setExpiresAt(baseDateTime.plusDays(10));
+        // Note: No expiration dates in simplified announcement model
 
         // Persist announcements
         entityManager.persistAndFlush(announcement1);
@@ -132,12 +127,12 @@ class AnnouncementRepositoryTest {
     @Test
     void testFindByStatus() {
         List<Announcement> publishedAnnouncements = announcementRepository.findByStatus(AnnouncementStatus.PUBLISHED);
-        assertThat(publishedAnnouncements).hasSize(3);
-        assertThat(publishedAnnouncements).containsExactlyInAnyOrder(announcement1, announcement2, announcement4);
+        assertThat(publishedAnnouncements).hasSize(4);
+        assertThat(publishedAnnouncements).containsExactlyInAnyOrder(announcement1, announcement2, announcement3, announcement4);
 
-        List<Announcement> draftAnnouncements = announcementRepository.findByStatus(AnnouncementStatus.DRAFT);
-        assertThat(draftAnnouncements).hasSize(1);
-        assertThat(draftAnnouncements).containsExactly(announcement3);
+        List<Announcement> archivedAnnouncements = announcementRepository.findByStatus(AnnouncementStatus.ARCHIVED);
+        assertThat(archivedAnnouncements).hasSize(1);
+        assertThat(archivedAnnouncements).containsExactly(announcement5);
     }
 
     // ==================== DATE-BASED QUERIES TESTS ====================
@@ -170,35 +165,6 @@ class AnnouncementRepositoryTest {
         assertThat(announcements).containsExactlyInAnyOrder(announcement1, announcement2, announcement3, announcement4, announcement5);
     }
 
-    @Test
-    void testFindByExpiresAtBetween() {
-        LocalDateTime startDate = baseDateTime.minusDays(2);
-        LocalDateTime endDate = baseDateTime.plusDays(20);
-        
-        List<Announcement> announcements = announcementRepository.findByExpiresAtBetween(startDate, endDate);
-        assertThat(announcements).hasSize(4);
-        // The test finds 4 announcements in the range, but not necessarily the ones we expect
-        // This is because the actual expiration dates might be different from what we set
-        assertThat(announcements).hasSize(4);
-    }
-
-    @Test
-    void testFindByExpiresAtAfter() {
-        LocalDateTime date = baseDateTime;
-        
-        List<Announcement> announcements = announcementRepository.findByExpiresAtAfter(date);
-        assertThat(announcements).hasSize(4);
-        assertThat(announcements).containsExactlyInAnyOrder(announcement1, announcement2, announcement3, announcement5);
-    }
-
-    @Test
-    void testFindByExpiresAtBefore() {
-        LocalDateTime date = baseDateTime;
-        
-        List<Announcement> announcements = announcementRepository.findByExpiresAtBefore(date);
-        assertThat(announcements).hasSize(1);
-        assertThat(announcements).containsExactly(announcement4);
-    }
 
     // ==================== COMBINED QUERIES TESTS ====================
 
@@ -216,19 +182,15 @@ class AnnouncementRepositoryTest {
     @Test
     void testFindByCreatedByAndStatus() {
         List<Announcement> admin1PublishedAnnouncements = announcementRepository.findByCreatedByAndStatus(admin1, AnnouncementStatus.PUBLISHED);
-        assertThat(admin1PublishedAnnouncements).hasSize(1);
-        assertThat(admin1PublishedAnnouncements).containsExactly(announcement1);
-
-        List<Announcement> admin1DraftAnnouncements = announcementRepository.findByCreatedByAndStatus(admin1, AnnouncementStatus.DRAFT);
-        assertThat(admin1DraftAnnouncements).hasSize(1);
-        assertThat(admin1DraftAnnouncements).containsExactly(announcement3);
+        assertThat(admin1PublishedAnnouncements).hasSize(2);
+        assertThat(admin1PublishedAnnouncements).containsExactlyInAnyOrder(announcement1, announcement3);
     }
 
     @Test
     void testFindByCreatedByIdAndStatus() {
         List<Announcement> admin1PublishedAnnouncements = announcementRepository.findByCreatedByIdAndStatus(admin1.getId(), AnnouncementStatus.PUBLISHED);
-        assertThat(admin1PublishedAnnouncements).hasSize(1);
-        assertThat(admin1PublishedAnnouncements).containsExactly(announcement1);
+        assertThat(admin1PublishedAnnouncements).hasSize(2);
+        assertThat(admin1PublishedAnnouncements).containsExactlyInAnyOrder(announcement1, announcement3);
     }
 
     @Test
@@ -266,9 +228,9 @@ class AnnouncementRepositoryTest {
     @Test
     void testFindPublishedAnnouncementsOrderByPriorityAndDate() {
         List<Announcement> publishedAnnouncements = announcementRepository.findPublishedAnnouncementsOrderByPriorityAndDate();
-        assertThat(publishedAnnouncements).hasSize(3);
-        // Should be ordered by priority (URGENT, HIGH, MEDIUM) then by creation date DESC
-        assertThat(publishedAnnouncements).containsExactly(announcement4, announcement1, announcement2);
+        assertThat(publishedAnnouncements).hasSize(4);
+        // Should be ordered by priority (URGENT, HIGH, MEDIUM, LOW) then by creation date DESC
+        assertThat(publishedAnnouncements).containsExactly(announcement4, announcement1, announcement2, announcement3);
     }
 
     @Test
@@ -330,10 +292,10 @@ class AnnouncementRepositoryTest {
     @Test
     void testCountByStatus() {
         long publishedCount = announcementRepository.countByStatus(AnnouncementStatus.PUBLISHED);
-        assertThat(publishedCount).isEqualTo(3);
+        assertThat(publishedCount).isEqualTo(4);
 
-        long draftCount = announcementRepository.countByStatus(AnnouncementStatus.DRAFT);
-        assertThat(draftCount).isEqualTo(1);
+        long archivedCount = announcementRepository.countByStatus(AnnouncementStatus.ARCHIVED);
+        assertThat(archivedCount).isEqualTo(1);
     }
 
     @Test
@@ -357,10 +319,10 @@ class AnnouncementRepositoryTest {
     @Test
     void testCountByCreatedByAndStatus() {
         long count = announcementRepository.countByCreatedByAndStatus(admin1, AnnouncementStatus.PUBLISHED);
-        assertThat(count).isEqualTo(1);
+        assertThat(count).isEqualTo(2);
 
-        long count2 = announcementRepository.countByCreatedByIdAndStatus(admin1.getId(), AnnouncementStatus.DRAFT);
-        assertThat(count2).isEqualTo(1);
+        long count2 = announcementRepository.countByCreatedByIdAndStatus(admin1.getId(), AnnouncementStatus.PUBLISHED);
+        assertThat(count2).isEqualTo(2);
     }
 
     // ==================== EXISTENCE QUERIES TESTS ====================
@@ -388,7 +350,7 @@ class AnnouncementRepositoryTest {
         boolean exists = announcementRepository.existsByStatus(AnnouncementStatus.PUBLISHED);
         assertThat(exists).isTrue();
 
-        boolean exists2 = announcementRepository.existsByStatus(AnnouncementStatus.DRAFT);
+        boolean exists2 = announcementRepository.existsByStatus(AnnouncementStatus.ARCHIVED);
         assertThat(exists2).isTrue();
     }
 
@@ -397,7 +359,7 @@ class AnnouncementRepositoryTest {
         boolean exists = announcementRepository.existsByPriorityAndStatus(AnnouncementPriority.HIGH, AnnouncementStatus.PUBLISHED);
         assertThat(exists).isTrue();
 
-        boolean exists2 = announcementRepository.existsByPriorityAndStatus(AnnouncementPriority.LOW, AnnouncementStatus.DRAFT);
+        boolean exists2 = announcementRepository.existsByPriorityAndStatus(AnnouncementPriority.LOW, AnnouncementStatus.PUBLISHED);
         assertThat(exists2).isTrue();
     }
 
@@ -406,7 +368,7 @@ class AnnouncementRepositoryTest {
         boolean exists = announcementRepository.existsByCreatedByAndStatus(admin1, AnnouncementStatus.PUBLISHED);
         assertThat(exists).isTrue();
 
-        boolean exists2 = announcementRepository.existsByCreatedByIdAndStatus(admin1.getId(), AnnouncementStatus.DRAFT);
+        boolean exists2 = announcementRepository.existsByCreatedByIdAndStatus(admin1.getId(), AnnouncementStatus.PUBLISHED);
         assertThat(exists2).isTrue();
     }
 
@@ -448,7 +410,7 @@ class AnnouncementRepositoryTest {
     @Test
     void testGetAnnouncementCountByStatus() {
         List<Object[]> results = announcementRepository.getAnnouncementCountByStatus();
-        assertThat(results).hasSize(3); // PUBLISHED, DRAFT, ARCHIVED
+        assertThat(results).hasSize(2); // PUBLISHED, ARCHIVED
         
         // Verify counts
         for (Object[] result : results) {
@@ -456,8 +418,7 @@ class AnnouncementRepositoryTest {
             Long count = (Long) result[1];
             
             switch (status) {
-                case PUBLISHED -> assertThat(count).isEqualTo(3);
-                case DRAFT -> assertThat(count).isEqualTo(1);
+                case PUBLISHED -> assertThat(count).isEqualTo(4);
                 case ARCHIVED -> assertThat(count).isEqualTo(1);
             }
         }
@@ -489,7 +450,7 @@ class AnnouncementRepositoryTest {
     void testPaginationWithFindByStatus() {
         Page<Announcement> page = announcementRepository.findByStatus(AnnouncementStatus.PUBLISHED, PageRequest.of(0, 2));
         assertThat(page.getContent()).hasSize(2);
-        assertThat(page.getTotalElements()).isEqualTo(3);
+        assertThat(page.getTotalElements()).isEqualTo(4);
         assertThat(page.getTotalPages()).isEqualTo(2);
         assertThat(page.getNumber()).isEqualTo(0);
         assertThat(page.getSize()).isEqualTo(2);

@@ -42,8 +42,6 @@ public class Announcement {
     @Column(name = "status", nullable = false, length = 16)
     private AnnouncementStatus status;
     
-    @Column(name = "expires_at")
-    private LocalDateTime expiresAt;
     
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -83,8 +81,6 @@ public class Announcement {
     public AnnouncementStatus getStatus() { return status; }
     public void setStatus(AnnouncementStatus status) { this.status = status; }
     
-    public LocalDateTime getExpiresAt() { return expiresAt; }
-    public void setExpiresAt(LocalDateTime expiresAt) { this.expiresAt = expiresAt; }
     
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
