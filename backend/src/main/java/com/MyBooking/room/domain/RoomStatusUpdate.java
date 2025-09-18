@@ -38,7 +38,6 @@ public class RoomStatusUpdate {
     @Column(name = "notes", length = 500)
     private String notes;
     
-    @NotNull(message = "Update timestamp is required")
     @CreationTimestamp
     @Column(name = "updated_at", nullable = false, updatable = false)
     private LocalDateTime updatedAt;

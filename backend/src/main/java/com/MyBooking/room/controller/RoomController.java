@@ -31,13 +31,14 @@ public class RoomController {
     @Autowired
     private JwtService jwtService;
 
-    // ========== PUBLIC/CLIENT ENDPOINTS ==========
+    // ========== CLIENT & ADMIN ENDPOINTS ==========
 
     /**
-     * GET /api/rooms - List/filter rooms with proper pagination
+     * GET /api/rooms - List/filter rooms with proper pagination (CLIENT & ADMIN ONLY)
      * Supports filtering by: roomType, capacity, price range, status, dates
      */
     @GetMapping
+    @PreAuthorize("hasAnyRole('CLIENT', 'ADMIN')")
     public ResponseEntity<Page<Room>> getRooms(
             @RequestParam(required = false) RoomType roomType,
             @RequestParam(required = false) Integer minCapacity,
@@ -72,9 +73,10 @@ public class RoomController {
     }
 
     /**
-     * GET /api/rooms/{roomId} - Get room details
+     * GET /api/rooms/{roomId} - Get room details (CLIENT & ADMIN ONLY)
      */
     @GetMapping("/{roomId}")
+    @PreAuthorize("hasAnyRole('CLIENT', 'ADMIN')")
     public ResponseEntity<Room> getRoomById(@PathVariable Long roomId) {
         try {
             Room room = roomService.getRoomById(roomId);
@@ -87,9 +89,10 @@ public class RoomController {
     }
 
     /**
-     * GET /api/rooms/{roomId}/availability - Check room availability
+     * GET /api/rooms/{roomId}/availability - Check room availability (CLIENT & ADMIN ONLY)
      */
     @GetMapping("/{roomId}/availability")
+    @PreAuthorize("hasAnyRole('CLIENT', 'ADMIN')")
     public ResponseEntity<?> getRoomAvailability(
             @PathVariable Long roomId,
             @RequestParam(required = false) LocalDate checkIn,
@@ -151,7 +154,8 @@ public class RoomController {
                 room.getPrice(),
                 room.getCurrency(),
                 room.getCapacity(),
-                room.getDescription()
+                room.getDescription(),
+                room.getStatus()
             );
             return ResponseEntity.ok(updatedRoom);
         } catch (NotFoundException e) {
@@ -225,7 +229,7 @@ public class RoomController {
     @PreAuthorize("hasRole('EMPLOYEE')")
     public ResponseEntity<Room> updateRoomStatus(
             @PathVariable Long roomId,
-            @Valid @RequestBody RoomStatusUpdateRequest request,
+            @RequestBody RoomStatusUpdateRequest request,
             HttpServletRequest httpRequest) {
         
         try {
@@ -234,6 +238,7 @@ public class RoomController {
             String username = extractEmailFromToken(authHeader);
             User user = roomService.getUserByUsername(username);
             
+            // Use the simpler updateRoomStatus method without notes and reason
             Room updatedRoom = roomService.updateRoomStatus(
                 roomId,
                 request.getNewStatus(),

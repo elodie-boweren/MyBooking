@@ -47,6 +47,15 @@ public class JwtService {
         .getSubject();
     }
     
+    public String extractRole(String token) {
+        return Jwts.parser()
+        .verifyWith(getSigningKey())
+        .build()
+        .parseSignedClaims(token)
+        .getPayload()
+        .get("role", String.class);
+    }
+    
     // Get signing key
     private SecretKey getSigningKey() {
         // Use the secret key directly as bytes for HMAC
