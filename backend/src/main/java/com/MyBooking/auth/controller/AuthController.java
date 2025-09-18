@@ -50,7 +50,7 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<User> register(@RequestBody User user) {
         try {
-            // Set default role for new users
+            // Set default role for new users if not provided
             if (user.getRole() == null) {
                 user.setRole(Role.CLIENT);
             }
@@ -62,7 +62,8 @@ public class AuthController {
                 user.getLastName(),
                 user.getPhone(),
                 user.getAddress(),
-                user.getBirthDate()
+                user.getBirthDate(),
+                user.getRole()
             );
             return ResponseEntity.status(HttpStatus.CREATED).body(registeredUser);
         } catch (BusinessRuleException e) {
