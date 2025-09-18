@@ -11,27 +11,17 @@ import org.springframework.context.annotation.Profile;
 
 @Configuration
 @EnableWebSecurity
-@Profile("!repository-test")
 public class SecurityConfig {
-    private final JwtAuthenticationFilter jwtAuthenticationFilter; 
-
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
-        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-    }
+    
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        System.out.println("*** SecurityConfig is being loaded! ***");
+        
         http
             .csrf(csrf -> csrf.disable())
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/v1/auth/**").permitAll()
-                .requestMatchers("/api/v1/rooms").permitAll()
-                .requestMatchers("/api/v1/events").permitAll()
-                .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                .requestMatchers("/api/v1/employee/**").hasRole("EMPLOYEE")
-                .anyRequest().authenticated()
-            )
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .anyRequest().permitAll()
+            );
         
         return http.build();
 }

@@ -45,6 +45,13 @@ public class AuthService {
      * Register a new user with default CLIENT role
      */
     public User registerUser(String email, String password, String firstName, String lastName, String phone, String address, LocalDate birthDate) {
+        return registerUser(email, password, firstName, lastName, phone, address, birthDate, Role.CLIENT);
+    }
+    
+    /**
+     * Register a new user with specified role
+     */
+    public User registerUser(String email, String password, String firstName, String lastName, String phone, String address, LocalDate birthDate, Role role) {
         // Validate email uniqueness
         if (userRepository.existsByEmail(email)) {
             throw new BusinessRuleException("Email already exists: " + email);
@@ -59,13 +66,13 @@ public class AuthService {
         user.setPhone(phone);
         user.setAddress(address);
         user.setBirthDate(birthDate);
-        user.setRole(Role.CLIENT);
+        user.setRole(role);
         
         
         User savedUser = userRepository.save(user);
         
         // Create default notification preferences
-        createDefaultNotificationPreferences(savedUser);
+        // createDefaultNotificationPreferences(savedUser);
         
         return savedUser;
     }

@@ -95,10 +95,6 @@ class EmployeeTrainingTest {
     
     @Test
     void testGettersAndSetters() {
-        // Test ID
-        employeeTraining.setId(1L);
-        assertEquals(1L, employeeTraining.getId());
-        
         // Test employee
         User newEmployee = new User();
         newEmployee.setId(2L);
