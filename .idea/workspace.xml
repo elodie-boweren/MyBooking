@@ -1,0 +1,495 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="dd5410aa-f580-4f52-8856-2d5e800ae4ba" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.cursorrules" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitattributes" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.mvn/wrapper/maven-wrapper.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front/Assets/Font/Delius_Swash_Caps/DeliusSwashCaps-Regular.ttf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front/Assets/Font/Delius_Swash_Caps/OFL.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front/Assets/Font/Salsa/OFL.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front/Assets/Font/Salsa/Salsa-Regular.ttf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front/Assets/Images/Background/IMG_1513-1536x1152.jpg.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front/Assets/Images/Background/Nhowpt.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front/Assets/Images/Background/beach.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front/Assets/Images/Background/nhow1.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front/Assets/Images/Background/nhow2.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front/Assets/Images/Background/nhow3.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front/Assets/Images/Background/nhow4.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front/Assets/Images/Background/nhowview.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front/Assets/Images/Background/ocean.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front/Assets/Images/Events/meetingroom.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front/Assets/Images/Events/nhowconference.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front/Assets/Images/Events/showroom.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front/Assets/Images/Events/spa.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front/Assets/Images/Events/weddingroom.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front/Assets/Images/Rooms/Deluxe.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front/Assets/Images/Rooms/Deluxe2.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front/Assets/Images/Rooms/Double.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front/Assets/Images/Rooms/Family.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front/Assets/Images/Rooms/Single.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front/Assets/Images/Rooms/Single2.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front/Assets/Logos/facebook-30.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front/Assets/Logos/instagram-30.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front/Assets/Logos/loyalty-64.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front/Assets/Logos/search-26.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front/Assets/Logos/sign-out-50.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front/Assets/Logos/sign-out-white-50.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front/Assets/Logos/twitter-bird-30.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front/Overlook Hotel graph chart.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front/Overlook_admin_dashboard.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front/Overlook_client_dashboard.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front/Overlook_employee_dashboard.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/.gitattributes" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/.mvn/wrapper/maven-wrapper.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/docker-compose.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/mvnw" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/mvnw.cmd" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pom.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/analytics/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/analytics/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/analytics/controller/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/analytics/dto/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/analytics/service/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/announcement/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/announcement/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/announcement/controller/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/announcement/domain/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/announcement/domain/Announcement.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/announcement/domain/AnnouncementPriority.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/announcement/domain/AnnouncementReply.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/announcement/domain/AnnouncementStatus.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/announcement/dto/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/announcement/repository/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/announcement/service/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/auth/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/auth/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/auth/controller/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/auth/domain/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/auth/domain/NotificationPreference.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/auth/domain/Role.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/auth/domain/User.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/auth/dto/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/auth/repository/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/auth/repository/UserRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/auth/service/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/client/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/client/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/client/controller/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/client/dto/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/client/service/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/common/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/common/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/common/config/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/common/config/CorsConfig.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/common/config/OpenApiConfig.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/common/exception/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/common/exception/BusinessRuleException.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/common/exception/ErrorResponse.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/common/exception/GlobalExceptionHandler.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/common/exception/NotFoundException.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/common/mapper/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/common/mapper/CommonMapper.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/common/mapper/PageResponse.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/common/security/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/common/security/JwtAuthenticationFilter.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/common/security/JwtService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/common/security/PasswordConfig.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/common/security/SecurityConfig.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/common/util/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/common/util/DateUtils.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/common/util/MoneyUtils.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/common/util/PaginationUtils.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/common/util/ValidationUtils.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/employee/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/employee/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/employee/controller/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/employee/domain/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/employee/domain/Employee.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/employee/domain/EmployeeStatus.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/employee/domain/EmployeeTask.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/employee/domain/EmployeeTraining.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/employee/domain/LeaveRequest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/employee/domain/LeaveRequestStatus.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/employee/domain/Shift.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/employee/domain/TaskStatus.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/employee/domain/Training.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/employee/domain/TrainingStatus.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/employee/dto/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/employee/repository/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/employee/service/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/event/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/event/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/event/controller/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/event/domain/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/event/domain/Event.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/event/domain/EventBooking.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/event/domain/EventBookingStatus.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/event/domain/EventNotification.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/event/domain/EventNotificationType.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/event/domain/EventType.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/event/dto/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/event/repository/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/event/service/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/feedback/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/feedback/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/feedback/controller/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/feedback/domain/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/feedback/domain/Feedback.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/feedback/domain/FeedbackReply.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/feedback/dto/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/feedback/repository/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/feedback/service/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/hotel_management/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/hotel_management/HotelManagementApplication.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/hr/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/hr/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/hr/controller/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/hr/domain/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/hr/dto/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/hr/repository/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/hr/service/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/installation/domain/Installation.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/installation/domain/InstallationType.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/loyalty/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/loyalty/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/loyalty/controller/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/loyalty/domain/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/loyalty/domain/LoyaltyAccount.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/loyalty/domain/LoyaltyTransaction.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/loyalty/domain/LoyaltyTransactionType.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/loyalty/dto/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/loyalty/repository/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/loyalty/service/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/reservation/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/reservation/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/reservation/controller/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/reservation/domain/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/reservation/domain/Reservation.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/reservation/domain/ReservationStatus.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/reservation/dto/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/reservation/repository/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/reservation/service/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/room/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/room/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/room/controller/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/room/domain/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/room/domain/Room.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/room/domain/RoomStatus.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/room/domain/RoomType.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/room/dto/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/room/repository/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/room/repository/RoomRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/MyBooking/room/service/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/resources/application.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/resources/application.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/resources/db/migration/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/resources/db/migration/V1__init.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/MyBooking/announcement/domain/AnnouncementReplyTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/MyBooking/announcement/domain/AnnouncementTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/MyBooking/auth/domain/NotificationPreferenceTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/MyBooking/auth/domain/UserTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/MyBooking/auth/repository/UserRepositoryTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/MyBooking/employee/domain/EmployeeTrainingTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/MyBooking/employee/domain/TrainingStatusTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/MyBooking/employee/domain/TrainingTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/MyBooking/event/domain/EventBookingTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/MyBooking/event/domain/EventNotificationTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/MyBooking/event/domain/EventTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/MyBooking/feedback/domain/FeedbackReplyTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/MyBooking/feedback/domain/FeedbackTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/MyBooking/hotel_management/HotelManagementApplicationTests.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/MyBooking/installation/domain/InstallationTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/MyBooking/loyalty/domain/LoyaltyAccountTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/MyBooking/loyalty/domain/LoyaltyTransactionTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/MyBooking/reservation/domain/ReservationTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/MyBooking/room/domain/RoomTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/MyBooking/room/repository/RoomRepositoryTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/resources/application-repository-test.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/resources/application-test.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/modelisation.zip" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/modelisation/MyBooking.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/modelisation/Overlook Hotel - Kickoff.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/modelisation/api/api_endpoints.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/modelisation/api/api_examples.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/modelisation/consistency/consistency_matrix.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/modelisation/consistency/consistency_matrix.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/modelisation/functionalities/functional_requirements.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/modelisation/merise/MCD.mmd" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/modelisation/merise/MCD.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/modelisation/merise/MPD.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/modelisation/merise/MPD.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/modelisation/merise/mcd_link.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/modelisation/merise/mpd_link.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/modelisation/uml/UML.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/modelisation/uml/classes.mmd" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/modelisation/uml/uml_link.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/mvnw" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/mvnw.cmd" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/project_planning.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/analytics/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/analytics/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/analytics/controller/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/analytics/dto/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/analytics/service/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/announcement/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/announcement/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/announcement/controller/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/announcement/domain/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/announcement/dto/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/announcement/repository/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/announcement/service/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/auth/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/auth/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/auth/controller/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/auth/domain/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/auth/dto/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/auth/repository/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/auth/service/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/client/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/client/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/client/controller/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/client/dto/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/client/service/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/common/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/common/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/common/config/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/common/exception/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/common/mapper/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/common/security/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/common/util/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/employee/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/employee/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/employee/controller/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/employee/domain/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/employee/dto/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/employee/repository/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/employee/service/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/event/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/event/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/event/controller/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/event/domain/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/event/dto/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/event/repository/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/event/service/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/feedback/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/feedback/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/feedback/controller/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/feedback/domain/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/feedback/dto/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/feedback/repository/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/feedback/service/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/hotel_management/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/hotel_management/HotelManagementApplication.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/hr/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/hr/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/hr/controller/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/hr/domain/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/hr/dto/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/hr/repository/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/hr/service/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/loyalty/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/loyalty/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/loyalty/controller/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/loyalty/domain/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/loyalty/dto/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/loyalty/repository/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/loyalty/service/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/reservation/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/reservation/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/reservation/controller/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/reservation/domain/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/reservation/dto/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/reservation/repository/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/reservation/service/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/room/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/room/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/room/controller/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/room/domain/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/room/dto/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/room/repository/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/MyBooking/room/service/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/application.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/application.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/db/migration/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/db/migration/V1__init.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/MyBooking/hotel_management/HotelManagementApplicationTests.java" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+        <option value="HTML File" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;elodie-boweren&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/elodie-boweren/MyBooking_overlook_hotel.git&quot;,
+    &quot;accountId&quot;: &quot;4ab3d656-a168-4f82-a801-e56bd49a16c7&quot;
+  }
+}</component>
+  <component name="KubernetesApiPersistence">{}</component>
+  <component name="KubernetesApiProvider">{
+  &quot;isMigrated&quot;: true
+}</component>
+  <component name="MavenImportPreferences">
+    <option name="generalSettings">
+      <MavenGeneralSettings>
+        <option name="mavenHomeTypeForPersistence" value="WRAPPER" />
+      </MavenGeneralSettings>
+    </option>
+  </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 8
+}</component>
+  <component name="ProjectId" id="32Q1EdjtUKfKfHJotgDSdyt030A" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "DefaultHtmlFileTemplate": "HTML File",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RequestMappingsPanelOrder0": "0",
+    "RequestMappingsPanelOrder1": "1",
+    "RequestMappingsPanelWidth0": "75",
+    "RequestMappingsPanelWidth1": "75",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "Spring Boot.HotelManagementApplication.executor": "Run",
+    "git-widget-placeholder": "assets/Elodie",
+    "junie.onboarding.icon.badge.shown": "true",
+    "last_directory_selection": "C:/Users/elodi/OneDrive/Desktop/Projets_plateforme/LOGICIEL/B2/Java/Overlook/MyBooking/src/main/java/com/MyBooking/reservation/controller",
+    "last_opened_file_path": "C:/Users/elodi/OneDrive/Desktop/Projets_plateforme/LOGICIEL/B2/Java/Overlook/MyBooking/src/main/java/com/MyBooking/reservation/service",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "MavenSettings",
+    "to.speed.mode.migration.done": "true",
+    "vue.rearranger.settings.migration": "true"
+  },
+  "keyToStringList": {
+    "DatabaseDriversLRU": [
+      "postgresql"
+    ]
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\elodi\OneDrive\Desktop\Projets_plateforme\LOGICIEL\B2\Java\Overlook\MyBooking\src\main\java\com\MyBooking\reservation\service" />
+      <recent name="C:\Users\elodi\OneDrive\Desktop\Projets_plateforme\LOGICIEL\B2\Java\Overlook\MyBooking\src\main\java\com\MyBooking\reservation\repository" />
+      <recent name="C:\Users\elodi\OneDrive\Desktop\Projets_plateforme\LOGICIEL\B2\Java\Overlook\MyBooking\src\main\java\com\MyBooking\reservation\dto" />
+      <recent name="C:\Users\elodi\OneDrive\Desktop\Projets_plateforme\LOGICIEL\B2\Java\Overlook\MyBooking\src\main\java\com\MyBooking\reservation\domain" />
+      <recent name="C:\Users\elodi\OneDrive\Desktop\Projets_plateforme\LOGICIEL\B2\Java\Overlook\MyBooking\src\main\java\com\MyBooking\reservation\controller" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\elodi\OneDrive\Desktop\Projets_plateforme\LOGICIEL\B2\Java\Overlook\MyBooking\backend\src\main\java\com\MyBooking\reservation\service" />
+    </key>
+    <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
+      <recent name="main.java.com.MyBooking.reservation.controller" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration name="HotelManagementApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <option name="FRAME_DEACTIVATION_UPDATE_POLICY" value="UpdateClassesAndResources" />
+      <module name="hotel-management" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.mybooking.hotel_management.HotelManagementApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="HotelManagementApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <option name="FRAME_DEACTIVATION_UPDATE_POLICY" value="UpdateClassesAndResources" />
+      <module name="hotel-management" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.MyBooking.hotel_management.HotelManagementApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-9823dce3aa75-fbdcb00ec9e3-intellij.indexing.shared.core-IU-251.26094.121" />
+        <option value="bundled-js-predefined-d6986cc7102b-b26f3e71634d-JavaScript-IU-251.26094.121" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="dd5410aa-f580-4f52-8856-2d5e800ae4ba" name="Changes" comment="" />
+      <created>1757337872022</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1757337872022</updated>
+      <workItem from="1757337873761" duration="873000" />
+      <workItem from="1757405746793" duration="59000" />
+      <workItem from="1757407833559" duration="4796000" />
+      <workItem from="1757509640126" duration="5509000" />
+      <workItem from="1757574985142" duration="22124000" />
+      <workItem from="1757662878936" duration="3948000" />
+      <workItem from="1757667002523" duration="9857000" />
+      <workItem from="1757678665078" duration="3076000" />
+      <workItem from="1758008881384" duration="5663000" />
+      <workItem from="1758110915459" duration="1149000" />
+    </task>
+    <task id="LOCAL-00001">
+      <option name="closed" value="true" />
+      <created>1757665847219</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1757665847219</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>
