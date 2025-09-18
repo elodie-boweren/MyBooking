@@ -6,6 +6,7 @@ import com.MyBooking.auth.domain.User;
 import com.MyBooking.auth.dto.ChangePasswordRequestDto;
 import com.MyBooking.auth.dto.LoginRequestDto;
 import com.MyBooking.auth.dto.LoginResponseDto;
+import com.MyBooking.auth.dto.NotificationPreferenceUpdateDto;
 import com.MyBooking.auth.dto.UserResponseDto;
 import com.MyBooking.auth.service.AuthService;
 import com.MyBooking.common.exception.BusinessRuleException;
@@ -209,15 +210,15 @@ public class AuthController {
     @PreAuthorize("hasAnyRole('CLIENT', 'EMPLOYEE', 'ADMIN')")
     public ResponseEntity<NotificationPreference> updateNotificationPreference(
             @RequestHeader("Authorization") String authHeader,
-            @Valid @RequestBody NotificationPreference preference) {
+            @Valid @RequestBody NotificationPreferenceUpdateDto request) {
         try {
             String email = extractEmailFromToken(authHeader);
             NotificationPreference updatedPreference = authService.updateNotificationPreference(
                 email,
-                preference.getNotificationType(),
-                preference.getEmailEnabled(),
-                preference.getSmsEnabled(),
-                preference.getPushEnabled()
+                request.getNotificationType(),
+                request.getEmailEnabled(),
+                request.getSmsEnabled(),
+                request.getPushEnabled()
             );
             return ResponseEntity.ok(updatedPreference);
         } catch (NotFoundException e) {
@@ -259,13 +260,114 @@ public class AuthController {
                 user.getLastName(),
                 user.getPhone(),
                 user.getAddress(),
-                user.getBirthDate()
+                user.getBirthDate(),
+                user.getRole()
             );
             return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
         } catch (BusinessRuleException e) {
             return ResponseEntity.badRequest().build();
         }
     }
+
+    /**
+     * Get user by ID - Admin only
+     */
+    @GetMapping("/users/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UserResponseDto> getUserById(@PathVariable Long userId) {
+        try {
+            User user = authService.getUserById(userId);
+            UserResponseDto response = new UserResponseDto(
+                user.getId(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getEmail(),
+                user.getPhone(),
+                user.getAddress(),
+                user.getBirthDate(),
+                user.getRole(),
+                user.getCreatedAt(),
+                user.getUpdatedAt()
+            );
+            return ResponseEntity.ok(response);
+        } catch (NotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+
+
+    /**
+     * Update user - Admin only
+     */
+    @PutMapping("/users/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UserResponseDto> updateUser(@PathVariable Long userId, @Valid @RequestBody User user) {
+        try {
+            User updatedUser = authService.updateUser(
+                userId,
+                user.getEmail(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getPhone(),
+                user.getAddress(),
+                user.getBirthDate(),
+                user.getRole()
+            );
+            
+            UserResponseDto response = new UserResponseDto(
+                updatedUser.getId(),
+                updatedUser.getFirstName(),
+                updatedUser.getLastName(),
+                updatedUser.getEmail(),
+                updatedUser.getPhone(),
+                updatedUser.getAddress(),
+                updatedUser.getBirthDate(),
+                updatedUser.getRole(),
+                updatedUser.getCreatedAt(),
+                updatedUser.getUpdatedAt()
+            );
+            return ResponseEntity.ok(response);
+        } catch (NotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (BusinessRuleException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    /**
+     * Delete user - Admin only
+     */
+    @DeleteMapping("/users/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long userId) {
+        try {
+            authService.deleteUser(userId);
+            return ResponseEntity.noContent().build();
+        } catch (NotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+
+    /**
+     * Logout user
+     */
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@RequestHeader("Authorization") String authHeader) {
+        try {
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.badRequest().build();
+            }
+            String token = authHeader.substring(7); // Remove "Bearer " prefix
+            authService.logoutUser(token);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+
 
     /**
      * Health check endpoint
