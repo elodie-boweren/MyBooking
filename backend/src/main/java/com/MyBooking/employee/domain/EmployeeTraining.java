@@ -8,17 +8,16 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "employee_training")
+@IdClass(EmployeeTrainingId.class)
 public class EmployeeTraining {
     
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "employee_user_id", nullable = false)
     @NotNull(message = "Employee is required")
     private User employee;
     
+    @Id
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "training_id", nullable = false)
     @NotNull(message = "Training is required")
@@ -46,9 +45,6 @@ public class EmployeeTraining {
     }
     
     // Getters and Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    
     public User getEmployee() { return employee; }
     public void setEmployee(User employee) { this.employee = employee; }
     

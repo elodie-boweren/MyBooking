@@ -1,6 +1,7 @@
 package com.MyBooking.event.repository;
 
 import com.MyBooking.event.domain.Event;
+import com.MyBooking.event.domain.EventBooking;
 import com.MyBooking.event.domain.EventNotification;
 import com.MyBooking.event.domain.EventNotificationType;
 import org.springframework.data.domain.Page;
@@ -18,41 +19,41 @@ public interface EventNotificationRepository extends JpaRepository<EventNotifica
 
     // ==================== BASIC QUERIES ====================
 
-    // Find by event
-    List<EventNotification> findByEvent(Event event);
-    Page<EventNotification> findByEvent(Event event, Pageable pageable);
+    // Find by event booking
+    List<EventNotification> findByEventBooking(EventBooking eventBooking);
+    Page<EventNotification> findByEventBooking(EventBooking eventBooking, Pageable pageable);
     
-    // Find by event ID
-    List<EventNotification> findByEventId(Long eventId);
-    Page<EventNotification> findByEventId(Long eventId, Pageable pageable);
+    // Find by event booking ID
+    List<EventNotification> findByEventBookingId(Long eventBookingId);
+    Page<EventNotification> findByEventBookingId(Long eventBookingId, Pageable pageable);
 
     // ==================== NOTIFICATION TYPE QUERIES ====================
 
     // Find by notification type
-    List<EventNotification> findByNotificationType(EventNotificationType notificationType);
-    Page<EventNotification> findByNotificationType(EventNotificationType notificationType, Pageable pageable);
+    List<EventNotification> findByType(EventNotificationType type);
+    Page<EventNotification> findByType(EventNotificationType type, Pageable pageable);
     
-    // Find by event and notification type
-    List<EventNotification> findByEventAndNotificationType(Event event, EventNotificationType notificationType);
-    Page<EventNotification> findByEventAndNotificationType(Event event, EventNotificationType notificationType, Pageable pageable);
+    // Find by event booking and notification type
+    List<EventNotification> findByEventBookingAndType(EventBooking eventBooking, EventNotificationType type);
+    Page<EventNotification> findByEventBookingAndType(EventBooking eventBooking, EventNotificationType type, Pageable pageable);
     
-    // Find by event ID and notification type
-    List<EventNotification> findByEventIdAndNotificationType(Long eventId, EventNotificationType notificationType);
-    Page<EventNotification> findByEventIdAndNotificationType(Long eventId, EventNotificationType notificationType, Pageable pageable);
+    // Find by event booking ID and notification type
+    List<EventNotification> findByEventBookingIdAndType(Long eventBookingId, EventNotificationType type);
+    Page<EventNotification> findByEventBookingIdAndType(Long eventBookingId, EventNotificationType type, Pageable pageable);
 
     // ==================== ORDERING QUERIES ====================
 
-    // Find by event ordered by creation time (most recent first)
-    List<EventNotification> findByEventOrderByCreatedAtDesc(Event event);
-    List<EventNotification> findByEventIdOrderByCreatedAtDesc(Long eventId);
+    // Find by event booking ordered by creation time (most recent first)
+    List<EventNotification> findByEventBookingOrderByCreatedAtDesc(EventBooking eventBooking);
+    List<EventNotification> findByEventBookingIdOrderByCreatedAtDesc(Long eventBookingId);
     
-    // Find by event ordered by creation time (oldest first)
-    List<EventNotification> findByEventOrderByCreatedAtAsc(Event event);
-    List<EventNotification> findByEventIdOrderByCreatedAtAsc(Long eventId);
+    // Find by event booking ordered by creation time (oldest first)
+    List<EventNotification> findByEventBookingOrderByCreatedAtAsc(EventBooking eventBooking);
+    List<EventNotification> findByEventBookingIdOrderByCreatedAtAsc(Long eventBookingId);
     
     // Find by notification type ordered by creation time
-    List<EventNotification> findByNotificationTypeOrderByCreatedAtDesc(EventNotificationType notificationType);
-    List<EventNotification> findByNotificationTypeOrderByCreatedAtAsc(EventNotificationType notificationType);
+    List<EventNotification> findByTypeOrderByCreatedAtDesc(EventNotificationType type);
+    List<EventNotification> findByTypeOrderByCreatedAtAsc(EventNotificationType type);
 
     // ==================== DATE-BASED QUERIES ====================
 
@@ -68,72 +69,68 @@ public interface EventNotificationRepository extends JpaRepository<EventNotifica
     List<EventNotification> findByCreatedAtBefore(LocalDateTime date);
     Page<EventNotification> findByCreatedAtBefore(LocalDateTime date, Pageable pageable);
     
-    // Find by event and creation date range
-    List<EventNotification> findByEventAndCreatedAtBetween(Event event, LocalDateTime startDate, LocalDateTime endDate);
-    Page<EventNotification> findByEventAndCreatedAtBetween(Event event, LocalDateTime startDate, LocalDateTime endDate, Pageable pageable);
+    // Find by event booking and creation date range
+    List<EventNotification> findByEventBookingAndCreatedAtBetween(EventBooking eventBooking, LocalDateTime startDate, LocalDateTime endDate);
+    Page<EventNotification> findByEventBookingAndCreatedAtBetween(EventBooking eventBooking, LocalDateTime startDate, LocalDateTime endDate, Pageable pageable);
 
     // ==================== SEARCH QUERIES ====================
 
     // Find by message containing (case-insensitive)
     List<EventNotification> findByMessageContainingIgnoreCase(String message);
     Page<EventNotification> findByMessageContainingIgnoreCase(String message, Pageable pageable);
-    
-    // Find by title containing (case-insensitive)
-    List<EventNotification> findByTitleContainingIgnoreCase(String title);
-    Page<EventNotification> findByTitleContainingIgnoreCase(String title, Pageable pageable);
 
     // ==================== CUSTOM BUSINESS QUERIES ====================
 
     // Find recent notifications for an event
-    @Query("SELECT en FROM EventNotification en WHERE en.event = :event ORDER BY en.createdAt DESC")
+    @Query("SELECT en FROM EventNotification en WHERE en.eventBooking.event = :event ORDER BY en.createdAt DESC")
     List<EventNotification> findRecentByEvent(@Param("event") Event event, Pageable pageable);
     
-    @Query("SELECT en FROM EventNotification en WHERE en.event.id = :eventId ORDER BY en.createdAt DESC")
+    @Query("SELECT en FROM EventNotification en WHERE en.eventBooking.event.id = :eventId ORDER BY en.createdAt DESC")
     List<EventNotification> findRecentByEventId(@Param("eventId") Long eventId, Pageable pageable);
     
     // Find notifications by type in date range
-    @Query("SELECT en FROM EventNotification en WHERE en.notificationType = :type AND en.createdAt BETWEEN :startDate AND :endDate ORDER BY en.createdAt DESC")
-    List<EventNotification> findByTypeInPeriod(@Param("type") EventNotificationType notificationType, @Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
+    @Query("SELECT en FROM EventNotification en WHERE en.type = :type AND en.createdAt BETWEEN :startDate AND :endDate ORDER BY en.createdAt DESC")
+    List<EventNotification> findByTypeInPeriod(@Param("type") EventNotificationType type, @Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
     
     // Find latest notification for an event
-    @Query("SELECT en FROM EventNotification en WHERE en.event = :event ORDER BY en.createdAt DESC")
+    @Query("SELECT en FROM EventNotification en WHERE en.eventBooking.event = :event ORDER BY en.createdAt DESC")
     List<EventNotification> findLatestByEvent(@Param("event") Event event, Pageable pageable);
     
-    @Query("SELECT en FROM EventNotification en WHERE en.event.id = :eventId ORDER BY en.createdAt DESC")
+    @Query("SELECT en FROM EventNotification en WHERE en.eventBooking.event.id = :eventId ORDER BY en.createdAt DESC")
     List<EventNotification> findLatestByEventId(@Param("eventId") Long eventId, Pageable pageable);
     
     // Find notifications for events in date range
-    @Query("SELECT en FROM EventNotification en WHERE en.event.startAt BETWEEN :startDate AND :endDate ORDER BY en.createdAt DESC")
+    @Query("SELECT en FROM EventNotification en WHERE en.eventBooking.event.startAt BETWEEN :startDate AND :endDate ORDER BY en.createdAt DESC")
     List<EventNotification> findForEventsInPeriod(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
 
     // ==================== COUNT QUERIES ====================
 
-    // Count by event
-    long countByEvent(Event event);
-    long countByEventId(Long eventId);
+    // Count by event booking
+    long countByEventBooking(EventBooking eventBooking);
+    long countByEventBookingId(Long eventBookingId);
     
     // Count by notification type
-    long countByNotificationType(EventNotificationType notificationType);
+    long countByType(EventNotificationType type);
     
-    // Count by event and notification type
-    long countByEventAndNotificationType(Event event, EventNotificationType notificationType);
-    long countByEventIdAndNotificationType(Long eventId, EventNotificationType notificationType);
+    // Count by event booking and notification type
+    long countByEventBookingAndType(EventBooking eventBooking, EventNotificationType type);
+    long countByEventBookingIdAndType(Long eventBookingId, EventNotificationType type);
     
     // Count by creation date range
     long countByCreatedAtBetween(LocalDateTime startDate, LocalDateTime endDate);
 
     // ==================== EXISTENCE QUERIES ====================
 
-    // Check existence by event
-    boolean existsByEvent(Event event);
-    boolean existsByEventId(Long eventId);
+    // Check existence by event booking
+    boolean existsByEventBooking(EventBooking eventBooking);
+    boolean existsByEventBookingId(Long eventBookingId);
     
     // Check existence by notification type
-    boolean existsByNotificationType(EventNotificationType notificationType);
+    boolean existsByType(EventNotificationType type);
     
-    // Check existence by event and notification type
-    boolean existsByEventAndNotificationType(Event event, EventNotificationType notificationType);
-    boolean existsByEventIdAndNotificationType(Long eventId, EventNotificationType notificationType);
+    // Check existence by event booking and notification type
+    boolean existsByEventBookingAndType(EventBooking eventBooking, EventNotificationType type);
+    boolean existsByEventBookingIdAndType(Long eventBookingId, EventNotificationType type);
 
     // ==================== AGGREGATION QUERIES ====================
 
@@ -141,18 +138,18 @@ public interface EventNotificationRepository extends JpaRepository<EventNotifica
     long count();
 
     // Get notification count by event
-    @Query("SELECT en.event.id, COUNT(en) FROM EventNotification en GROUP BY en.event.id")
+    @Query("SELECT en.eventBooking.event.id, COUNT(en) FROM EventNotification en GROUP BY en.eventBooking.event.id")
     List<Object[]> getNotificationCountByEvent();
     
     // Get notification count by type
-    @Query("SELECT en.notificationType, COUNT(en) FROM EventNotification en GROUP BY en.notificationType")
+    @Query("SELECT en.type, COUNT(en) FROM EventNotification en GROUP BY en.type")
     List<Object[]> getNotificationCountByType();
     
     // Get notification count by event and type
-    @Query("SELECT en.event.id, en.notificationType, COUNT(en) FROM EventNotification en GROUP BY en.event.id, en.notificationType")
+    @Query("SELECT en.eventBooking.event.id, en.type, COUNT(en) FROM EventNotification en GROUP BY en.eventBooking.event.id, en.type")
     List<Object[]> getNotificationCountByEventAndType();
     
     // Get recent notification statistics
-    @Query("SELECT en.notificationType, COUNT(en) FROM EventNotification en WHERE en.createdAt >= :since GROUP BY en.notificationType")
+    @Query("SELECT en.type, COUNT(en) FROM EventNotification en WHERE en.createdAt >= :since GROUP BY en.type")
     List<Object[]> getRecentNotificationStatistics(@Param("since") LocalDateTime since);
 }

@@ -32,8 +32,8 @@ public interface RoomStatusUpdateRepository extends JpaRepository<RoomStatusUpda
     Page<RoomStatusUpdate> findByUpdatedBy(User user, Pageable pageable);
     
     // Find by updated by user ID
-    List<RoomStatusUpdate> findByUpdatedByUserId(Long userId);
-    Page<RoomStatusUpdate> findByUpdatedByUserId(Long userId, Pageable pageable);
+    List<RoomStatusUpdate> findByUpdatedById(Long userId);
+    Page<RoomStatusUpdate> findByUpdatedById(Long userId, Pageable pageable);
 
     // ==================== STATUS QUERIES ====================
 
@@ -65,7 +65,7 @@ public interface RoomStatusUpdateRepository extends JpaRepository<RoomStatusUpda
     
     // Find by user ordered by update time (most recent first)
     List<RoomStatusUpdate> findByUpdatedByOrderByUpdatedAtDesc(User user);
-    List<RoomStatusUpdate> findByUpdatedByUserIdOrderByUpdatedAtDesc(Long userId);
+    List<RoomStatusUpdate> findByUpdatedByIdOrderByUpdatedAtDesc(Long userId);
 
     // ==================== DATE-BASED QUERIES ====================
 
@@ -153,7 +153,7 @@ public interface RoomStatusUpdateRepository extends JpaRepository<RoomStatusUpda
     
     // Count by user
     long countByUpdatedBy(User user);
-    long countByUpdatedByUserId(Long userId);
+    long countByUpdatedById(Long userId);
     
     // Count by status
     long countByPreviousStatus(RoomStatus previousStatus);
@@ -180,7 +180,7 @@ public interface RoomStatusUpdateRepository extends JpaRepository<RoomStatusUpda
     
     // Check existence by user
     boolean existsByUpdatedBy(User user);
-    boolean existsByUpdatedByUserId(Long userId);
+    boolean existsByUpdatedById(Long userId);
     
     // Check existence by status change
     boolean existsByPreviousStatusAndNewStatus(RoomStatus previousStatus, RoomStatus newStatus);

@@ -65,7 +65,7 @@ public class AuthService {
         User savedUser = userRepository.save(user);
         
         // Create default notification preferences
-        createDefaultNotificationPreferences(savedUser);
+        // createDefaultNotificationPreferences(savedUser);
         
         return savedUser;
     }
