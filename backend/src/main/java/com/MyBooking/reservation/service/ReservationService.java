@@ -9,6 +9,7 @@ package com.MyBooking.reservation.service;
 import com.MyBooking.reservation.domain.Reservation;
 import com.MyBooking.reservation.domain.ReservationStatus;
 import com.MyBooking.reservation.repository.ReservationRepository;
+import com.MyBooking.reservation.dto.*;
 import com.MyBooking.room.domain.Room;
 import com.MyBooking.room.domain.RoomStatus;
 import com.MyBooking.room.repository.RoomRepository;
@@ -357,6 +358,7 @@ public class ReservationService {
     /**
      * Cancel a reservation with business rules
      */
+    @Transactional
     public void cancelReservation(Long reservationId, String reason) {
         Reservation reservation = getReservationById(reservationId);
         
@@ -554,6 +556,209 @@ public class ReservationService {
     @Transactional(readOnly = true)
     public Page<Reservation> getAllReservations(Pageable pageable) {
         return reservationRepository.findAll(pageable);
+    }
+
+    // ========== DTO CONVERSION METHODS ==========
+
+    /**
+     * Convert Reservation entity to ReservationResponseDto
+     */
+    private ReservationResponseDto convertToResponseDto(Reservation reservation) {
+        ReservationResponseDto dto = new ReservationResponseDto();
+        dto.setId(reservation.getId());
+        dto.setCheckIn(reservation.getCheckIn());
+        dto.setCheckOut(reservation.getCheckOut());
+        dto.setNumberOfGuests(reservation.getNumberOfGuests());
+        dto.setTotalPrice(reservation.getTotalPrice());
+        dto.setCurrency(reservation.getCurrency());
+        dto.setStatus(reservation.getStatus());
+        dto.setClientId(reservation.getClient().getId());
+        dto.setClientName(reservation.getClient().getFullName());
+        dto.setClientEmail(reservation.getClient().getEmail());
+        dto.setRoomId(reservation.getRoom().getId());
+        dto.setRoomNumber(reservation.getRoom().getNumber());
+        dto.setRoomType(reservation.getRoom().getRoomType().toString());
+        dto.setCreatedAt(reservation.getCreatedAt());
+        dto.setUpdatedAt(reservation.getUpdatedAt());
+        return dto;
+    }
+
+    // ========== CONTROLLER-SPECIFIC METHODS ==========
+
+    /**
+     * Create reservation from DTO (Client controller)
+     */
+    public ReservationResponseDto createReservation(ReservationCreateRequestDto request, Long clientId) {
+        Reservation reservation = createReservation(
+            request.getRoomId(), 
+            clientId, 
+            request.getCheckIn(), 
+            request.getCheckOut(), 
+            request.getNumberOfGuests(), 
+            request.getCurrency()
+        );
+        return convertToResponseDto(reservation);
+    }
+
+    /**
+     * Get reservations by client ID with pagination (returns DTOs)
+     */
+    @Transactional(readOnly = true)
+    public Page<ReservationResponseDto> getReservationsByClientId(Long clientId, Pageable pageable) {
+        Page<Reservation> reservations = reservationRepository.findByClientId(clientId, pageable);
+        return reservations.map(this::convertToResponseDto);
+    }
+
+    /**
+     * Get reservation by ID and client ID (Client can only see their own)
+     */
+    @Transactional(readOnly = true)
+    public ReservationResponseDto getReservationByIdAndClientId(Long id, Long clientId) {
+        Reservation reservation = getReservationById(id);
+        if (!reservation.getClient().getId().equals(clientId)) {
+            throw new BusinessRuleException("You can only view your own reservations");
+        }
+        return convertToResponseDto(reservation);
+    }
+
+    /**
+     * Update reservation from DTO (Client controller)
+     */
+    public ReservationResponseDto updateReservation(Long id, ReservationUpdateRequestDto request, Long clientId) {
+        Reservation reservation = getReservationById(id);
+        if (!reservation.getClient().getId().equals(clientId)) {
+            throw new BusinessRuleException("You can only update your own reservations");
+        }
+        
+        Reservation updatedReservation = updateReservation(
+            id, 
+            request.getCheckIn(), 
+            request.getCheckOut(), 
+            request.getNumberOfGuests(), 
+            reservation.getCurrency()
+        );
+        return convertToResponseDto(updatedReservation);
+    }
+
+    /**
+     * Update reservation from DTO (Admin controller)
+     */
+    public ReservationResponseDto updateReservation(Long id, ReservationUpdateRequestDto request) {
+        Reservation updatedReservation = updateReservation(
+            id, 
+            request.getCheckIn(), 
+            request.getCheckOut(), 
+            request.getNumberOfGuests(), 
+            getReservationById(id).getCurrency()
+        );
+        return convertToResponseDto(updatedReservation);
+    }
+
+    /**
+     * Cancel reservation (Client controller)
+     */
+    @Transactional
+    public void cancelReservation(Long id, Long clientId) {
+        Reservation reservation = getReservationById(id);
+        if (!reservation.getClient().getId().equals(clientId)) {
+            throw new BusinessRuleException("You can only cancel your own reservations");
+        }
+        cancelReservation(id, "Cancelled by client");
+    }
+
+    /**
+     * Cancel reservation (Admin controller)
+     */
+    @Transactional
+    public void cancelReservation(Long id) {
+        cancelReservation(id, "Cancelled by admin");
+    }
+
+    /**
+     * Get reservation by ID (returns DTO)
+     */
+    @Transactional(readOnly = true)
+    public ReservationResponseDto getReservationByIdAsDto(Long id) {
+        Reservation reservation = getReservationById(id);
+        return convertToResponseDto(reservation);
+    }
+
+    /**
+     * Search reservations with criteria DTO
+     */
+    @Transactional(readOnly = true)
+    public Page<ReservationResponseDto> searchReservations(ReservationSearchCriteriaDto criteria, Pageable pageable) {
+        Page<Reservation> reservations = searchReservations(
+            criteria.getClientId(),
+            criteria.getRoomId(),
+            criteria.getStatus(),
+            null, // minPrice
+            null, // maxPrice
+            null, // currency
+            null, // minGuests
+            null, // maxGuests
+            criteria.getCheckInFrom(),
+            criteria.getCheckInTo(),
+            pageable
+        );
+        return reservations.map(this::convertToResponseDto);
+    }
+
+    /**
+     * Reassign reservation to different room
+     */
+    public ReservationResponseDto reassignReservation(Long id, Long newRoomId) {
+        Reservation reservation = getReservationById(id);
+        
+        // Validate new room
+        Room newRoom = roomRepository.findById(newRoomId)
+            .orElseThrow(() -> new NotFoundException("Room not found with ID: " + newRoomId));
+        
+        // Check if new room is available for the reservation dates
+        checkRoomAvailabilityForUpdate(newRoomId, reservation.getCheckIn(), reservation.getCheckOut(), id);
+        
+        // Update reservation
+        reservation.setRoom(newRoom);
+        Reservation updatedReservation = reservationRepository.save(reservation);
+        
+        return convertToResponseDto(updatedReservation);
+    }
+
+    /**
+     * Get reservations by room ID with pagination (returns DTOs)
+     */
+    @Transactional(readOnly = true)
+    public Page<ReservationResponseDto> getReservationsByRoomId(Long roomId, Pageable pageable) {
+        Page<Reservation> reservations = reservationRepository.findByRoomId(roomId, pageable);
+        return reservations.map(this::convertToResponseDto);
+    }
+
+    /**
+     * Get reservations by status with pagination (returns DTOs)
+     */
+    @Transactional(readOnly = true)
+    public Page<ReservationResponseDto> getReservationsByStatus(ReservationStatus status, Pageable pageable) {
+        Page<Reservation> reservations = reservationRepository.findByStatus(status, pageable);
+        return reservations.map(this::convertToResponseDto);
+    }
+
+    /**
+     * Get reservations by date range with pagination (returns DTOs)
+     */
+    @Transactional(readOnly = true)
+    public Page<ReservationResponseDto> getReservationsByDateRange(LocalDate startDate, LocalDate endDate, Pageable pageable) {
+        Page<Reservation> reservations = reservationRepository.findByCheckInBetween(startDate, endDate, pageable);
+        return reservations.map(this::convertToResponseDto);
+    }
+
+    /**
+     * Get user ID by email (for JWT token extraction)
+     */
+    @Transactional(readOnly = true)
+    public Long getUserIdByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new NotFoundException("User not found with email: " + email));
+        return user.getId();
     }
 
     // ========== INNER CLASSES ==========
