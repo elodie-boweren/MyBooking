@@ -72,7 +72,7 @@ public class AuthService {
         User savedUser = userRepository.save(user);
         
         // Create default notification preferences
-        // createDefaultNotificationPreferences(savedUser);
+        createDefaultNotificationPreferences(savedUser);
         
         return savedUser;
     }
@@ -187,6 +187,94 @@ public class AuthService {
     @Transactional(readOnly = true)
     public List<User> getUsersByRole(Role role) {
         return userRepository.findByRole(role);
+    }
+
+    /**
+     * Get user by ID (Admin only)
+     */
+    @Transactional(readOnly = true)
+    public User getUserById(Long userId) {
+        return userRepository.findById(userId)
+            .orElseThrow(() -> new NotFoundException("User not found with ID: " + userId));
+    }
+
+    /**
+     * Create user (Admin only)
+     */
+    public User createUser(String email, String password, String firstName, String lastName, 
+                          String phone, String address, LocalDate birthDate, Role role) {
+        // Validate email uniqueness
+        if (userRepository.existsByEmail(email)) {
+            throw new BusinessRuleException("Email already exists: " + email);
+        }
+        
+        // Create new user
+        User user = new User();
+        user.setEmail(email);
+        user.setPassword(passwordEncoder.encode(password));
+        user.setFirstName(firstName);
+        user.setLastName(lastName);
+        user.setPhone(phone);
+        user.setAddress(address);
+        user.setBirthDate(birthDate);
+        user.setRole(role);
+        
+        User savedUser = userRepository.save(user);
+        
+        // Create default notification preferences
+        createDefaultNotificationPreferences(savedUser);
+        
+        return savedUser;
+    }
+
+    /**
+     * Update user (Admin only)
+     */
+    public User updateUser(Long userId, String email, String firstName, String lastName, 
+                          String phone, String address, LocalDate birthDate, Role role) {
+        User user = getUserById(userId);
+        
+        // Check if email is being changed and if it's unique
+        if (!user.getEmail().equals(email) && userRepository.existsByEmail(email)) {
+            throw new BusinessRuleException("Email already exists: " + email);
+        }
+        
+        user.setEmail(email);
+        user.setFirstName(firstName);
+        user.setLastName(lastName);
+        user.setPhone(phone);
+        user.setAddress(address);
+        user.setBirthDate(birthDate);
+        user.setRole(role);
+        
+        return userRepository.save(user);
+    }
+
+    /**
+     * Delete user (Admin only)
+     */
+    public void deleteUser(Long userId) {
+        User user = getUserById(userId);
+        userRepository.delete(user);
+    }
+
+
+    /**
+     * Logout user (invalidate token)
+     */
+    public void logoutUser(String token) {
+        // Basic implementation: just log the logout
+        // In a real application, you would:
+        // 1. Add token to blacklist
+        // 2. Store in Redis or database
+        // 3. Check blacklist in JWT filter
+        
+        // For now, just validate token format and log
+        if (token == null || token.trim().isEmpty()) {
+            throw new BusinessRuleException("Token is required");
+        }
+        
+        System.out.println("User logged out successfully with token: " + token.substring(0, Math.min(20, token.length())) + "...");
     }
 
     /**

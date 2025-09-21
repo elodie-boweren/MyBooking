@@ -173,7 +173,7 @@ class RoomServiceTest {
         
         // When
         Room result = roomService.updateRoom(roomId, newNumber, RoomType.SINGLE, 
-            BigDecimal.valueOf(120.00), "USD", 1, "Updated description");
+            BigDecimal.valueOf(120.00), "USD", 1, "Updated description", RoomStatus.AVAILABLE);
         
         // Then
         assertThat(result).isNotNull();
