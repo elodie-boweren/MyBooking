@@ -1,0 +1,1354 @@
+{
+	"info": {
+		"_postman_id": "mybooking-hotel-management-api",
+		"name": "MyBooking Hotel Management API",
+		"description": "Comprehensive API collection for MyBooking Hotel Management System - Overlook Hotel\n\n## Features:\n- 🔐 JWT Authentication with role-based access control\n- 🏨 Room management with pagination and filtering\n- 👥 User management (Admin only)\n- 📧 Notification preferences\n- 🔍 Employee-specific room search\n\n## User Roles:\n- **CLIENT**: Can view rooms, make reservations\n- **EMPLOYEE**: Can search rooms, update room status\n- **ADMIN**: Full access to all endpoints\n\n## Base URL: http://localhost:8080\n\n## Authentication:\nAll endpoints (except login/register) require JWT token in Authorization header:\n`Authorization: Bearer <your-jwt-token>`",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "🔐 Authentication",
+			"item": [
+				{
+					"name": "Login (Admin)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.environment.set('admin_token', response.token);",
+									"    pm.environment.set('admin_user_id', response.userId);",
+									"    console.log('Admin token saved:', response.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@hotel.com\",\n  \"password\": \"Admin123@\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Login as admin user to get JWT token"
+					},
+					"response": []
+				},
+				{
+					"name": "Login (Client)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.environment.set('client_token', response.token);",
+									"    pm.environment.set('client_user_id', response.userId);",
+									"    console.log('Client token saved:', response.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"sergey@example.com\",\n  \"password\": \"Pass123@\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Login as client user to get JWT token"
+					},
+					"response": []
+				},
+				{
+					"name": "Login (Employee)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.environment.set('employee_token', response.token);",
+									"    pm.environment.set('employee_user_id', response.userId);",
+									"    console.log('Employee token saved:', response.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"employee@hotel.com\",\n  \"password\": \"Employee123@\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Login as employee user to get JWT token"
+					},
+					"response": []
+				},
+				{
+					"name": "Register New User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"newuser@example.com\",\n  \"password\": \"NewUser123@\",\n  \"firstName\": \"New\",\n  \"lastName\": \"User\",\n  \"phone\": \"1234567890\",\n  \"address\": \"123 Main St, City, Country\",\n  \"birthDate\": \"1990-01-01\",\n  \"role\": \"CLIENT\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						},
+						"description": "Register a new user account"
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/auth/logout",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"logout"
+							]
+						},
+						"description": "Logout current user (JWT token remains valid until expiration)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/auth/profile",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"profile"
+							]
+						},
+						"description": "Get current user profile information"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Profile",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"Updated\",\n  \"lastName\": \"Name\",\n  \"phone\": \"9876543210\",\n  \"address\": \"456 Updated St, New City, Country\",\n  \"birthDate\": \"1985-05-15\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/profile",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"profile"
+							]
+						},
+						"description": "Update current user profile"
+					},
+					"response": []
+				},
+				{
+					"name": "Change Password",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"currentPassword\": \"Admin123@\",\n  \"newPassword\": \"NewAdmin123@\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/change-password",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"change-password"
+							]
+						},
+						"description": "Change user password"
+					},
+					"response": []
+				},
+				{
+					"name": "Reset Password",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@hotel.com\",\n  \"newPassword\": \"ResetPassword123@\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/reset-password?email=admin@hotel.com&newPassword=ResetPassword123@",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"reset-password"
+							],
+							"query": [
+								{
+									"key": "email",
+									"value": "admin@hotel.com"
+								},
+								{
+									"key": "newPassword",
+									"value": "ResetPassword123@"
+								}
+							]
+						},
+						"description": "Reset user password (admin function)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Notification Preferences",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/auth/notification-preferences",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"notification-preferences"
+							]
+						},
+						"description": "Get user notification preferences"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Notification Preferences",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"notificationType\": \"RESERVATION\",\n  \"emailEnabled\": true,\n  \"smsEnabled\": false,\n  \"pushEnabled\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/notification-preferences",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"notification-preferences"
+							]
+						},
+						"description": "Update notification preferences for specific notification type"
+					},
+					"response": []
+				},
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/auth/health",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"health"
+							]
+						},
+						"description": "Check if auth service is running"
+					},
+					"response": []
+				}
+			],
+			"description": "Authentication and user profile management endpoints"
+		},
+		{
+			"name": "👨‍💼 Admin User Management",
+			"item": [
+				{
+					"name": "List All Users",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/auth/users",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"users"
+							]
+						},
+						"description": "Get all users (Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Users by Role (CLIENT)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/auth/users/role/CLIENT",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"users",
+								"role",
+								"CLIENT"
+							]
+						},
+						"description": "Get all users with CLIENT role (Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Users by Role (EMPLOYEE)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/auth/users/role/EMPLOYEE",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"users",
+								"role",
+								"EMPLOYEE"
+							]
+						},
+						"description": "Get all users with EMPLOYEE role (Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Users by Role (ADMIN)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/auth/users/role/ADMIN",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"users",
+								"role",
+								"ADMIN"
+							]
+						},
+						"description": "Get all users with ADMIN role (Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get User by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/auth/users/{{admin_user_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"users",
+								"{{admin_user_id}}"
+							]
+						},
+						"description": "Get specific user by ID (Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Create User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"newemployee@hotel.com\",\n  \"password\": \"Employee123@\",\n  \"firstName\": \"New\",\n  \"lastName\": \"Employee\",\n  \"phone\": \"5555555555\",\n  \"address\": \"789 Employee St, Hotel City, Country\",\n  \"birthDate\": \"1988-03-20\",\n  \"role\": \"EMPLOYEE\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/users",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"users"
+							]
+						},
+						"description": "Create new user (Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Update User",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"updated@hotel.com\",\n  \"firstName\": \"Updated\",\n  \"lastName\": \"User\",\n  \"phone\": \"1111111111\",\n  \"address\": \"999 Updated Address, City, Country\",\n  \"birthDate\": \"1990-01-01\",\n  \"role\": \"CLIENT\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/users/{{admin_user_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"users",
+								"{{admin_user_id}}"
+							]
+						},
+						"description": "Update user information (Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete User",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/auth/users/{{admin_user_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"users",
+								"{{admin_user_id}}"
+							]
+						},
+						"description": "Delete user (Admin only) - Use with caution!"
+					},
+					"response": []
+				}
+			],
+			"description": "Admin-only user management endpoints"
+		},
+		{
+			"name": "🏨 Room Management",
+			"item": [
+				{
+					"name": "📋 List All Rooms (Client/Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/rooms?page=0&size=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"rooms"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Get paginated list of all rooms (Client/Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "🔍 Filter Rooms by Type",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/rooms?roomType=SUITE&page=0&size=5",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"rooms"
+							],
+							"query": [
+								{
+									"key": "roomType",
+									"value": "SUITE"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "5"
+								}
+							]
+						},
+						"description": "Filter rooms by type (SUITE, DELUXE, STANDARD)"
+					},
+					"response": []
+				},
+				{
+					"name": "💰 Filter Rooms by Price Range",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/rooms?minPrice=100&maxPrice=300&page=0&size=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"rooms"
+							],
+							"query": [
+								{
+									"key": "minPrice",
+									"value": "100"
+								},
+								{
+									"key": "maxPrice",
+									"value": "300"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Filter rooms by price range"
+					},
+					"response": []
+				},
+				{
+					"name": "👥 Filter Rooms by Capacity",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/rooms?minCapacity=2&page=0&size=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"rooms"
+							],
+							"query": [
+								{
+									"key": "minCapacity",
+									"value": "2"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Filter rooms by minimum capacity"
+					},
+					"response": []
+				},
+				{
+					"name": "📅 Check Room Availability",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/rooms/1/availability?checkIn=2024-12-01&checkOut=2024-12-05",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"rooms",
+								"1",
+								"availability"
+							],
+							"query": [
+								{
+									"key": "checkIn",
+									"value": "2024-12-01"
+								},
+								{
+									"key": "checkOut",
+									"value": "2024-12-05"
+								}
+							]
+						},
+						"description": "Check if specific room is available for date range"
+					},
+					"response": []
+				},
+				{
+					"name": "📋 Get Room by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/rooms/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"rooms",
+								"1"
+							]
+						},
+						"description": "Get specific room details by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "➕ Create Room (Admin Only)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"number\": \"101\",\n  \"roomType\": \"DELUXE\",\n  \"capacity\": 2,\n  \"price\": 150.00,\n  \"currency\": \"EUR\",\n  \"description\": \"Beautiful deluxe room with city view\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/rooms",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"rooms"
+							]
+						},
+						"description": "Create new room (Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "✏️ Update Room (Admin Only)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"number\": \"101\",\n  \"roomType\": \"SUITE\",\n  \"capacity\": 4,\n  \"price\": 250.00,\n  \"currency\": \"EUR\",\n  \"description\": \"Updated suite room with premium amenities\",\n  \"status\": \"AVAILABLE\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/rooms/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"rooms",
+								"1"
+							]
+						},
+						"description": "Update room information (Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "🗑️ Delete Room (Admin Only)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/rooms/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"rooms",
+								"1"
+							]
+						},
+						"description": "Delete room (Admin only) - Use with caution!"
+					},
+					"response": []
+				}
+			],
+			"description": "Room management endpoints with role-based access control"
+		},
+		{
+			"name": "🔍 Employee Room Search",
+			"item": [
+				{
+					"name": "🔍 Search Rooms by Number",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/rooms/employee/search?roomNumber=101&page=0&size=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"rooms",
+								"employee",
+								"search"
+							],
+							"query": [
+								{
+									"key": "roomNumber",
+									"value": "101"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Search rooms by room number (Employee only)"
+					},
+					"response": []
+				},
+				{
+					"name": "📊 Search Rooms by Status",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/rooms/employee/search?status=AVAILABLE&page=0&size=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"rooms",
+								"employee",
+								"search"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "AVAILABLE"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Search rooms by status (AVAILABLE, OCCUPIED, OUT_OF_SERVICE, MAINTENANCE)"
+					},
+					"response": []
+				},
+				{
+					"name": "🏨 Search Rooms by Type",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/rooms/employee/search?roomType=SUITE&page=0&size=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"rooms",
+								"employee",
+								"search"
+							],
+							"query": [
+								{
+									"key": "roomType",
+									"value": "SUITE"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Search rooms by type (SUITE, DELUXE, STANDARD)"
+					},
+					"response": []
+				},
+				{
+					"name": "🔍 Combined Search (Number + Status)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/rooms/employee/search?roomNumber=1&status=AVAILABLE&page=0&size=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"rooms",
+								"employee",
+								"search"
+							],
+							"query": [
+								{
+									"key": "roomNumber",
+									"value": "1"
+								},
+								{
+									"key": "status",
+									"value": "AVAILABLE"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Combined search with multiple filters"
+					},
+					"response": []
+				},
+				{
+					"name": "📋 All Available Rooms",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/rooms/employee/search?page=0&size=20",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"rooms",
+								"employee",
+								"search"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Get all rooms with pagination (Employee only)"
+					},
+					"response": []
+				}
+			],
+			"description": "Employee-specific room search and management endpoints"
+		},
+		{
+			"name": "🧪 Test Scenarios",
+			"item": [
+				{
+					"name": "🚫 Test Unauthorized Access (No Token)",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/rooms",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"rooms"
+							]
+						},
+						"description": "Test unauthorized access - should return 401"
+					},
+					"response": []
+				},
+				{
+					"name": "🚫 Test Client Access to Admin Endpoint",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"number\": \"999\",\n  \"roomType\": \"STANDARD\",\n  \"capacity\": 1,\n  \"price\": 50.00,\n  \"currency\": \"EUR\",\n  \"description\": \"Test room\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/rooms",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"rooms"
+							]
+						},
+						"description": "Test client trying to create room - should return 403"
+					},
+					"response": []
+				},
+				{
+					"name": "🚫 Test Employee Access to General Rooms",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/rooms",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"rooms"
+							]
+						},
+						"description": "Test employee accessing general rooms endpoint - should return 403"
+					},
+					"response": []
+				},
+				{
+					"name": "📄 Test Pagination Edge Cases",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/rooms?page=999&size=1000",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"rooms"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "999"
+								},
+								{
+									"key": "size",
+									"value": "1000"
+								}
+							]
+						},
+						"description": "Test pagination with large page number and size"
+					},
+					"response": []
+				},
+				{
+					"name": "🔍 Test Invalid Room ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/rooms/99999",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"rooms",
+								"99999"
+							]
+						},
+						"description": "Test getting non-existent room - should return 404"
+					},
+					"response": []
+				},
+				{
+					"name": "📅 Test Invalid Date Format",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/rooms/1/availability?checkIn=invalid-date&checkOut=2024-12-05",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"rooms",
+								"1",
+								"availability"
+							],
+							"query": [
+								{
+									"key": "checkIn",
+									"value": "invalid-date"
+								},
+								{
+									"key": "checkOut",
+									"value": "2024-12-05"
+								}
+							]
+						},
+						"description": "Test invalid date format - should return 400"
+					},
+					"response": []
+				}
+			],
+			"description": "Test scenarios for edge cases and error handling"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Set base URL if not already set",
+					"if (!pm.environment.get('base_url')) {",
+					"    pm.environment.set('base_url', 'http://localhost:8080');",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080",
+			"type": "string"
+		}
+	]
+}
