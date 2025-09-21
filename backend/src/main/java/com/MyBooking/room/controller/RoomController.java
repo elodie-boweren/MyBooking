@@ -1,6 +1,7 @@
 package com.MyBooking.room.controller;
 
 import com.MyBooking.room.domain.*;
+import com.MyBooking.room.dto.RoomCreateRequestDto;
 import com.MyBooking.room.service.RoomService;
 import com.MyBooking.auth.domain.User;
 import com.MyBooking.common.exception.BusinessRuleException;
@@ -122,15 +123,15 @@ public class RoomController {
      */
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Room> createRoom(@Valid @RequestBody Room room) {
+    public ResponseEntity<Room> createRoom(@Valid @RequestBody RoomCreateRequestDto roomRequest) {
         try {
             Room createdRoom = roomService.createRoom(
-                room.getNumber(),
-                room.getRoomType(),
-                room.getPrice(),
-                room.getCurrency(),
-                room.getCapacity(),
-                room.getDescription()
+                roomRequest.getNumber(),
+                roomRequest.getRoomType(),
+                roomRequest.getPrice(),
+                roomRequest.getCurrency(),
+                roomRequest.getCapacity(),
+                roomRequest.getDescription()
             );
             return ResponseEntity.status(HttpStatus.CREATED).body(createdRoom);
         } catch (BusinessRuleException e) {
@@ -186,7 +187,7 @@ public class RoomController {
     // ========== EMPLOYEE ENDPOINTS ==========
 
     /**
-     * GET /api/employee/rooms/search - Search rooms by number/status (EMPLOYEE only)
+     * GET /api/rooms/employee/search - Search rooms by number/status (EMPLOYEE only)
      */
     @GetMapping("/employee/search")
     @PreAuthorize("hasRole('EMPLOYEE')")
