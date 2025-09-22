@@ -135,9 +135,11 @@ public class RoomController {
             );
             return ResponseEntity.status(HttpStatus.CREATED).body(createdRoom);
         } catch (BusinessRuleException e) {
-            return ResponseEntity.badRequest().build();
+            e.printStackTrace(); // Log the error for debugging
+            throw e; // Let GlobalExceptionHandler handle it with proper error message
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            e.printStackTrace(); // Log the error for debugging
+            throw e; // Let GlobalExceptionHandler handle it
         }
     }
 

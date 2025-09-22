@@ -380,6 +380,31 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                                      @Param("checkInTo") LocalDate checkInTo,
                                      Pageable pageable);
 
+    /**
+     * Alternative search method with better null handling for date parameters
+     */
+    @Query("SELECT r FROM Reservation r WHERE " +
+           "r.client.id = :clientId AND " +
+           "(:roomId IS NULL OR r.room.id = :roomId) AND " +
+           "(:status IS NULL OR r.status = :status) AND " +
+           "(:checkInFrom IS NULL OR r.checkIn >= :checkInFrom) AND " +
+           "(:checkInTo IS NULL OR r.checkIn <= :checkInTo)")
+    Page<Reservation> findByClientAndDateRange(@Param("clientId") Long clientId,
+                                               @Param("roomId") Long roomId,
+                                               @Param("status") ReservationStatus status,
+                                               @Param("checkInFrom") LocalDate checkInFrom,
+                                               @Param("checkInTo") LocalDate checkInTo,
+                                               Pageable pageable);
+    
+    /**
+     * Search method for client reservations with date range - handles null dates properly
+     */
+    @Query("SELECT r FROM Reservation r WHERE r.client.id = :clientId AND r.checkIn >= :checkInFrom AND r.checkIn <= :checkInTo")
+    Page<Reservation> findByClientIdAndDateRange(@Param("clientId") Long clientId,
+                                                 @Param("checkInFrom") LocalDate checkInFrom,
+                                                 @Param("checkInTo") LocalDate checkInTo,
+                                                 Pageable pageable);
+
     // ==================== EXISTENCE CHECKS ====================
     
     /**
