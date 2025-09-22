@@ -386,6 +386,145 @@ public class EmployeeService {
         }
     }
 
+    /**
+     * Create a new training
+     */
+    public Training createTraining(String title, LocalDate startDate, LocalDate endDate) {
+        // Validate date range
+        if (startDate.isAfter(endDate)) {
+            throw new BusinessRuleException("Training start date cannot be after end date");
+        }
+
+        if (startDate.isBefore(LocalDate.now())) {
+            throw new BusinessRuleException("Training start date cannot be in the past");
+        }
+
+        // Check for overlapping trainings
+        List<Training> overlappingTrainings = trainingRepository.findOverlappingTrainings(startDate, endDate);
+        if (!overlappingTrainings.isEmpty()) {
+            throw new BusinessRuleException("Training overlaps with existing training");
+        }
+
+        Training training = new Training(title, startDate, endDate);
+        return trainingRepository.save(training);
+    }
+
+    /**
+     * Update training information
+     */
+    public Training updateTraining(Long trainingId, String title, LocalDate startDate, LocalDate endDate) {
+        Training training = trainingRepository.findById(trainingId)
+            .orElseThrow(() -> new NotFoundException("Training not found with ID: " + trainingId));
+
+        // Validate date range
+        if (startDate.isAfter(endDate)) {
+            throw new BusinessRuleException("Training start date cannot be after end date");
+        }
+
+        // Check for overlapping trainings (excluding current training)
+        List<Training> overlappingTrainings = trainingRepository.findOverlappingTrainingsExcluding(trainingId, startDate, endDate);
+        if (!overlappingTrainings.isEmpty()) {
+            throw new BusinessRuleException("Training overlaps with existing training");
+        }
+
+        // Check if any employees are assigned to this training and would be affected
+        if (employeeTrainingRepository.existsByTraining(training)) {
+            throw new BusinessRuleException("Cannot update training that has employee assignments");
+        }
+
+        training.setTitle(title);
+        training.setStartDate(startDate);
+        training.setEndDate(endDate);
+        return trainingRepository.save(training);
+    }
+
+    /**
+     * Delete a training
+     */
+    public void deleteTraining(Long trainingId) {
+        Training training = trainingRepository.findById(trainingId)
+            .orElseThrow(() -> new NotFoundException("Training not found with ID: " + trainingId));
+
+        // Check if any employees are assigned to this training
+        if (employeeTrainingRepository.existsByTraining(training)) {
+            throw new BusinessRuleException("Cannot delete training that has employee assignments");
+        }
+
+        trainingRepository.delete(training);
+    }
+
+    /**
+     * Get training by ID
+     */
+    @Transactional(readOnly = true)
+    public Training getTraining(Long trainingId) {
+        return trainingRepository.findById(trainingId)
+            .orElseThrow(() -> new NotFoundException("Training not found with ID: " + trainingId));
+    }
+
+    /**
+     * Get all trainings with pagination
+     */
+    @Transactional(readOnly = true)
+    public Page<Training> getAllTrainings(Pageable pageable) {
+        return trainingRepository.findAll(pageable);
+    }
+
+    /**
+     * Search trainings with criteria
+     */
+    @Transactional(readOnly = true)
+    public Page<Training> searchTrainings(String title, LocalDate startDate, LocalDate endDate, Pageable pageable) {
+        if (title != null && !title.trim().isEmpty()) {
+            return trainingRepository.findByTitleContaining(title.trim(), pageable);
+        } else if (startDate != null && endDate != null) {
+            return trainingRepository.findByStartDateBetween(startDate, endDate, pageable);
+        } else if (startDate != null) {
+            return trainingRepository.findByStartDateAfter(startDate, pageable);
+        } else if (endDate != null) {
+            return trainingRepository.findByEndDateBefore(endDate, pageable);
+        } else {
+            return trainingRepository.findAll(pageable);
+        }
+    }
+
+    /**
+     * Update employee training status
+     */
+    public EmployeeTraining updateEmployeeTrainingStatus(Long employeeId, Long trainingId, TrainingStatus status) {
+        // Validate employee exists
+        Employee employee = getEmployeeByUserId(employeeId);
+        
+        // Validate training exists
+        Training training = trainingRepository.findById(trainingId)
+            .orElseThrow(() -> new NotFoundException("Training not found with ID: " + trainingId));
+
+        // Find the employee training assignment
+        EmployeeTraining employeeTraining = employeeTrainingRepository.findByEmployeeAndTraining(employee.getUser(), training)
+            .stream()
+            .findFirst()
+            .orElseThrow(() -> new NotFoundException("Employee training assignment not found"));
+
+        // Validate status transition
+        TrainingStatus currentStatus = employeeTraining.getStatus();
+        if (currentStatus == TrainingStatus.COMPLETED) {
+            throw new BusinessRuleException("Cannot change status of completed training");
+        }
+
+        if (status == TrainingStatus.COMPLETED && currentStatus != TrainingStatus.IN_PROGRESS) {
+            throw new BusinessRuleException("Training must be in progress before it can be completed");
+        }
+
+        employeeTraining.setStatus(status);
+        
+        // Set completion date if training is completed
+        if (status == TrainingStatus.COMPLETED) {
+            employeeTraining.setCompletedAt(LocalDateTime.now());
+        }
+
+        return employeeTrainingRepository.save(employeeTraining);
+    }
+
     // ==================== AVAILABILITY CHECKS ====================
 
     /**
@@ -434,6 +573,132 @@ public class EmployeeService {
         return !hasInProgressTraining(employeeId);
     }
 
+    // ==================== SHIFT MANAGEMENT ====================
+
+    /**
+     * Create a new shift for an employee
+     */
+    public Shift createShift(Long employeeId, LocalDateTime startAt, LocalDateTime endAt) {
+        // Validate employee exists and is active
+        Employee employee = getEmployeeByUserId(employeeId);
+        if (employee.getStatus() != EmployeeStatus.ACTIVE) {
+            throw new BusinessRuleException("Cannot assign shift to inactive employee");
+        }
+
+        // Validate time range
+        if (startAt.isAfter(endAt)) {
+            throw new BusinessRuleException("Shift start time cannot be after end time");
+        }
+
+        if (startAt.isBefore(LocalDateTime.now())) {
+            throw new BusinessRuleException("Shift start time cannot be in the past");
+        }
+
+        // Check for overlapping shifts
+        List<Shift> overlappingShifts = shiftRepository.findOverlappingShiftsForEmployeeId(startAt, endAt, employeeId);
+        if (!overlappingShifts.isEmpty()) {
+            throw new BusinessRuleException("Employee already has overlapping shift");
+        }
+
+        // Check if employee is available for shift on the shift date
+        LocalDate shiftDate = startAt.toLocalDate();
+        if (!isEmployeeAvailableForShift(employeeId, shiftDate)) {
+            throw new BusinessRuleException("Employee is not available for shift on " + shiftDate);
+        }
+
+        Shift shift = new Shift(employee.getUser(), startAt, endAt);
+        return shiftRepository.save(shift);
+    }
+
+    /**
+     * Update shift information
+     */
+    public Shift updateShift(Long shiftId, LocalDateTime startAt, LocalDateTime endAt) {
+        Shift shift = shiftRepository.findById(shiftId)
+            .orElseThrow(() -> new NotFoundException("Shift not found with ID: " + shiftId));
+
+        // Validate time range
+        if (startAt.isAfter(endAt)) {
+            throw new BusinessRuleException("Shift start time cannot be after end time");
+        }
+
+        // Check for overlapping shifts (excluding current shift)
+        List<Shift> overlappingShifts = shiftRepository.findOverlappingShiftsForEmployeeId(startAt, endAt, shift.getEmployee().getId());
+        overlappingShifts.removeIf(s -> s.getId().equals(shiftId));
+        if (!overlappingShifts.isEmpty()) {
+            throw new BusinessRuleException("Employee already has overlapping shift");
+        }
+
+        // Check if employee is available for shift on the new shift date
+        LocalDate shiftDate = startAt.toLocalDate();
+        if (!isEmployeeAvailableForShift(shift.getEmployee().getId(), shiftDate)) {
+            throw new BusinessRuleException("Employee is not available for shift on " + shiftDate);
+        }
+
+        shift.setStartAt(startAt);
+        shift.setEndAt(endAt);
+        return shiftRepository.save(shift);
+    }
+
+    /**
+     * Delete a shift
+     */
+    public void deleteShift(Long shiftId) {
+        Shift shift = shiftRepository.findById(shiftId)
+            .orElseThrow(() -> new NotFoundException("Shift not found with ID: " + shiftId));
+
+        shiftRepository.delete(shift);
+    }
+
+    /**
+     * Get shift by ID
+     */
+    @Transactional(readOnly = true)
+    public Shift getShift(Long shiftId) {
+        return shiftRepository.findById(shiftId)
+            .orElseThrow(() -> new NotFoundException("Shift not found with ID: " + shiftId));
+    }
+
+    /**
+     * Get shifts for an employee with pagination
+     */
+    @Transactional(readOnly = true)
+    public Page<Shift> getEmployeeShifts(Long employeeId, Pageable pageable) {
+        Employee employee = getEmployeeByUserId(employeeId);
+        return shiftRepository.findByEmployee(employee.getUser(), pageable);
+    }
+
+    /**
+     * Get all shifts with pagination
+     */
+    @Transactional(readOnly = true)
+    public Page<Shift> getAllShifts(Pageable pageable) {
+        return shiftRepository.findAll(pageable);
+    }
+
+    /**
+     * Search shifts with criteria
+     */
+    @Transactional(readOnly = true)
+    public Page<Shift> searchShifts(Long employeeId, LocalDateTime startAt, LocalDateTime endAt, Pageable pageable) {
+        if (employeeId != null) {
+            // For employee-specific searches, we'll use the basic findByEmployeeId with pagination
+            // and then filter by date range in memory if needed
+            // This is a limitation of the current repository design
+            return shiftRepository.findByEmployeeId(employeeId, pageable);
+        } else {
+            if (startAt != null && endAt != null) {
+                return shiftRepository.findByStartAtBetween(startAt, endAt, pageable);
+            } else if (startAt != null) {
+                return shiftRepository.findByStartAtAfter(startAt, pageable);
+            } else if (endAt != null) {
+                return shiftRepository.findByEndAtBefore(endAt, pageable);
+            } else {
+                return shiftRepository.findAll(pageable);
+            }
+        }
+    }
+
     // ==================== STATISTICS AND ANALYTICS ====================
 
     /**
@@ -456,6 +721,27 @@ public class EmployeeService {
             pendingLeaveRequests, approvedLeaveRequests,
             inProgressTrainings, completedTrainings
         );
+    }
+
+    /**
+     * Get employee statistics as DTO
+     */
+    @Transactional(readOnly = true)
+    public com.MyBooking.employee.dto.EmployeeStatisticsDto getEmployeeStatisticsAsDto() {
+        long totalEmployees = employeeRepository.count();
+        long activeEmployees = employeeRepository.countByStatus(EmployeeStatus.ACTIVE);
+        long inactiveEmployees = employeeRepository.countByStatus(EmployeeStatus.INACTIVE);
+        
+        long pendingLeaveRequests = leaveRequestRepository.countByStatus(LeaveRequestStatus.PENDING);
+        long approvedLeaveRequests = leaveRequestRepository.countByStatus(LeaveRequestStatus.APPROVED);
+        
+        long inProgressTrainings = employeeTrainingRepository.countByStatus(TrainingStatus.IN_PROGRESS);
+        long completedTrainings = employeeTrainingRepository.countByStatus(TrainingStatus.COMPLETED);
+        
+        return new com.MyBooking.employee.dto.EmployeeStatisticsDto(
+                totalEmployees, activeEmployees, inactiveEmployees,
+                pendingLeaveRequests, approvedLeaveRequests,
+                inProgressTrainings, completedTrainings);
     }
 
     /**
