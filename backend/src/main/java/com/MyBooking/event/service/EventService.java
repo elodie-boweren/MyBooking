@@ -144,6 +144,21 @@ public class EventService {
             throw new BusinessRuleException("Cannot delete events that start within 24 hours");
         }
         
+        // Check if event has existing bookings
+        List<EventBooking> existingBookings = eventBookingRepository.findByEventId(eventId);
+        if (!existingBookings.isEmpty()) {
+            long confirmedBookings = existingBookings.stream()
+                .filter(booking -> booking.getStatus() == EventBookingStatus.CONFIRMED)
+                .count();
+            
+            if (confirmedBookings > 0) {
+                throw new BusinessRuleException(
+                    "Cannot delete event with " + confirmedBookings + " confirmed booking(s). " +
+                    "Please cancel all bookings first or contact support for assistance."
+                );
+            }
+        }
+        
         eventRepository.delete(event);
     }
 
