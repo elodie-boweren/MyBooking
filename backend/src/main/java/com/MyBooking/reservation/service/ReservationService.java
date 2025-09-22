@@ -757,6 +757,38 @@ public class ReservationService {
     }
 
     /**
+     * Get all reservations with pagination (returns DTOs) - Admin only
+     */
+    @Transactional(readOnly = true)
+    public Page<ReservationResponseDto> getAllReservationsAsDto(Pageable pageable) {
+        Page<Reservation> reservations = reservationRepository.findAll(pageable);
+        return reservations.map(this::convertToResponseDto);
+    }
+
+    /**
+     * Search all reservations with criteria (returns DTOs) - Admin only
+     * This method can search across all reservations without requiring a specific clientId
+     */
+    @Transactional(readOnly = true)
+    public Page<ReservationResponseDto> searchAllReservationsAsDto(ReservationSearchCriteriaDto criteria, Pageable pageable) {
+        // Use the general search method that can handle null clientId for admin searches
+        Page<Reservation> reservations = reservationRepository.findByCriteria(
+            criteria.getClientId(), 
+            criteria.getRoomId(), 
+            criteria.getStatus(),
+            null, // minPrice - not used in current criteria
+            null, // maxPrice - not used in current criteria  
+            null, // currency - not used in current criteria
+            null, // minGuests - not used in current criteria
+            null, // maxGuests - not used in current criteria
+            criteria.getCheckInFrom(), 
+            criteria.getCheckInTo(), 
+            pageable
+        );
+        return reservations.map(this::convertToResponseDto);
+    }
+
+    /**
      * Get user ID by email (for JWT token extraction)
      */
     @Transactional(readOnly = true)

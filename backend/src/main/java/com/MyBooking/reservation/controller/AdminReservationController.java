@@ -38,26 +38,40 @@ public class AdminReservationController {
             @RequestParam(required = false) String checkOutTo,
             Pageable pageable) {
         try {
-            ReservationSearchCriteriaDto criteria = new ReservationSearchCriteriaDto();
-            criteria.setClientId(clientId);
-            criteria.setRoomId(roomId);
-            if (status != null) {
-                criteria.setStatus(com.MyBooking.reservation.domain.ReservationStatus.valueOf(status));
-            }
-            if (checkInFrom != null) {
-                criteria.setCheckInFrom(java.time.LocalDate.parse(checkInFrom));
-            }
-            if (checkInTo != null) {
-                criteria.setCheckInTo(java.time.LocalDate.parse(checkInTo));
-            }
-            if (checkOutFrom != null) {
-                criteria.setCheckOutFrom(java.time.LocalDate.parse(checkOutFrom));
-            }
-            if (checkOutTo != null) {
-                criteria.setCheckOutTo(java.time.LocalDate.parse(checkOutTo));
+            // Check if any filters are provided
+            boolean hasFilters = clientId != null || roomId != null || status != null || 
+                               checkInFrom != null || checkInTo != null || 
+                               checkOutFrom != null || checkOutTo != null;
+            
+            Page<ReservationResponseDto> reservations;
+            
+            if (hasFilters) {
+                // Use admin search method when filters are provided
+                ReservationSearchCriteriaDto criteria = new ReservationSearchCriteriaDto();
+                criteria.setClientId(clientId);
+                criteria.setRoomId(roomId);
+                if (status != null) {
+                    criteria.setStatus(com.MyBooking.reservation.domain.ReservationStatus.valueOf(status));
+                }
+                if (checkInFrom != null) {
+                    criteria.setCheckInFrom(java.time.LocalDate.parse(checkInFrom));
+                }
+                if (checkInTo != null) {
+                    criteria.setCheckInTo(java.time.LocalDate.parse(checkInTo));
+                }
+                if (checkOutFrom != null) {
+                    criteria.setCheckOutFrom(java.time.LocalDate.parse(checkOutFrom));
+                }
+                if (checkOutTo != null) {
+                    criteria.setCheckOutTo(java.time.LocalDate.parse(checkOutTo));
+                }
+                
+                reservations = reservationService.searchAllReservationsAsDto(criteria, pageable);
+            } else {
+                // Use getAllReservationsAsDto when no filters are provided
+                reservations = reservationService.getAllReservationsAsDto(pageable);
             }
             
-            Page<ReservationResponseDto> reservations = reservationService.searchReservationsAsDto(criteria, pageable);
             return ResponseEntity.ok(reservations);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
