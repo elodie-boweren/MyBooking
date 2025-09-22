@@ -521,4 +521,149 @@ public class LoyaltyService {
         public long getTotalEarnedPoints() { return totalEarnedPoints; }
         public long getTotalRedeemedPoints() { return totalRedeemedPoints; }
     }
+
+    // ==================== DTO-AWARE METHODS ====================
+
+    // Loyalty Account DTO methods
+    @Transactional
+    public com.MyBooking.loyalty.dto.LoyaltyAccountResponseDto createLoyaltyAccountAsDto(Long userId) {
+        LoyaltyAccount account = createLoyaltyAccount(userId);
+        return convertToLoyaltyAccountResponseDto(account);
+    }
+
+    @Transactional(readOnly = true)
+    public com.MyBooking.loyalty.dto.LoyaltyAccountResponseDto getLoyaltyAccountByUserIdAsDto(Long userId) {
+        LoyaltyAccount account = getLoyaltyAccountByUserId(userId);
+        return convertToLoyaltyAccountResponseDto(account);
+    }
+
+    @Transactional(readOnly = true)
+    public com.MyBooking.loyalty.dto.LoyaltyAccountResponseDto getLoyaltyAccountByIdAsDto(Long accountId) {
+        LoyaltyAccount account = loyaltyAccountRepository.findById(accountId)
+                .orElseThrow(() -> new NotFoundException("Loyalty account not found with ID: " + accountId));
+        return convertToLoyaltyAccountResponseDto(account);
+    }
+
+    @Transactional
+    public void deleteLoyaltyAccountAsDto(Long accountId) {
+        deleteLoyaltyAccount(accountId);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<com.MyBooking.loyalty.dto.LoyaltyAccountResponseDto> getAllLoyaltyAccountsAsDto(Pageable pageable) {
+        Page<LoyaltyAccount> accounts = getAllLoyaltyAccounts(pageable);
+        return accounts.map(this::convertToLoyaltyAccountResponseDto);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<com.MyBooking.loyalty.dto.LoyaltyAccountResponseDto> getAccountsWithHighBalanceAsDto(Integer threshold, Pageable pageable) {
+        Page<LoyaltyAccount> accounts = getAccountsWithHighBalance(threshold, pageable);
+        return accounts.map(this::convertToLoyaltyAccountResponseDto);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<com.MyBooking.loyalty.dto.LoyaltyAccountResponseDto> getAccountsWithZeroBalanceAsDto(Pageable pageable) {
+        Page<LoyaltyAccount> accounts = getAccountsWithZeroBalance(pageable);
+        return accounts.map(this::convertToLoyaltyAccountResponseDto);
+    }
+
+    // Loyalty Transaction DTO methods
+    @Transactional
+    public com.MyBooking.loyalty.dto.LoyaltyTransactionResponseDto earnPointsAsDto(Long userId, BigDecimal amount, String reason, Long reservationId) {
+        LoyaltyTransaction transaction = earnPoints(userId, amount, reason, reservationId);
+        return convertToLoyaltyTransactionResponseDto(transaction);
+    }
+
+    @Transactional
+    public com.MyBooking.loyalty.dto.LoyaltyTransactionResponseDto redeemPointsAsDto(Long userId, Integer points, String reason) {
+        LoyaltyTransaction transaction = redeemPoints(userId, points, reason);
+        return convertToLoyaltyTransactionResponseDto(transaction);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<com.MyBooking.loyalty.dto.LoyaltyTransactionResponseDto> getTransactionsByUserIdAsDto(Long userId, Pageable pageable) {
+        Page<LoyaltyTransaction> transactions = getTransactionHistory(userId, pageable);
+        return transactions.map(this::convertToLoyaltyTransactionResponseDto);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<com.MyBooking.loyalty.dto.LoyaltyTransactionResponseDto> getAllTransactionsAsDto(Pageable pageable) {
+        Page<LoyaltyTransaction> transactions = getAllTransactions(pageable);
+        return transactions.map(this::convertToLoyaltyTransactionResponseDto);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<com.MyBooking.loyalty.dto.LoyaltyTransactionResponseDto> getHighValueTransactionsAsDto(Integer threshold, Pageable pageable) {
+        Page<LoyaltyTransaction> transactions = getHighValueTransactions(threshold, pageable);
+        return transactions.map(this::convertToLoyaltyTransactionResponseDto);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<com.MyBooking.loyalty.dto.LoyaltyTransactionResponseDto> getTransactionsByTypeAsDto(LoyaltyTxType type, Pageable pageable) {
+        Page<LoyaltyTransaction> transactions = getTransactionsByType(type, pageable);
+        return transactions.map(this::convertToLoyaltyTransactionResponseDto);
+    }
+
+    // Statistics DTO methods
+    @Transactional(readOnly = true)
+    public com.MyBooking.loyalty.dto.LoyaltyStatisticsDto getLoyaltyStatisticsAsDto() {
+        LoyaltyStatistics stats = getLoyaltyStatistics();
+        return convertToLoyaltyStatisticsDto(stats);
+    }
+
+    @Transactional(readOnly = true)
+    public com.MyBooking.loyalty.dto.PointsCalculationDto calculatePointsAsDto(BigDecimal amount) {
+        Integer calculatedPoints = calculatePointsFromAmount(amount);
+        BigDecimal calculatedDiscountAmount = calculatePointsDiscountAmount(calculatedPoints);
+        Integer maxRedeemablePoints = 10000; // Business rule: max 10,000 points per transaction
+        
+        return new com.MyBooking.loyalty.dto.PointsCalculationDto(
+            calculatedPoints, amount, calculatedDiscountAmount, maxRedeemablePoints, "STANDARD");
+    }
+
+    // Utility method to get user ID by email
+    @Transactional(readOnly = true)
+    public Long getUserIdByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException("User not found with email: " + email));
+        return user.getId();
+    }
+
+    // Conversion methods
+    private com.MyBooking.loyalty.dto.LoyaltyAccountResponseDto convertToLoyaltyAccountResponseDto(LoyaltyAccount account) {
+        com.MyBooking.loyalty.dto.LoyaltyAccountResponseDto dto = new com.MyBooking.loyalty.dto.LoyaltyAccountResponseDto();
+        dto.setId(account.getId());
+        dto.setUserId(account.getUser().getId());
+        dto.setUserName(account.getUser().getFirstName() + " " + account.getUser().getLastName());
+        dto.setUserEmail(account.getUser().getEmail());
+        dto.setBalance(account.getBalance());
+        dto.setCreatedAt(account.getCreatedAt());
+        dto.setUpdatedAt(account.getUpdatedAt());
+        return dto;
+    }
+
+    private com.MyBooking.loyalty.dto.LoyaltyTransactionResponseDto convertToLoyaltyTransactionResponseDto(LoyaltyTransaction transaction) {
+        com.MyBooking.loyalty.dto.LoyaltyTransactionResponseDto dto = new com.MyBooking.loyalty.dto.LoyaltyTransactionResponseDto();
+        dto.setId(transaction.getId());
+        dto.setAccountId(transaction.getAccount().getId());
+        dto.setUserId(transaction.getAccount().getUser().getId());
+        dto.setUserName(transaction.getAccount().getUser().getFirstName() + " " + transaction.getAccount().getUser().getLastName());
+        dto.setUserEmail(transaction.getAccount().getUser().getEmail());
+        dto.setType(transaction.getType());
+        dto.setPoints(transaction.getPoints());
+        dto.setReservationId(transaction.getReservation() != null ? transaction.getReservation().getId() : null);
+        dto.setCreatedAt(transaction.getCreatedAt());
+        return dto;
+    }
+
+    private com.MyBooking.loyalty.dto.LoyaltyStatisticsDto convertToLoyaltyStatisticsDto(LoyaltyStatistics stats) {
+        return new com.MyBooking.loyalty.dto.LoyaltyStatisticsDto(
+            stats.getTotalAccounts(),
+            stats.getTotalTransactions(),
+            stats.getTotalBalance(),
+            stats.getAverageBalance(),
+            stats.getTotalEarnedPoints(),
+            stats.getTotalRedeemedPoints()
+        );
+    }
 }

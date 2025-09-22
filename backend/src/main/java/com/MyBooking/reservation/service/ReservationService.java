@@ -93,6 +93,14 @@ public class ReservationService {
         
         Reservation savedReservation = reservationRepository.save(reservation);
         
+        // Process loyalty points for the confirmed reservation
+        try {
+            loyaltyService.processReservationPoints(savedReservation.getId());
+        } catch (Exception e) {
+            // Log the error but don't fail the reservation creation
+            System.err.println("Failed to process loyalty points for reservation " + savedReservation.getId() + ": " + e.getMessage());
+        }
+        
         // Update room status to occupied for the entire reservation period
         roomService.updateRoomStatusAutomatically(roomId, RoomStatus.OCCUPIED, 
             "Reservation created for " + checkIn + " to " + checkOut);
@@ -174,6 +182,14 @@ public class ReservationService {
         if (actualPointsUsed > 0) {
             loyaltyService.redeemPoints(clientId, actualPointsUsed, 
                 "Points redeemed for reservation #" + savedReservation.getId());
+        }
+        
+        // Process loyalty points for the confirmed reservation (earn points for the final price)
+        try {
+            loyaltyService.processReservationPoints(savedReservation.getId());
+        } catch (Exception e) {
+            // Log the error but don't fail the reservation creation
+            System.err.println("Failed to process loyalty points for reservation " + savedReservation.getId() + ": " + e.getMessage());
         }
         
         // Update room status to occupied for the entire reservation period
