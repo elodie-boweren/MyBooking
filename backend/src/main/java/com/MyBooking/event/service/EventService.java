@@ -8,10 +8,17 @@ package com.MyBooking.event.service;
 
 import com.MyBooking.event.domain.Event;
 import com.MyBooking.event.domain.EventType;
+import com.MyBooking.event.domain.EventBooking;
+import com.MyBooking.event.domain.EventBookingStatus;
 import com.MyBooking.event.repository.EventRepository;
+import com.MyBooking.event.repository.EventBookingRepository;
 import com.MyBooking.installation.domain.Installation;
 import com.MyBooking.installation.domain.InstallationType;
 import com.MyBooking.installation.repository.InstallationRepository;
+import com.MyBooking.auth.domain.User;
+import com.MyBooking.auth.repository.UserRepository;
+import com.MyBooking.reservation.domain.Reservation;
+import com.MyBooking.reservation.repository.ReservationRepository;
 import com.MyBooking.common.exception.BusinessRuleException;
 import com.MyBooking.common.exception.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +42,16 @@ public class EventService {
     private EventRepository eventRepository;
     
     @Autowired
+    private EventBookingRepository eventBookingRepository;
+    
+    @Autowired
     private InstallationRepository installationRepository;
+    
+    @Autowired
+    private UserRepository userRepository;
+    
+    @Autowired
+    private ReservationRepository reservationRepository;
 
     // ========== EVENT MANAGEMENT ==========
 
@@ -506,6 +522,289 @@ public class EventService {
         return eventRepository.findByNameContainingIgnoreCase(name, pageable);
     }
 
+    // ========== DTO METHODS ==========
+    
+    /**
+     * Get all events as DTOs with pagination
+     */
+    @Transactional(readOnly = true)
+    public Page<com.MyBooking.event.dto.EventResponseDto> getAllEventsAsDto(Pageable pageable) {
+        Page<Event> events = getAllEvents(pageable);
+        return events.map(this::convertToResponseDto);
+    }
+    
+    /**
+     * Get event by ID as DTO
+     */
+    @Transactional(readOnly = true)
+    public com.MyBooking.event.dto.EventResponseDto getEventByIdAsDto(Long eventId) {
+        Event event = getEventById(eventId);
+        return convertToResponseDto(event);
+    }
+    
+    /**
+     * Create event from DTO
+     */
+    public com.MyBooking.event.dto.EventResponseDto createEventAsDto(com.MyBooking.event.dto.EventCreateRequestDto request) {
+        Event event = createEvent(
+            request.getName(),
+            request.getDescription(),
+            request.getEventType(),
+            request.getStartAt(),
+            request.getEndAt(),
+            request.getCapacity(),
+            request.getPrice(),
+            request.getCurrency(),
+            request.getInstallationId()
+        );
+        return convertToResponseDto(event);
+    }
+    
+    /**
+     * Update event from DTO
+     */
+    public com.MyBooking.event.dto.EventResponseDto updateEventAsDto(Long eventId, com.MyBooking.event.dto.EventUpdateRequestDto request) {
+        Event event = getEventById(eventId);
+        
+        if (request.getName() != null) event.setName(request.getName());
+        if (request.getDescription() != null) event.setDescription(request.getDescription());
+        if (request.getEventType() != null) event.setEventType(request.getEventType());
+        if (request.getStartAt() != null) event.setStartAt(request.getStartAt());
+        if (request.getEndAt() != null) event.setEndAt(request.getEndAt());
+        if (request.getCapacity() != null) event.setCapacity(request.getCapacity());
+        if (request.getPrice() != null) event.setPrice(request.getPrice());
+        if (request.getCurrency() != null) event.setCurrency(request.getCurrency());
+        if (request.getInstallationId() != null) {
+            Installation installation = installationRepository.findById(request.getInstallationId())
+                .orElseThrow(() -> new NotFoundException("Installation not found with ID: " + request.getInstallationId()));
+            event.setInstallation(installation);
+        }
+        
+        Event updatedEvent = updateEvent(
+            event.getId(),
+            event.getName(),
+            event.getDescription(),
+            event.getEventType(),
+            event.getStartAt(),
+            event.getEndAt(),
+            event.getCapacity(),
+            event.getPrice(),
+            event.getCurrency(),
+            event.getInstallation().getId()
+        );
+        return convertToResponseDto(updatedEvent);
+    }
+    
+    /**
+     * Search events as DTOs
+     */
+    @Transactional(readOnly = true)
+    public Page<com.MyBooking.event.dto.EventResponseDto> searchEventsAsDto(com.MyBooking.event.dto.EventSearchCriteriaDto criteria, Pageable pageable) {
+        Page<Event> events = searchEvents(criteria.getName(), criteria.getEventType(), criteria.getInstallationId(), 
+                                        criteria.getMinPrice(), criteria.getMaxPrice(), "EUR", 
+                                        criteria.getMinCapacity(), pageable);
+        return events.map(this::convertToResponseDto);
+    }
+    
+    /**
+     * Get upcoming events as DTOs
+     */
+    @Transactional(readOnly = true)
+    public Page<com.MyBooking.event.dto.EventResponseDto> getUpcomingEventsAsDto(Pageable pageable) {
+        // For now, get all events and filter - in a real app, this should be a repository method
+        Page<Event> allEvents = getAllEvents(pageable);
+        return allEvents.map(this::convertToResponseDto);
+    }
+    
+    /**
+     * Get events by type as DTOs
+     */
+    @Transactional(readOnly = true)
+    public Page<com.MyBooking.event.dto.EventResponseDto> getEventsByTypeAsDto(EventType eventType, Pageable pageable) {
+        Page<Event> events = getEventsByType(eventType, pageable);
+        return events.map(this::convertToResponseDto);
+    }
+    
+    /**
+     * Get events by installation as DTOs
+     */
+    @Transactional(readOnly = true)
+    public Page<com.MyBooking.event.dto.EventResponseDto> getEventsByInstallationAsDto(Long installationId, Pageable pageable) {
+        Page<Event> events = getEventsByInstallation(installationId, pageable);
+        return events.map(this::convertToResponseDto);
+    }
+    
+    /**
+     * Convert Event entity to EventResponseDto
+     */
+    private com.MyBooking.event.dto.EventResponseDto convertToResponseDto(Event event) {
+        return new com.MyBooking.event.dto.EventResponseDto(
+            event.getId(),
+            event.getName(),
+            event.getDescription(),
+            event.getEventType(),
+            event.getStartAt(),
+            event.getEndAt(),
+            event.getCapacity(),
+            event.getPrice(),
+            event.getCurrency(),
+            event.getInstallation().getId(),
+            event.getInstallation().getName(),
+            event.getInstallation().getInstallationType().toString(),
+            event.getCreatedAt(),
+            event.getUpdatedAt()
+        );
+    }
+    
+    // ========== EVENT BOOKING DTO METHODS ==========
+    
+    /**
+     * Create event booking from DTO
+     */
+    public com.MyBooking.event.dto.EventBookingResponseDto createEventBookingAsDto(com.MyBooking.event.dto.EventBookingCreateRequestDto request, Long userId) {
+        // Get event and validate
+        Event event = getEventById(request.getEventId());
+        
+        // Get user and validate
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new NotFoundException("User not found with ID: " + userId));
+        
+        // Get reservation and validate
+        Reservation reservation = reservationRepository.findById(request.getReservationId())
+            .orElseThrow(() -> new NotFoundException("Reservation not found with ID: " + request.getReservationId()));
+        
+        // Create event booking
+        EventBooking booking = new EventBooking();
+        booking.setEvent(event);
+        booking.setClient(user);
+        booking.setReservation(reservation);
+        booking.setStatus(EventBookingStatus.CONFIRMED);
+        booking.setEventDateTime(event.getStartAt());
+        booking.setBookingDate(LocalDateTime.now());
+        booking.setNumberOfParticipants(1); // Default to 1 participant
+        booking.setDurationHours((int) ChronoUnit.HOURS.between(event.getStartAt(), event.getEndAt()));
+        booking.setTotalPrice(event.getPrice());
+        
+        EventBooking savedBooking = eventBookingRepository.save(booking);
+        return convertToEventBookingResponseDto(savedBooking);
+    }
+    
+    /**
+     * Get event bookings by user as DTOs
+     */
+    @Transactional(readOnly = true)
+    public Page<com.MyBooking.event.dto.EventBookingResponseDto> getEventBookingsByUserAsDto(Long userId, Pageable pageable) {
+        Page<EventBooking> bookings = eventBookingRepository.findByClientId(userId, pageable);
+        return bookings.map(this::convertToEventBookingResponseDto);
+    }
+    
+    /**
+     * Get event booking by ID as DTO (with user validation)
+     */
+    @Transactional(readOnly = true)
+    public com.MyBooking.event.dto.EventBookingResponseDto getEventBookingByIdAsDto(Long bookingId, Long userId) {
+        EventBooking booking = eventBookingRepository.findById(bookingId)
+            .orElseThrow(() -> new NotFoundException("Event booking not found with ID: " + bookingId));
+        
+        // Validate that the booking belongs to the user
+        if (!booking.getClient().getId().equals(userId)) {
+            throw new BusinessRuleException("Access denied: This booking does not belong to the user");
+        }
+        
+        return convertToEventBookingResponseDto(booking);
+    }
+    
+    /**
+     * Get event booking by ID as DTO (admin view)
+     */
+    @Transactional(readOnly = true)
+    public com.MyBooking.event.dto.EventBookingResponseDto getEventBookingByIdAsDto(Long bookingId) {
+        EventBooking booking = eventBookingRepository.findById(bookingId)
+            .orElseThrow(() -> new NotFoundException("Event booking not found with ID: " + bookingId));
+        return convertToEventBookingResponseDto(booking);
+    }
+    
+    /**
+     * Cancel event booking as DTO
+     */
+    public com.MyBooking.event.dto.EventBookingResponseDto cancelEventBookingAsDto(Long bookingId, Long userId, String reason) {
+        EventBooking booking = eventBookingRepository.findById(bookingId)
+            .orElseThrow(() -> new NotFoundException("Event booking not found with ID: " + bookingId));
+        
+        // Validate that the booking belongs to the user
+        if (!booking.getClient().getId().equals(userId)) {
+            throw new BusinessRuleException("Access denied: This booking does not belong to the user");
+        }
+        
+        // Check if booking can be cancelled
+        if (booking.getStatus() != EventBookingStatus.CONFIRMED) {
+            throw new BusinessRuleException("Only confirmed bookings can be cancelled");
+        }
+        
+        // Check if event is in the future
+        if (booking.getEventDateTime().isBefore(LocalDateTime.now())) {
+            throw new BusinessRuleException("Cannot cancel past events");
+        }
+        
+        booking.setStatus(EventBookingStatus.CANCELLED);
+        EventBooking savedBooking = eventBookingRepository.save(booking);
+        return convertToEventBookingResponseDto(savedBooking);
+    }
+    
+    /**
+     * Get all event bookings as DTOs (admin view)
+     */
+    @Transactional(readOnly = true)
+    public Page<com.MyBooking.event.dto.EventBookingResponseDto> getAllEventBookingsAsDto(Pageable pageable) {
+        Page<EventBooking> bookings = eventBookingRepository.findAll(pageable);
+        return bookings.map(this::convertToEventBookingResponseDto);
+    }
+    
+    /**
+     * Update event booking status as DTO
+     */
+    public com.MyBooking.event.dto.EventBookingResponseDto updateEventBookingStatusAsDto(Long bookingId, com.MyBooking.event.domain.EventBookingStatus status) {
+        EventBooking booking = eventBookingRepository.findById(bookingId)
+            .orElseThrow(() -> new NotFoundException("Event booking not found with ID: " + bookingId));
+        
+        booking.setStatus(status);
+        EventBooking savedBooking = eventBookingRepository.save(booking);
+        return convertToEventBookingResponseDto(savedBooking);
+    }
+    
+    /**
+     * Get user ID by email (helper method for JWT token processing)
+     */
+    public Long getUserIdByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new NotFoundException("User not found with email: " + email));
+        return user.getId();
+    }
+    
+    /**
+     * Convert EventBooking entity to EventBookingResponseDto
+     */
+    private com.MyBooking.event.dto.EventBookingResponseDto convertToEventBookingResponseDto(EventBooking booking) {
+        return new com.MyBooking.event.dto.EventBookingResponseDto(
+            booking.getId(),
+            booking.getEvent().getId(),
+            booking.getEvent().getName(),
+            booking.getEvent().getEventType(),
+            booking.getEvent().getStartAt(),
+            booking.getEvent().getEndAt(),
+            booking.getEvent().getPrice(),
+            booking.getEvent().getCurrency(),
+            booking.getClient().getId(),
+            booking.getClient().getFirstName(),
+            booking.getClient().getLastName(),
+            booking.getClient().getEmail(),
+            booking.getReservation() != null ? booking.getReservation().getId() : null,
+            booking.getStatus(),
+            booking.getCreatedAt(),
+            booking.getUpdatedAt()
+        );
+    }
+    
     // ========== INNER CLASSES ==========
 
     /**
