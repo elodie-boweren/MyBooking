@@ -688,6 +688,8 @@ public class ReservationService {
      */
     @Transactional(readOnly = true)
     public Page<ReservationResponseDto> searchReservations(ReservationSearchCriteriaDto criteria, Pageable pageable) {
+        // For now, we'll use the existing searchReservations method which only supports checkIn date range
+        // TODO: Enhance the repository method to support checkOut date range as well
         Page<Reservation> reservations = searchReservations(
             criteria.getClientId(),
             criteria.getRoomId(),

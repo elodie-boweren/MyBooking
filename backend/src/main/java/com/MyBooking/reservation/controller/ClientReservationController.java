@@ -1,6 +1,7 @@
 package com.MyBooking.reservation.controller;
 
 import com.MyBooking.reservation.dto.*;
+import com.MyBooking.reservation.domain.ReservationStatus;
 import com.MyBooking.reservation.service.ReservationService;
 import com.MyBooking.common.security.JwtService;
 import com.MyBooking.common.exception.BusinessRuleException;
@@ -64,6 +65,50 @@ public class ClientReservationController {
             Page<ReservationResponseDto> reservations = reservationService.getReservationsByClientId(clientId, pageable);
             return ResponseEntity.ok(reservations);
         } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * Search my reservations with criteria
+     * GET /api/client/reservations/search
+     */
+    @GetMapping("/search")
+    @PreAuthorize("hasRole('CLIENT')")
+    public ResponseEntity<Page<ReservationResponseDto>> searchMyReservations(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam(required = false) Long roomId,
+            @RequestParam(required = false) ReservationStatus status,
+            @RequestParam(required = false) String checkInFrom,
+            @RequestParam(required = false) String checkInTo,
+            @RequestParam(required = false) String checkOutFrom,
+            @RequestParam(required = false) String checkOutTo,
+            Pageable pageable) {
+        try {
+            Long clientId = extractUserIdFromToken(authHeader);
+            
+            // Create search criteria DTO
+            ReservationSearchCriteriaDto criteria = new ReservationSearchCriteriaDto();
+            criteria.setClientId(clientId);
+            criteria.setRoomId(roomId);
+            criteria.setStatus(status);
+            if (checkInFrom != null) {
+                criteria.setCheckInFrom(java.time.LocalDate.parse(checkInFrom));
+            }
+            if (checkInTo != null) {
+                criteria.setCheckInTo(java.time.LocalDate.parse(checkInTo));
+            }
+            if (checkOutFrom != null) {
+                criteria.setCheckOutFrom(java.time.LocalDate.parse(checkOutFrom));
+            }
+            if (checkOutTo != null) {
+                criteria.setCheckOutTo(java.time.LocalDate.parse(checkOutTo));
+            }
+            
+            Page<ReservationResponseDto> reservations = reservationService.searchReservations(criteria, pageable);
+            return ResponseEntity.ok(reservations);
+        } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
