@@ -142,8 +142,8 @@ public class RoomService {
     public boolean isRoomAvailable(Long roomId, LocalDate checkIn, LocalDate checkOut) {
         Room room = getRoomById(roomId);
         
-        // Check if room is out of service
-        if (room.getStatus() == RoomStatus.OUT_OF_SERVICE) {
+        // Check if room is out of service or occupied
+        if (room.getStatus() == RoomStatus.OUT_OF_SERVICE || room.getStatus() == RoomStatus.OCCUPIED) {
             return false;
         }
         
