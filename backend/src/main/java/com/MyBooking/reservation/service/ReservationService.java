@@ -687,22 +687,25 @@ public class ReservationService {
      * Search reservations with criteria DTO
      */
     @Transactional(readOnly = true)
-    public Page<ReservationResponseDto> searchReservations(ReservationSearchCriteriaDto criteria, Pageable pageable) {
-        // For now, we'll use the existing searchReservations method which only supports checkIn date range
-        // TODO: Enhance the repository method to support checkOut date range as well
-        Page<Reservation> reservations = searchReservations(
-            criteria.getClientId(),
-            criteria.getRoomId(),
-            criteria.getStatus(),
-            null, // minPrice
-            null, // maxPrice
-            null, // currency
-            null, // minGuests
-            null, // maxGuests
-            criteria.getCheckInFrom(),
-            criteria.getCheckInTo(),
-            pageable
-        );
+    public Page<ReservationResponseDto> searchReservationsAsDto(ReservationSearchCriteriaDto criteria, Pageable pageable) {
+        // Use the new repository method that handles date parameters better
+        // Use appropriate repository method based on whether dates are provided
+        Page<Reservation> reservations;
+        if (criteria.getCheckInFrom() != null && criteria.getCheckInTo() != null) {
+            // Use date range method when both dates are provided
+            reservations = reservationRepository.findByClientIdAndDateRange(
+                criteria.getClientId(), 
+                criteria.getCheckInFrom(), 
+                criteria.getCheckInTo(), 
+                pageable
+            );
+        } else {
+            // Use simple client method when no dates are provided
+            reservations = reservationRepository.findByClientId(
+                criteria.getClientId(), 
+                pageable
+            );
+        }
         return reservations.map(this::convertToResponseDto);
     }
 

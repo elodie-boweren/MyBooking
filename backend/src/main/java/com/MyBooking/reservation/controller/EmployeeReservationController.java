@@ -56,7 +56,7 @@ public class EmployeeReservationController {
                 criteria.setCheckOutTo(java.time.LocalDate.parse(checkOutTo));
             }
             
-            Page<ReservationResponseDto> reservations = reservationService.searchReservations(criteria, pageable);
+            Page<ReservationResponseDto> reservations = reservationService.searchReservationsAsDto(criteria, pageable);
             return ResponseEntity.ok(reservations);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

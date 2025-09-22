@@ -15,6 +15,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 /**
  * Controller for client-specific reservation operations
  * Handles reservation creation, viewing, updating, and cancellation by clients
@@ -28,6 +30,7 @@ public class ClientReservationController {
 
     @Autowired
     private JwtService jwtService;
+    
 
     /**
      * Create a new reservation
@@ -92,22 +95,56 @@ public class ClientReservationController {
             criteria.setClientId(clientId);
             criteria.setRoomId(roomId);
             criteria.setStatus(status);
-            if (checkInFrom != null) {
-                criteria.setCheckInFrom(java.time.LocalDate.parse(checkInFrom));
+            
+            // Parse date parameters with proper error handling
+            if (checkInFrom != null && !checkInFrom.trim().isEmpty()) {
+                try {
+                    criteria.setCheckInFrom(java.time.LocalDate.parse(checkInFrom));
+                } catch (Exception e) {
+                    System.err.println("Error parsing checkInFrom: " + checkInFrom + " - " + e.getMessage());
+                    return ResponseEntity.badRequest().build();
+                }
             }
-            if (checkInTo != null) {
-                criteria.setCheckInTo(java.time.LocalDate.parse(checkInTo));
+            if (checkInTo != null && !checkInTo.trim().isEmpty()) {
+                try {
+                    criteria.setCheckInTo(java.time.LocalDate.parse(checkInTo));
+                } catch (Exception e) {
+                    System.err.println("Error parsing checkInTo: " + checkInTo + " - " + e.getMessage());
+                    return ResponseEntity.badRequest().build();
+                }
             }
-            if (checkOutFrom != null) {
-                criteria.setCheckOutFrom(java.time.LocalDate.parse(checkOutFrom));
+            if (checkOutFrom != null && !checkOutFrom.trim().isEmpty()) {
+                try {
+                    criteria.setCheckOutFrom(java.time.LocalDate.parse(checkOutFrom));
+                } catch (Exception e) {
+                    System.err.println("Error parsing checkOutFrom: " + checkOutFrom + " - " + e.getMessage());
+                    return ResponseEntity.badRequest().build();
+                }
             }
-            if (checkOutTo != null) {
-                criteria.setCheckOutTo(java.time.LocalDate.parse(checkOutTo));
+            if (checkOutTo != null && !checkOutTo.trim().isEmpty()) {
+                try {
+                    criteria.setCheckOutTo(java.time.LocalDate.parse(checkOutTo));
+                } catch (Exception e) {
+                    System.err.println("Error parsing checkOutTo: " + checkOutTo + " - " + e.getMessage());
+                    return ResponseEntity.badRequest().build();
+                }
             }
             
-            Page<ReservationResponseDto> reservations = reservationService.searchReservations(criteria, pageable);
-            return ResponseEntity.ok(reservations);
+            System.out.println("Search criteria: " + criteria);
+            
+            // Test direct repository call to isolate the issue
+            try {
+                System.out.println("Calling reservationService.searchReservationsAsDto...");
+                Page<ReservationResponseDto> reservations = reservationService.searchReservationsAsDto(criteria, pageable);
+                System.out.println("Search completed successfully, found " + reservations.getTotalElements() + " reservations");
+                return ResponseEntity.ok(reservations);
+            } catch (Exception serviceException) {
+                System.err.println("Service exception: " + serviceException.getMessage());
+                serviceException.printStackTrace();
+                throw serviceException;
+            }
         } catch (Exception e) {
+            System.err.println("Error in searchMyReservations: " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
@@ -179,6 +216,8 @@ public class ClientReservationController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
+
 
     /**
      * Extract user ID from JWT token
