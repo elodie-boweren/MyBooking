@@ -17,11 +17,17 @@ public class CorsConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // Allow Angular frontend
-        configuration.setAllowedOriginPatterns(Arrays.asList("http://localhost:4200", "https://*.vercel.app"));
+        // Allow Next.js frontend (React)
+        configuration.setAllowedOriginPatterns(Arrays.asList(
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+            "http://localhost:3001",
+            "http://127.0.0.1:3001",
+            "https://*.vercel.app"
+        ));
         
         // Allow common HTTP methods
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         
         // Allow common headers
         configuration.setAllowedHeaders(Arrays.asList("*"));

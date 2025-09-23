@@ -25,8 +25,12 @@ public class SecurityConfig {
         
         http
             .csrf(csrf -> csrf.disable())
+            .cors(cors -> {})
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/rooms").permitAll() // Allow public access to rooms list
+                .requestMatchers("/api/events").permitAll() // Allow public access to events list
+                .requestMatchers("/api/announcements").permitAll() // Allow public access to announcements
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
