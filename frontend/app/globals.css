@@ -1,0 +1,186 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Updated color tokens to match the professional room reservation design brief */
+  --background: #f9fafb; /* Light Gray for backgrounds */
+  --foreground: #4b5563; /* Dark Gray for text */
+  --card: #ffffff; /* White for cards */
+  --card-foreground: #4b5563; /* Dark Gray for card text */
+  --popover: #ffffff; /* White for popovers */
+  --popover-foreground: #4b5563; /* Dark Gray for popover text */
+  --primary: #0891b2; /* Cyan-600 for primary actions */
+  --primary-foreground: #ffffff; /* White text on primary background */
+  --secondary: #8b5cf6; /* Purple for secondary actions */
+  --secondary-foreground: #ffffff; /* White text on secondary background */
+  --muted: #f9fafb; /* Light Gray for muted elements */
+  --muted-foreground: #4b5563; /* Dark Gray for muted text */
+  --accent: #8b5cf6; /* Accent color for highlights */
+  --accent-foreground: #ffffff; /* White text on accent background */
+  --destructive: #f87171; /* Red for destructive actions */
+  --destructive-foreground: #ffffff; /* White text on destructive background */
+  --border: #e5e7eb; /* Light Gray for borders */
+  --input: #ffffff; /* White for input fields */
+  --ring: #0891b2; /* Cyan-600 for focus rings */
+  --chart-1: #4b5563; /* Dark Gray for chart elements */
+  --chart-2: #0891b2; /* Cyan-600 for chart elements */
+  --chart-3: #8b5cf6; /* Purple for chart elements */
+  --chart-4: #f87171; /* Red for chart elements */
+  --chart-5: #f9fafb; /* Light Gray for chart elements */
+  --radius: 0.5rem; /* Rounded corners for cards and buttons */
+  --sidebar: #ffffff; /* White for sidebar background */
+  --sidebar-foreground: #4b5563; /* Dark Gray for sidebar text */
+  --sidebar-primary: #f9fafb; /* Light Gray for sidebar primary */
+  --sidebar-primary-foreground: #4b5563; /* Dark Gray for sidebar primary text */
+  --sidebar-accent: #8b5cf6; /* Purple for sidebar accents */
+  --sidebar-accent-foreground: #ffffff; /* White text on sidebar accent */
+  --sidebar-border: #e5e7eb; /* Light Gray for sidebar borders */
+  --sidebar-ring: #0891b2; /* Cyan-600 for sidebar focus rings */
+}
+
+.dark {
+  --background: #1f2937; /* Dark Gray for dark mode backgrounds */
+  --foreground: #f9fafb; /* Light Gray for dark mode text */
+  --card: #374151; /* Medium Gray for dark mode cards */
+  --card-foreground: #f9fafb; /* Light Gray for dark mode card text */
+  --popover: #374151; /* Medium Gray for dark mode popovers */
+  --popover-foreground: #f9fafb; /* Light Gray for dark mode popover text */
+  --primary: #0891b2; /* Cyan-600 for primary actions */
+  --primary-foreground: #ffffff; /* White text on primary background */
+  --secondary: #8b5cf6; /* Purple for secondary actions */
+  --secondary-foreground: #ffffff; /* White text on secondary background */
+  --muted: #4b5563; /* Dark Gray for muted elements */
+  --muted-foreground: #9ca3af; /* Medium Gray for muted text */
+  --accent: #8b5cf6; /* Accent color for highlights */
+  --accent-foreground: #ffffff; /* White text on accent background */
+  --destructive: #f87171; /* Red for destructive actions */
+  --destructive-foreground: #ffffff; /* White text on destructive background */
+  --border: #4b5563; /* Dark Gray for borders */
+  --input: #374151; /* Medium Gray for input fields */
+  --ring: #0891b2; /* Cyan-600 for focus rings */
+  --chart-1: #f9fafb; /* Light Gray for chart elements */
+  --chart-2: #0891b2; /* Cyan-600 for chart elements */
+  --chart-3: #8b5cf6; /* Purple for chart elements */
+  --chart-4: #f87171; /* Red for chart elements */
+  --chart-5: #4b5563; /* Dark Gray for chart elements */
+  --sidebar: #374151; /* Medium Gray for sidebar background */
+  --sidebar-foreground: #f9fafb; /* Light Gray for sidebar text */
+  --sidebar-primary: #4b5563; /* Dark Gray for sidebar primary */
+  --sidebar-primary-foreground: #f9fafb; /* Light Gray for sidebar primary text */
+  --sidebar-accent: #8b5cf6; /* Purple for sidebar accents */
+  --sidebar-accent-foreground: #ffffff; /* White text on sidebar accent */
+  --sidebar-border: #4b5563; /* Dark Gray for sidebar borders */
+  --sidebar-ring: #0891b2; /* Cyan-600 for sidebar focus rings */
+}
+
+/* Added professional business admin theme with red, blue, green colors */
+.admin-business {
+  --background: #1f1f1f; /* Dark background for the dashboard */
+  --foreground: #ffffff; /* Primary text color */
+  --card: #2a2a2a; /* Card background */
+  --card-foreground: #ffffff; /* Text on cards */
+  --popover: #2a2a2a; /* Popover background */
+  --popover-foreground: #ffffff; /* Text in popovers */
+  --primary: #dc2626; /* Primary action color (red) */
+  --primary-foreground: #ffffff; /* Text for primary actions */
+  --secondary: #3b82f6; /* Secondary action color (blue) */
+  --secondary-foreground: #ffffff; /* Text for secondary actions */
+  --muted: #b0b0b0; /* Muted text color */
+  --muted-foreground: #ffffff; /* Text for muted elements */
+  --accent: #059669; /* Success messages color (green) */
+  --accent-foreground: #ffffff; /* Text for success messages */
+  --destructive: #dc2626; /* Destructive actions color (red) */
+  --destructive-foreground: #ffffff; /* Text for destructive actions */
+  --border: #b0b0b0; /* Border color */
+  --input: #2a2a2a; /* Input background */
+  --ring: rgba(220, 38, 38, 0.5); /* Ring color for focus states */
+  --chart-1: #dc2626; /* Chart color 1 */
+  --chart-2: #3b82f6; /* Chart color 2 */
+  --chart-3: #059669; /* Chart color 3 */
+  --chart-4: #b0b0b0; /* Chart color 4 */
+  --chart-5: #ffffff; /* Chart color 5 */
+  --radius: 0.5rem; /* Rounded corners */
+  --sidebar: #1f1f1f; /* Sidebar background */
+  --sidebar-foreground: #ffffff; /* Text in sidebar */
+  --sidebar-primary: #2a2a2a; /* Primary sidebar items */
+  --sidebar-primary-foreground: #ffffff; /* Text for primary sidebar items */
+  --sidebar-accent: #3b82f6; /* Accent color for sidebar */
+  --sidebar-accent-foreground: #ffffff; /* Text for sidebar accents */
+  --sidebar-border: #b0b0b0; /* Sidebar border color */
+  --sidebar-ring: rgba(59, 130, 246, 0.5); /* Ring color for sidebar */
+}
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Removed cyberpunk styles and added professional business card effects */
+.business-card-hover {
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.business-card-hover:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  transform: translateY(-2px);
+}
+
+.business-gradient-red {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+}
+
+.business-gradient-blue {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+}
+
+.business-gradient-green {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}

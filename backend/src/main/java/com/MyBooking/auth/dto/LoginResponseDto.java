@@ -18,6 +18,14 @@ public class LoginResponseDto {
     private Role role;
     private LocalDateTime expiresAt;
     
+    // Additional fields for frontend compatibility
+    private boolean client;
+    private boolean employee;
+    private boolean admin;
+    private String roleDisplayName;
+    private boolean tokenValid;
+    private String fullName;
+    
     // Constructors
     public LoginResponseDto() {}
     
@@ -30,6 +38,15 @@ public class LoginResponseDto {
         this.lastName = lastName;
         this.role = role;
         this.expiresAt = expiresAt;
+        
+        // Set additional fields for frontend compatibility
+        this.client = (role == Role.CLIENT);
+        this.employee = (role == Role.EMPLOYEE);
+        this.admin = (role == Role.ADMIN);
+        this.roleDisplayName = role != null ? role.toString() : "Unknown";
+        this.tokenValid = token != null && !token.trim().isEmpty() && 
+                         expiresAt != null && expiresAt.isAfter(LocalDateTime.now());
+        this.fullName = firstName + " " + lastName;
     }
     
     // Getters and Setters
@@ -57,29 +74,24 @@ public class LoginResponseDto {
     public LocalDateTime getExpiresAt() { return expiresAt; }
     public void setExpiresAt(LocalDateTime expiresAt) { this.expiresAt = expiresAt; }
     
-    // Utility methods
-    public String getFullName() {
-        return firstName + " " + lastName;
-    }
+    // Additional field getters and setters
+    public boolean isClient() { return client; }
+    public void setClient(boolean client) { this.client = client; }
     
-    public String getRoleDisplayName() {
-        return role != null ? role.toString() : "Unknown";
-    }
+    public boolean isEmployee() { return employee; }
+    public void setEmployee(boolean employee) { this.employee = employee; }
     
-    public boolean isTokenValid() {
-        return token != null && !token.trim().isEmpty() && 
-               expiresAt != null && expiresAt.isAfter(LocalDateTime.now());
-    }
+    public boolean isAdmin() { return admin; }
+    public void setAdmin(boolean admin) { this.admin = admin; }
     
-    public boolean isClient() {
-        return role == Role.CLIENT;
-    }
+    public String getRoleDisplayName() { return roleDisplayName; }
+    public void setRoleDisplayName(String roleDisplayName) { this.roleDisplayName = roleDisplayName; }
     
-    public boolean isEmployee() {
-        return role == Role.EMPLOYEE;
-    }
+    public boolean isTokenValid() { return tokenValid; }
+    public void setTokenValid(boolean tokenValid) { this.tokenValid = tokenValid; }
     
-    public boolean isAdmin() {
-        return role == Role.ADMIN;
-    }
+    public String getFullName() { return fullName; }
+    public void setFullName(String fullName) { this.fullName = fullName; }
+    
+    // Utility methods (now handled by constructor and getters)
 }
