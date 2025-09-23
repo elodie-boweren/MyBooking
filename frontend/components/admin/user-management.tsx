@@ -19,11 +19,37 @@ import {
 import { COMPONENT_TEMPLATES } from '@/lib/style-constants'
 import { apiClient, API_ENDPOINTS, User as UserType } from '@/lib/api'
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api"
+
 export function UserManagement() {
   const [users, setUsers] = useState<UserType[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedRole, setSelectedRole] = useState<string>('all')
+  const [showCreateForm, setShowCreateForm] = useState(false)
+  const [showEditForm, setShowEditForm] = useState(false)
+  const [creating, setCreating] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [selectedUser, setSelectedUser] = useState<UserType | null>(null)
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    address: '',
+    birthDate: '',
+    role: 'CLIENT' as 'ADMIN' | 'EMPLOYEE' | 'CLIENT',
+    password: ''
+  })
+  const [editFormData, setEditFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    address: '',
+    birthDate: '',
+    role: 'CLIENT' as 'ADMIN' | 'EMPLOYEE' | 'CLIENT'
+  })
 
   useEffect(() => {
     fetchUsers()
@@ -116,23 +142,155 @@ export function UserManagement() {
   }
 
   const handleEditUser = (userId: number) => {
-    // TODO: Implement edit user functionality
-    console.log('Edit user:', userId)
+    const user = users.find(u => u.id === userId)
+    if (user) {
+      setEditFormData({
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phone: user.phone || '',
+        address: user.address || '',
+        birthDate: user.birthDate || '',
+        role: user.role
+      })
+      setSelectedUser(user)
+      setShowEditForm(true)
+    }
   }
 
   const handleDeleteUser = async (userId: number) => {
-    if (!confirm('Are you sure you want to delete this user?')) {
+    const user = users.find(u => u.id === userId)
+    if (!user) return
+
+    const confirmMessage = `Are you sure you want to delete ${user.firstName} ${user.lastName}?\n\nThis action cannot be undone and will permanently remove the user from the system.`
+    
+    if (!confirm(confirmMessage)) {
       return
     }
 
     try {
-      await apiClient.delete(API_ENDPOINTS.ADMIN_USERS.DELETE(userId.toString()))
-      // Refresh the user list
-      fetchUsers()
-    } catch (error) {
+      // Make DELETE request with proper error handling
+      const response = await fetch(`${API_BASE_URL}/auth/users/${userId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(`HTTP ${response.status}: ${errorText}`)
+      }
+      
+      alert(`User ${user.firstName} ${user.lastName} has been deleted successfully!`)
+      fetchUsers() // Refresh the user list
+    } catch (error: any) {
       console.error('Failed to delete user:', error)
-      alert('Failed to delete user. Please try again.')
+      const errorMessage = error?.message || 'Network error occurred'
+      alert(`Failed to delete user: ${errorMessage}`)
     }
+  }
+
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (creating) return
+
+    try {
+      setCreating(true)
+      
+      // Create the user
+      await apiClient.post(API_ENDPOINTS.ADMIN_USERS.CREATE, formData)
+      
+      // Reset form and close modal
+      setFormData({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        address: '',
+        birthDate: '',
+        role: 'CLIENT',
+        password: ''
+      })
+      setShowCreateForm(false)
+
+      // Refresh user list
+      fetchUsers()
+
+      alert('User created successfully!')
+    } catch (error: any) {
+      console.error('Failed to create user:', error)
+      const errorMessage = error?.response?.data?.message || error?.message || 'Unknown error'
+      alert(`Failed to create user: ${errorMessage}`)
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  const handleUpdateUser = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (editing || !selectedUser) return
+
+    try {
+      setEditing(true)
+
+      // Create user update data with all required fields
+      const userUpdateData = {
+        id: selectedUser.id,
+        firstName: editFormData.firstName,
+        lastName: editFormData.lastName,
+        email: editFormData.email,
+        phone: editFormData.phone,
+        address: editFormData.address,
+        birthDate: editFormData.birthDate,
+        role: editFormData.role,
+        password: 'dummyPassword123!', // Provide a dummy password for update
+        createdAt: selectedUser.createdAt,
+        updatedAt: new Date().toISOString()
+      }
+
+      // Update the user
+      await apiClient.put(API_ENDPOINTS.ADMIN_USERS.UPDATE(selectedUser.id.toString()), userUpdateData)
+
+      // Reset form and close modal
+      setEditFormData({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        address: '',
+        birthDate: '',
+        role: 'CLIENT'
+      })
+      setShowEditForm(false)
+      setSelectedUser(null)
+
+      // Refresh user list
+      fetchUsers()
+
+      alert('User updated successfully!')
+    } catch (error: any) {
+      console.error('Failed to update user:', error)
+      const errorMessage = error?.response?.data?.message || error?.message || 'Unknown error'
+      alert(`Failed to update user: ${errorMessage}`)
+    } finally {
+      setEditing(false)
+    }
+  }
+
+  const handleFormChange = (field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }
+
+  const handleEditFormChange = (field: string, value: string) => {
+    setEditFormData(prev => ({
+      ...prev,
+      [field]: value
+    }))
   }
 
   if (loading) {
@@ -171,7 +329,7 @@ export function UserManagement() {
             Manage user accounts and permissions
           </p>
         </div>
-        <Button>
+        <Button onClick={() => setShowCreateForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Add User
         </Button>
@@ -290,6 +448,232 @@ export function UserManagement() {
             </p>
           </CardContent>
         </Card>
+      )}
+
+      {/* Create User Form Modal */}
+      {showCreateForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <Card className="w-full max-w-md mx-4">
+            <CardHeader>
+              <CardTitle>Create New User</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleCreateUser} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium">First Name</label>
+                    <Input
+                      value={formData.firstName}
+                      onChange={(e) => handleFormChange('firstName', e.target.value)}
+                      placeholder="John"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Last Name</label>
+                    <Input
+                      value={formData.lastName}
+                      onChange={(e) => handleFormChange('lastName', e.target.value)}
+                      placeholder="Doe"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium">Email</label>
+                  <Input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => handleFormChange('email', e.target.value)}
+                    placeholder="john@example.com"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium">Password</label>
+                  <Input
+                    type="password"
+                    value={formData.password}
+                    onChange={(e) => handleFormChange('password', e.target.value)}
+                    placeholder="Enter password"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium">Phone</label>
+                  <Input
+                    value={formData.phone}
+                    onChange={(e) => handleFormChange('phone', e.target.value)}
+                    placeholder="+1 (555) 123-4567"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium">Address</label>
+                  <Input
+                    value={formData.address}
+                    onChange={(e) => handleFormChange('address', e.target.value)}
+                    placeholder="123 Main St, City, State 12345"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium">Birth Date</label>
+                  <Input
+                    type="date"
+                    value={formData.birthDate}
+                    onChange={(e) => handleFormChange('birthDate', e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium">Role</label>
+                  <select
+                    value={formData.role}
+                    onChange={(e) => handleFormChange('role', e.target.value)}
+                    className="w-full p-2 border rounded-md"
+                    required
+                  >
+                    <option value="CLIENT">Client</option>
+                    <option value="EMPLOYEE">Employee</option>
+                    <option value="ADMIN">Admin</option>
+                  </select>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowCreateForm(false)}
+                    className="flex-1"
+                    disabled={creating}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="flex-1"
+                    disabled={creating}
+                  >
+                    {creating ? 'Creating...' : 'Create User'}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Edit User Form Modal */}
+      {showEditForm && selectedUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <Card className="w-full max-w-md mx-4">
+            <CardHeader>
+              <CardTitle>Edit User {selectedUser.firstName} {selectedUser.lastName}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleUpdateUser} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium">First Name</label>
+                    <Input
+                      value={editFormData.firstName}
+                      onChange={(e) => handleEditFormChange('firstName', e.target.value)}
+                      placeholder="John"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Last Name</label>
+                    <Input
+                      value={editFormData.lastName}
+                      onChange={(e) => handleEditFormChange('lastName', e.target.value)}
+                      placeholder="Doe"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium">Email</label>
+                  <Input
+                    type="email"
+                    value={editFormData.email}
+                    onChange={(e) => handleEditFormChange('email', e.target.value)}
+                    placeholder="john@example.com"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium">Phone</label>
+                  <Input
+                    value={editFormData.phone}
+                    onChange={(e) => handleEditFormChange('phone', e.target.value)}
+                    placeholder="+1 (555) 123-4567"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium">Address</label>
+                  <Input
+                    value={editFormData.address}
+                    onChange={(e) => handleEditFormChange('address', e.target.value)}
+                    placeholder="123 Main St, City, State 12345"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium">Birth Date</label>
+                  <Input
+                    type="date"
+                    value={editFormData.birthDate}
+                    onChange={(e) => handleEditFormChange('birthDate', e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium">Role</label>
+                  <select
+                    value={editFormData.role}
+                    onChange={(e) => handleEditFormChange('role', e.target.value)}
+                    className="w-full p-2 border rounded-md"
+                    required
+                  >
+                    <option value="CLIENT">Client</option>
+                    <option value="EMPLOYEE">Employee</option>
+                    <option value="ADMIN">Admin</option>
+                  </select>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setShowEditForm(false)
+                      setSelectedUser(null)
+                    }}
+                    className="flex-1"
+                    disabled={editing}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="flex-1"
+                    disabled={editing}
+                  >
+                    {editing ? 'Updating...' : 'Update User'}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
       )}
     </div>
   )
