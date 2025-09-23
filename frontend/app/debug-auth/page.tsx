@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -12,6 +12,17 @@ export default function DebugAuthPage() {
   const [password, setPassword] = useState('Pass123@')
   const [result, setResult] = useState<string>('')
   const [isLoading, setIsLoading] = useState(false)
+  const [localStorageData, setLocalStorageData] = useState<{token: string | null, user: string | null}>({token: null, user: null})
+
+  // Safely access localStorage on client side
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setLocalStorageData({
+        token: localStorage.getItem('token'),
+        user: localStorage.getItem('user')
+      })
+    }
+  }, [])
 
   const testLogin = async () => {
     setIsLoading(true)
@@ -48,10 +59,13 @@ export default function DebugAuthPage() {
     setResult('Testing profile endpoint...')
 
     try {
-      const token = localStorage.getItem('token')
-      if (!token) {
-        setResult('No token found in localStorage')
-        return
+      let token = null
+      if (typeof window !== 'undefined') {
+        token = localStorage.getItem('token')
+        if (!token) {
+          setResult('No token found in localStorage')
+          return
+        }
       }
 
       const response = await fetch('http://localhost:8080/api/auth/profile', {
@@ -80,10 +94,13 @@ export default function DebugAuthPage() {
   }
 
   const testTokenDecode = () => {
-    const token = localStorage.getItem('token')
-    if (!token) {
-      setResult('No token found in localStorage')
-      return
+    let token = null
+    if (typeof window !== 'undefined') {
+      token = localStorage.getItem('token')
+      if (!token) {
+        setResult('No token found in localStorage')
+        return
+      }
     }
 
     try {
@@ -102,8 +119,11 @@ export default function DebugAuthPage() {
   }
 
   const clearStorage = () => {
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+      setLocalStorageData({token: null, user: null})
+    }
     setResult('Storage cleared')
   }
 
@@ -160,8 +180,8 @@ export default function DebugAuthPage() {
 
             <div className="text-sm text-muted-foreground">
               <p><strong>Current localStorage:</strong></p>
-              <p>Token: {localStorage.getItem('token') ? 'Present' : 'Not found'}</p>
-              <p>User: {localStorage.getItem('user') ? 'Present' : 'Not found'}</p>
+              <p>Token: {localStorageData.token ? 'Present' : 'Not found'}</p>
+              <p>User: {localStorageData.user ? 'Present' : 'Not found'}</p>
             </div>
           </CardContent>
         </Card>

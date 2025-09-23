@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -12,6 +12,17 @@ export default function DebugDetailedPage() {
   const [password, setPassword] = useState('Pass123@')
   const [result, setResult] = useState<string>('')
   const [isLoading, setIsLoading] = useState(false)
+  const [localStorageData, setLocalStorageData] = useState<{token: string | null, user: string | null}>({token: null, user: null})
+
+  // Safely access localStorage on client side
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setLocalStorageData({
+        token: localStorage.getItem('token'),
+        user: localStorage.getItem('user')
+      })
+    }
+  }, [])
 
   const testLogin = async () => {
     setIsLoading(true)
@@ -126,16 +137,31 @@ export default function DebugDetailedPage() {
       const loginResponse = await response.json()
       
       // Store token and user data like the frontend does
-      localStorage.setItem('token', loginResponse.token)
-      localStorage.setItem('user', JSON.stringify({
-        id: loginResponse.userId,
-        email: loginResponse.email,
-        firstName: loginResponse.firstName,
-        lastName: loginResponse.lastName,
-        role: loginResponse.role,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }))
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('token', loginResponse.token)
+        localStorage.setItem('user', JSON.stringify({
+          id: loginResponse.userId,
+          email: loginResponse.email,
+          firstName: loginResponse.firstName,
+          lastName: loginResponse.lastName,
+          role: loginResponse.role,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }))
+        // Update state
+        setLocalStorageData({
+          token: loginResponse.token,
+          user: JSON.stringify({
+            id: loginResponse.userId,
+            email: loginResponse.email,
+            firstName: loginResponse.firstName,
+            lastName: loginResponse.lastName,
+            role: loginResponse.role,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          })
+        })
+      }
 
       setResult(`Frontend Login Success:\n${JSON.stringify(loginResponse, null, 2)}`)
     } catch (error: any) {
@@ -146,8 +172,11 @@ export default function DebugDetailedPage() {
   }
 
   const clearStorage = () => {
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+      setLocalStorageData({token: null, user: null})
+    }
     setResult('Storage cleared')
   }
 
@@ -207,8 +236,8 @@ export default function DebugDetailedPage() {
 
             <div className="text-sm text-muted-foreground">
               <p><strong>Current localStorage:</strong></p>
-              <p>Token: {localStorage.getItem('token') ? 'Present' : 'Not found'}</p>
-              <p>User: {localStorage.getItem('user') ? 'Present' : 'Not found'}</p>
+              <p>Token: {localStorageData.token ? 'Present' : 'Not found'}</p>
+              <p>User: {localStorageData.user ? 'Present' : 'Not found'}</p>
             </div>
           </CardContent>
         </Card>

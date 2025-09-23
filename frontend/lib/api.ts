@@ -160,7 +160,25 @@ export const API_ENDPOINTS = {
     LIST: "/rooms",
     GET: (id: string) => `/rooms/${id}`,
     AVAILABILITY: (id: string) => `/rooms/${id}/availability`,
-    SEARCH: "/rooms/search",
+    SEARCH: "/rooms",
+  },
+
+  // Admin Room Management
+  ADMIN_ROOMS: {
+    ALL: "/rooms",
+    GET: (id: string) => `/rooms/${id}`,
+    CREATE: "/rooms",
+    UPDATE: (id: string) => `/rooms/${id}`,
+    DELETE: (id: string) => `/rooms/${id}`,
+    SEARCH: "/rooms",
+  },
+
+  // Room Photo Management
+  ROOM_PHOTOS: {
+    ADD: (roomId: string) => `/rooms/${roomId}/photos`,
+    GET: (roomId: string) => `/rooms/${roomId}/photos`,
+    DELETE: (photoId: string) => `/rooms/photos/${photoId}`,
+    SET_PRIMARY: (photoId: string) => `/rooms/photos/${photoId}/primary`,
   },
 
   // Reservations - Client
@@ -327,6 +345,39 @@ export interface Room {
   equipment?: string
   createdAt: string
   updatedAt: string
+}
+
+// Room Photo interface
+export interface RoomPhoto {
+  id: number
+  photoUrl: string
+  caption?: string
+  roomId: number
+  displayOrder: number
+  isPrimary: boolean
+  isActive: boolean
+  photoType?: string
+  fileSize?: number
+  fileName?: string
+  createdAt: string
+  updatedAt: string
+}
+
+// Create Room Request interface
+export interface CreateRoomRequest {
+  number: string
+  roomType: "SINGLE" | "DOUBLE" | "DELUXE" | "FAMILY"
+  capacity: number
+  price: number
+  currency: string
+  description?: string
+}
+
+// Add Room Photo Request interface
+export interface AddRoomPhotoRequest {
+  photoUrl: string
+  caption?: string
+  isPrimary?: boolean
 }
 
 // Reservation interface - matches backend exactly
