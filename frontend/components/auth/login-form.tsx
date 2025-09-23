@@ -37,7 +37,15 @@ export function LoginForm({ onSuccess, redirectTo = '/rooms' }: LoginFormProps) 
       
       if (result.success) {
         onSuccess?.()
-        router.push(redirectTo)
+        // Redirect based on user role
+        const userRole = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!).role : null
+        if (userRole === 'ADMIN') {
+          router.push('/admin')
+        } else if (userRole === 'EMPLOYEE') {
+          router.push('/employee')
+        } else {
+          router.push(redirectTo)
+        }
       } else {
         setError(result.error || 'Login failed')
       }

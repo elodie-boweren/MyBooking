@@ -137,13 +137,23 @@ export const apiClient = new ApiClient(API_BASE_URL)
 
 // API endpoints configuration matching Spring Boot backend
 export const API_ENDPOINTS = {
-  // Authentication
-  AUTH: {
-    LOGIN: "/auth/login",
-    REGISTER: "/auth/register",
-    PROFILE: "/auth/profile",
-    CHANGE_PASSWORD: "/auth/change-password",
-  },
+      // Authentication
+      AUTH: {
+        LOGIN: "/auth/login",
+        REGISTER: "/auth/register",
+        PROFILE: "/auth/profile",
+        CHANGE_PASSWORD: "/auth/change-password",
+      },
+
+      // Admin User Management
+      ADMIN_USERS: {
+        ALL: "/auth/users",
+        GET: (id: string) => `/auth/users/${id}`,
+        CREATE: "/auth/users",
+        UPDATE: (id: string) => `/auth/users/${id}`,
+        DELETE: (id: string) => `/auth/users/${id}`,
+        BY_ROLE: (role: string) => `/auth/users/role/${role}`,
+      },
 
   // Rooms
   ROOMS: {
