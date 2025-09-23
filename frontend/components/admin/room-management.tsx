@@ -22,6 +22,8 @@ import {
 import { COMPONENT_TEMPLATES } from '@/lib/style-constants'
 import { apiClient, API_ENDPOINTS, Room, CreateRoomRequest, AddRoomPhotoRequest } from '@/lib/api'
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api"
+
 export function RoomManagement() {
   const [rooms, setRooms] = useState<Room[]>([])
   const [loading, setLoading] = useState(true)
@@ -29,11 +31,21 @@ export function RoomManagement() {
   const [selectedType, setSelectedType] = useState<string>('all')
   const [selectedStatus, setSelectedStatus] = useState<string>('all')
   const [showCreateForm, setShowCreateForm] = useState(false)
+  const [showEditForm, setShowEditForm] = useState(false)
   const [creating, setCreating] = useState(false)
+  const [editing, setEditing] = useState(false)
   const [showViewModal, setShowViewModal] = useState(false)
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [formData, setFormData] = useState<CreateRoomRequest>({
+    number: '',
+    roomType: 'SINGLE',
+    capacity: 1,
+    price: 0,
+    currency: 'EUR',
+    description: ''
+  })
+  const [editFormData, setEditFormData] = useState<CreateRoomRequest>({
     number: '',
     roomType: 'SINGLE',
     capacity: 1,
@@ -207,22 +219,96 @@ export function RoomManagement() {
   }
 
   const handleEditRoom = (roomId: number) => {
-    // TODO: Implement edit room functionality
-    console.log('Edit room:', roomId)
+    const room = rooms.find(r => r.id === roomId)
+    if (room) {
+      setEditFormData({
+        number: room.number,
+        roomType: room.roomType,
+        capacity: room.capacity,
+        price: room.price,
+        currency: room.currency,
+        description: room.description || ''
+      })
+      setSelectedRoom(room)
+      setShowEditForm(true)
+    }
   }
 
   const handleDeleteRoom = async (roomId: number) => {
-    if (!confirm('Are you sure you want to delete this room?')) {
+    const room = rooms.find(r => r.id === roomId)
+    if (!room) return
+
+    const confirmMessage = `Are you sure you want to delete Room ${room.number}?\n\nThis will mark the room as "Out of Service" and it will no longer be available for bookings.`
+    
+    if (!confirm(confirmMessage)) {
       return
     }
 
     try {
-      await apiClient.delete(API_ENDPOINTS.ADMIN_ROOMS.DELETE(roomId.toString()))
+      // Make DELETE request with proper error handling
+      const response = await fetch(`${API_BASE_URL}/rooms/${roomId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(`HTTP ${response.status}: ${errorText}`)
+      }
+      
+      // Show success message
+      alert(`Room ${room.number} has been deleted successfully!`)
+      
       // Refresh the room list
       fetchRooms()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to delete room:', error)
-      alert('Failed to delete room. Please try again.')
+      const errorMessage = error?.message || 'Network error occurred'
+      alert(`Failed to delete Room ${room.number}: ${errorMessage}`)
+    }
+  }
+
+  const handleRestoreRoom = async (roomId: number) => {
+    const room = rooms.find(r => r.id === roomId)
+    if (!room) return
+
+    const confirmMessage = `Are you sure you want to restore Room ${room.number}?\n\nThis will make the room available for bookings again.`
+    
+    if (!confirm(confirmMessage)) {
+      return
+    }
+
+    try {
+      // Update room status to AVAILABLE
+      const roomUpdateData = {
+        id: room.id,
+        number: room.number,
+        roomType: room.roomType,
+        capacity: room.capacity,
+        price: room.price,
+        currency: room.currency,
+        status: 'AVAILABLE', // Restore to available
+        description: room.description,
+        equipment: room.equipment,
+        createdAt: room.createdAt,
+        updatedAt: new Date().toISOString()
+      }
+
+      // Update the room
+      await apiClient.put(API_ENDPOINTS.ADMIN_ROOMS.UPDATE(roomId.toString()), roomUpdateData)
+
+      // Show success message
+      alert(`Room ${room.number} has been restored successfully!`)
+      
+      // Refresh the room list
+      fetchRooms()
+    } catch (error: any) {
+      console.error('Failed to restore room:', error)
+      const errorMessage = error?.response?.data?.message || error?.message || 'Unknown error'
+      alert(`Failed to restore Room ${room.number}: ${errorMessage}`)
     }
   }
 
@@ -267,6 +353,63 @@ export function RoomManagement() {
       ...prev,
       [field]: value
     }))
+  }
+
+  const handleEditFormChange = (field: keyof CreateRoomRequest, value: string | number) => {
+    setEditFormData(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }
+
+  const handleUpdateRoom = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (editing || !selectedRoom) return
+
+    try {
+      setEditing(true)
+
+      // Create Room object with all required fields
+      const roomUpdateData = {
+        id: selectedRoom.id,
+        number: editFormData.number,
+        roomType: editFormData.roomType,
+        capacity: editFormData.capacity,
+        price: editFormData.price,
+        currency: editFormData.currency,
+        status: selectedRoom.status, // Keep existing status
+        description: editFormData.description,
+        equipment: selectedRoom.equipment, // Keep existing equipment
+        createdAt: selectedRoom.createdAt,
+        updatedAt: new Date().toISOString()
+      }
+
+      // Update the room
+      await apiClient.put(API_ENDPOINTS.ADMIN_ROOMS.UPDATE(selectedRoom.id.toString()), roomUpdateData)
+
+      // Reset form and close modal
+      setEditFormData({
+        number: '',
+        roomType: 'SINGLE',
+        capacity: 1,
+        price: 0,
+        currency: 'EUR',
+        description: ''
+      })
+      setShowEditForm(false)
+      setSelectedRoom(null)
+
+      // Refresh room list
+      fetchRooms()
+
+      alert('Room updated successfully!')
+    } catch (error: any) {
+      console.error('Failed to update room:', error)
+      const errorMessage = error?.response?.data?.message || error?.message || 'Unknown error'
+      alert(`Failed to update room: ${errorMessage}`)
+    } finally {
+      setEditing(false)
+    }
   }
 
   const handleViewRoom = (roomId: number) => {
@@ -369,7 +512,7 @@ export function RoomManagement() {
       {/* Rooms Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredRooms.map((room) => (
-          <Card key={room.id} className={COMPONENT_TEMPLATES.cardHover}>
+          <Card key={room.id} className={`${COMPONENT_TEMPLATES.cardHover} ${room.status === 'OUT_OF_SERVICE' ? 'border-red-200 bg-red-50/30' : ''}`}>
             {/* Room Image */}
             <div className="relative h-48 w-full overflow-hidden rounded-t-lg bg-muted">
               <img
@@ -430,7 +573,10 @@ export function RoomManagement() {
                 <div className="flex items-center space-x-3">
                   <div className="text-2xl">{getRoomTypeIcon(room.roomType)}</div>
                   <div>
-                    <CardTitle className="text-lg">Room {room.number}</CardTitle>
+                    <CardTitle className={`text-lg ${room.status === 'OUT_OF_SERVICE' ? 'text-red-600' : ''}`}>
+                      Room {room.number}
+                      {room.status === 'OUT_OF_SERVICE' && <span className="ml-2 text-xs text-red-500">(Deleted)</span>}
+                    </CardTitle>
                     <p className="text-sm text-muted-foreground capitalize">
                       {room.roomType.toLowerCase()} • {room.capacity} guest{room.capacity > 1 ? 's' : ''}
                     </p>
@@ -474,24 +620,38 @@ export function RoomManagement() {
                   <Eye className="h-4 w-4 mr-2" />
                   View
                 </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="flex-1"
-                  onClick={() => handleEditRoom(room.id)}
-                >
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="flex-1"
-                  onClick={() => handleDeleteRoom(room.id)}
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
-                </Button>
+                {room.status === 'OUT_OF_SERVICE' ? (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1 text-green-600 hover:text-green-700"
+                    onClick={() => handleRestoreRoom(room.id)}
+                  >
+                    <AlertCircle className="h-4 w-4 mr-2" />
+                    Restore
+                  </Button>
+                ) : (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1"
+                    onClick={() => handleEditRoom(room.id)}
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit
+                  </Button>
+                )}
+                {room.status !== 'OUT_OF_SERVICE' && (
+                  <Button 
+                    variant="outline"
+                    size="sm" 
+                    className="flex-1"
+                    onClick={() => handleDeleteRoom(room.id)}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -613,6 +773,116 @@ export function RoomManagement() {
                     disabled={creating}
                   >
                     {creating ? 'Creating...' : 'Create Room'}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Edit Room Form Modal */}
+      {showEditForm && selectedRoom && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <Card className="w-full max-w-md mx-4">
+            <CardHeader>
+              <CardTitle>Edit Room {selectedRoom.number}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleUpdateRoom} className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium">Room Number</label>
+                  <Input
+                    value={editFormData.number}
+                    onChange={(e) => handleEditFormChange('number', e.target.value)}
+                    placeholder="e.g., 101"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium">Room Type</label>
+                  <select
+                    value={editFormData.roomType}
+                    onChange={(e) => handleEditFormChange('roomType', e.target.value)}
+                    className="w-full p-2 border rounded-md"
+                    required
+                  >
+                    <option value="SINGLE">Single</option>
+                    <option value="DOUBLE">Double</option>
+                    <option value="DELUXE">Deluxe</option>
+                    <option value="FAMILY">Family</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium">Capacity</label>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="10"
+                    value={editFormData.capacity}
+                    onChange={(e) => handleEditFormChange('capacity', parseInt(e.target.value))}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium">Price (€)</label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={editFormData.price}
+                    onChange={(e) => handleEditFormChange('price', parseFloat(e.target.value))}
+                    placeholder="0.00"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium">Currency</label>
+                  <select
+                    value={editFormData.currency}
+                    onChange={(e) => handleEditFormChange('currency', e.target.value)}
+                    className="w-full p-2 border rounded-md"
+                    required
+                  >
+                    <option value="EUR">EUR</option>
+                    <option value="USD">USD</option>
+                    <option value="GBP">GBP</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium">Description</label>
+                  <textarea
+                    value={editFormData.description}
+                    onChange={(e) => handleEditFormChange('description', e.target.value)}
+                    placeholder="Room description..."
+                    className="w-full p-2 border rounded-md h-20"
+                  />
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setShowEditForm(false)
+                      setSelectedRoom(null)
+                    }}
+                    className="flex-1"
+                    disabled={editing}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="flex-1"
+                    disabled={editing}
+                  >
+                    {editing ? 'Updating...' : 'Update Room'}
                   </Button>
                 </div>
               </form>
