@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
 		"name": "MyBooking Hotel Management API",
-		"description": "Complete API collection for MyBooking Hotel Management System including Authentication, Room Management, Reservation Management, Event Management, Feedback Management, Loyalty Management, and Employee Management endpoints",
+		"description": "Complete API collection for MyBooking Hotel Management System including Authentication, Room Management, Reservation Management, Event Management, Feedback Management, Loyalty Management, Employee Management, and Analytics endpoints",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
@@ -3773,6 +3773,217 @@
 							"response": []
 						}
 					]
+				}
+			]
+		},
+		{
+			"name": "Analytics",
+			"item": [
+				{
+					"name": "Get Dashboard Data",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/api/admin/analytics/dashboard",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8080",
+							"path": ["api", "admin", "analytics", "dashboard"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Revenue Analytics",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/api/admin/analytics/revenue?startDate=2025-01-01&endDate=2025-12-31",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8080",
+							"path": ["api", "admin", "analytics", "revenue"],
+							"query": [
+								{
+									"key": "startDate",
+									"value": "2025-01-01"
+								},
+								{
+									"key": "endDate",
+									"value": "2025-12-31"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Revenue Trends",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/api/admin/analytics/revenue/trends?months=12",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8080",
+							"path": ["api", "admin", "analytics", "revenue", "trends"],
+							"query": [
+								{
+									"key": "months",
+									"value": "12"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Occupancy Metrics",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/api/admin/analytics/occupancy?startDate=2025-01-01&endDate=2025-12-31",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8080",
+							"path": ["api", "admin", "analytics", "occupancy"],
+							"query": [
+								{
+									"key": "startDate",
+									"value": "2025-01-01"
+								},
+								{
+									"key": "endDate",
+									"value": "2025-12-31"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Customer Insights",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/api/admin/analytics/customers",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8080",
+							"path": ["api", "admin", "analytics", "customers"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Employee Performance",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/api/admin/analytics/employees/performance",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8080",
+							"path": ["api", "admin", "analytics", "employees", "performance"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Employee Productivity",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/api/admin/analytics/employees/productivity",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8080",
+							"path": ["api", "admin", "analytics", "employees", "productivity"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Operational KPIs",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/api/admin/analytics/kpis",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8080",
+							"path": ["api", "admin", "analytics", "kpis"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get System Performance",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/api/admin/analytics/system-performance",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8080",
+							"path": ["api", "admin", "analytics", "system-performance"]
+						}
+					},
+					"response": []
 				}
 			]
 		}
