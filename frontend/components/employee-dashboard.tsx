@@ -234,6 +234,15 @@ export default function EmployeeDashboard() {
                     </Button>
                     <Button 
                       size="sm" 
+                      variant="outline"
+                      className="flex items-center gap-2"
+                      onClick={() => window.location.href = '/employee/trainings'}
+                    >
+                      <BookOpen className="h-4 w-4" />
+                      View Trainings
+                    </Button>
+                    <Button 
+                      size="sm" 
                       className="flex items-center gap-2"
                       onClick={() => window.location.href = '/employee/leave'}
                     >
@@ -283,7 +292,11 @@ export default function EmployeeDashboard() {
                     </div>
                   </div>
                 ))}
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => window.location.href = '/employee/tasks'}
+                >
                   View All Tasks
                 </Button>
               </CardContent>
@@ -343,6 +356,14 @@ export default function EmployeeDashboard() {
         <Button 
           variant="outline" 
           className="w-full justify-start"
+          onClick={() => window.location.href = '/employee/trainings'}
+        >
+          <BookOpen className="h-4 w-4 mr-2" />
+          View Trainings
+        </Button>
+        <Button 
+          variant="outline" 
+          className="w-full justify-start"
           onClick={() => window.location.href = '/employee/leave'}
         >
           <Calendar className="h-4 w-4 mr-2" />
@@ -351,10 +372,6 @@ export default function EmployeeDashboard() {
                 <Button variant="outline" className="w-full justify-start">
                   <Bell className="h-4 w-4 mr-2" />
                   View Announcements
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Update Task Status
                 </Button>
               </CardContent>
             </Card>
