@@ -70,11 +70,13 @@ export default function AdminTrainingManagement() {
       // Load employee trainings for the first training if available
       if (trainingsResponse && trainingsResponse.content.length > 0) {
         loadEmployeeTrainings(trainingsResponse.content[0].id)
-        // Also load all employee trainings for statistics
-        setTimeout(() => {
-          loadAllEmployeeTrainings()
-        }, 100) // Small delay to ensure trainings are set
       }
+      
+      // Load all employee trainings for statistics after a short delay
+      // to ensure all data is properly loaded
+      setTimeout(() => {
+        loadAllEmployeeTrainings()
+      }, 1000)
     } catch (error) {
       console.error("General error loading data:", error)
       toast.error("Failed to load training data")
@@ -97,26 +99,53 @@ export default function AdminTrainingManagement() {
 
   const loadAllEmployeeTrainings = async () => {
     try {
+      console.log("Loading all employee trainings for statistics...")
       // Load all employee trainings for statistics
       const allTrainings = []
       
       // Get all employees first
       const employeesResponse = await adminEmployeesApi.getAllEmployees()
-      const allEmployees = employeesResponse.content
+      console.log("Employees response:", employeesResponse)
+      
+      // Handle both array response and paginated response
+      let allEmployees
+      if (Array.isArray(employeesResponse)) {
+        allEmployees = employeesResponse
+        console.log("Response is direct array")
+      } else if (employeesResponse && employeesResponse.content) {
+        allEmployees = employeesResponse.content
+        console.log("Response is paginated object")
+      } else {
+        console.error("No employees response or invalid format")
+        setAllEmployeeTrainings([])
+        return
+      }
+      console.log(`Found ${allEmployees.length} employees`)
+      
+      if (allEmployees.length === 0) {
+        console.log("No employees found")
+        setAllEmployeeTrainings([])
+        return
+      }
       
       // For each employee, get their trainings
       for (const employee of allEmployees) {
         try {
+          console.log(`Loading trainings for employee ${employee.userId} (${employee.firstName} ${employee.lastName})`)
           const response = await adminTrainingApi.getEmployeeTrainings(employee.userId)
+          console.log(`Employee ${employee.userId} has ${response.content.length} trainings:`, response.content)
           allTrainings.push(...response.content)
         } catch (error) {
           console.error(`Error loading trainings for employee ${employee.userId}:`, error)
         }
       }
       
+      console.log(`Total employee trainings loaded: ${allTrainings.length}`)
+      console.log("All employee trainings:", allTrainings)
       setAllEmployeeTrainings(allTrainings)
     } catch (error) {
       console.error("Error loading all employee trainings:", error)
+      setAllEmployeeTrainings([])
     }
   }
 
@@ -556,21 +585,18 @@ export default function AdminTrainingManagement() {
                     </div>
                     
                     <div className="flex items-center gap-2">
-                      <Select
+                      <select
                         value={employeeTraining.status}
-                        onValueChange={(value: "ASSIGNED" | "IN_PROGRESS" | "COMPLETED") => 
+                        onChange={(e) => {
+                          const value = e.target.value as "ASSIGNED" | "IN_PROGRESS" | "COMPLETED"
                           handleUpdateTrainingStatus(employeeTraining, value)
-                        }
+                        }}
+                        className="w-40 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
-                        <SelectTrigger className="w-40">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="ASSIGNED">Assigned</SelectItem>
-                          <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
-                          <SelectItem value="COMPLETED">Completed</SelectItem>
-                        </SelectContent>
-                      </Select>
+                        <option value="ASSIGNED">Assigned</option>
+                        <option value="IN_PROGRESS">In Progress</option>
+                        <option value="COMPLETED">Completed</option>
+                      </select>
                     </div>
                   </div>
                 ))}
