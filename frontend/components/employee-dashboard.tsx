@@ -222,7 +222,11 @@ export default function EmployeeDashboard() {
                       View your shifts, tasks, and training sessions
                     </CardDescription>
                   </div>
-                  <Button size="sm" className="flex items-center gap-2">
+                  <Button 
+                    size="sm" 
+                    className="flex items-center gap-2"
+                    onClick={() => window.location.href = '/employee/leave'}
+                  >
                     <Plus className="h-4 w-4" />
                     Request Leave
                   </Button>
@@ -317,7 +321,11 @@ export default function EmployeeDashboard() {
                   <User className="h-4 w-4 mr-2" />
                   View Profile
                 </Button>
-                <Button variant="outline" className="w-full justify-start">
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start"
+                  onClick={() => window.location.href = '/employee/leave'}
+                >
                   <Calendar className="h-4 w-4 mr-2" />
                   Request Leave
                 </Button>
