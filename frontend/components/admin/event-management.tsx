@@ -22,6 +22,18 @@ import {
   RefreshCw,
   ArrowLeft
 } from "lucide-react"
+
+// Event type images mapping
+const getEventTypeImage = (eventType: string) => {
+  const imageMap: { [key: string]: string } = {
+    SPA: "https://images.pexels.com/photos/3757942/pexels-photo-3757942.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop",
+    CONFERENCE: "https://images.pexels.com/photos/1181406/pexels-photo-1181406.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop",
+    YOGA_CLASS: "https://images.pexels.com/photos/1812964/pexels-photo-1812964.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop",
+    FITNESS: "https://images.pexels.com/photos/1552242/pexels-photo-1552242.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop",
+    WEDDING: "https://images.pexels.com/photos/2253870/pexels-photo-2253870.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop"
+  }
+  return imageMap[eventType] || "https://images.pexels.com/photos/1181406/pexels-photo-1181406.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop"
+}
 import { adminEventApi, installationApi } from "@/lib/api"
 import type { Event, CreateEventRequest, UpdateEventRequest, Installation } from "@/lib/api"
 
@@ -377,56 +389,72 @@ export default function AdminEventManagement() {
           ) : (
             <div className="space-y-4">
               {filteredEvents.map((event) => (
-                <Card key={event.id}>
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-lg font-semibold">{event.name}</h3>
-                          <Badge className={getEventTypeBadge(event.eventType)}>
-                            {event.eventType}
-                          </Badge>
-                        </div>
-                        {event.description && (
-                          <p className="text-muted-foreground">{event.description}</p>
-                        )}
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <Clock className="h-4 w-4" />
-                            {formatDateTime(event.startAt)} - {formatDateTime(event.endAt)}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Users className="h-4 w-4" />
-                            {event.capacity} people
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <DollarSign className="h-4 w-4" />
-                            {event.price} {event.currency}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <MapPin className="h-4 w-4" />
-                            {event.installationName}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEditEvent(event)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDeleteEvent(event.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+                <Card key={event.id} className="overflow-hidden">
+                  <div className="flex">
+                    {/* Event Image */}
+                    <div className="w-48 h-32 flex-shrink-0">
+                      <img
+                        src={getEventTypeImage(event.eventType)}
+                        alt={`${event.eventType} event`}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = "https://images.pexels.com/photos/1181406/pexels-photo-1181406.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop";
+                        }}
+                      />
                     </div>
-                  </CardContent>
+                    
+                    {/* Event Details */}
+                    <CardContent className="p-6 flex-1">
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-lg font-semibold">{event.name}</h3>
+                            <Badge className={getEventTypeBadge(event.eventType)}>
+                              {event.eventType}
+                            </Badge>
+                          </div>
+                          {event.description && (
+                            <p className="text-muted-foreground">{event.description}</p>
+                          )}
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-4 w-4" />
+                              {formatDateTime(event.startAt)} - {formatDateTime(event.endAt)}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Users className="h-4 w-4" />
+                              {event.capacity} people
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <DollarSign className="h-4 w-4" />
+                              {event.price} {event.currency}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <MapPin className="h-4 w-4" />
+                              {event.installationName}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditEvent(event)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteEvent(event.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </div>
                 </Card>
               ))}
             </div>

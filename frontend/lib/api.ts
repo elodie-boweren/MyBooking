@@ -1234,6 +1234,53 @@ export const employeeDashboardApi = {
   }
 }
 
+// ==================== LOYALTY API ====================
+
+export const loyaltyApi = {
+  // Get loyalty account for current user
+  getAccount: async (): Promise<LoyaltyAccount> => {
+    return apiClient.get<LoyaltyAccount>(API_ENDPOINTS.LOYALTY.ACCOUNT)
+  },
+
+  // Get loyalty account by user ID
+  getAccountByUser: async (userId: string): Promise<LoyaltyAccount> => {
+    return apiClient.get<LoyaltyAccount>(API_ENDPOINTS.ADMIN_LOYALTY.ACCOUNT_BY_USER(userId))
+  },
+
+  // Get loyalty transactions for current user
+  getTransactions: async (): Promise<LoyaltyTransaction[]> => {
+    return apiClient.get<LoyaltyTransaction[]>(API_ENDPOINTS.LOYALTY.TRANSACTIONS)
+  },
+
+  // Get loyalty statistics
+  getStatistics: async (): Promise<any> => {
+    return apiClient.get<any>(API_ENDPOINTS.LOYALTY.STATISTICS)
+  }
+}
+
+// ==================== FEEDBACK API ====================
+
+export const feedbackApi = {
+  // Get user's feedback
+  getUserFeedbacks: async (): Promise<Feedback[]> => {
+    return apiClient.get<Feedback[]>(API_ENDPOINTS.FEEDBACK.MY)
+  },
+
+  // Create feedback
+  createFeedback: async (request: CreateFeedbackRequest): Promise<Feedback> => {
+    return apiClient.post<Feedback>(API_ENDPOINTS.FEEDBACK.CREATE, request)
+  }
+}
+
+// ==================== EVENT API ====================
+
+export const eventApi = {
+  // Get user's event bookings
+  getUserEventBookings: async (): Promise<EventBooking[]> => {
+    return apiClient.get<EventBooking[]>(API_ENDPOINTS.EVENT_BOOKINGS.MY)
+  }
+}
+
 // ==================== ADMIN EMPLOYEES API ====================
 
 export const adminEmployeesApi = {

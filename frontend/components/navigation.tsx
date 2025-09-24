@@ -21,20 +21,67 @@ import {
   BookOpen,
   MapPin,
   PartyPopper,
+  CreditCard,
+  MessageSquare,
+  Gift,
 } from "lucide-react"
-import { useAuth, useIsAdmin, useIsEmployee } from "@/lib/auth-context"
+import { useAuth } from "@/components/auth-provider"
+import { useIsAdmin, useIsEmployee } from "@/lib/auth-context"
+import { useState, useEffect } from "react"
+import { loyaltyApi } from "@/lib/api"
+import type { LoyaltyAccount } from "@/lib/api"
 
 export function Navigation() {
   const router = useRouter()
   const pathname = usePathname()
-  const { user, logout, isAuthenticated } = useAuth()
-  const isAdmin = useIsAdmin()
-  const isEmployee = useIsEmployee()
+  const { user, logout, isLoading } = useAuth()
+  const isAuthenticated = !!user
+  const isAdmin = user?.role === 'admin'
+  const isEmployee = false // This auth provider doesn't have employee role
+  const [loyaltyAccount, setLoyaltyAccount] = useState<LoyaltyAccount | null>(null)
+  const [loyaltyLoading, setLoyaltyLoading] = useState(false)
+
+  // Debug authentication state
+  console.log('Navigation Debug:', {
+    isAuthenticated,
+    isLoading,
+    user: user ? { 
+      id: user.id, 
+      email: user.email, 
+      name: user.name,
+      role: user.role,
+      fullUser: user
+    } : null,
+    loyaltyAccount: loyaltyAccount ? { balance: loyaltyAccount.pointsBalance } : null
+  })
 
   const handleLogout = () => {
     logout()
     router.push("/login")
   }
+
+  // Fetch loyalty points for clients
+  useEffect(() => {
+    const fetchLoyaltyPoints = async () => {
+      if (user && user.role === 'CLIENT' && isAuthenticated) {
+        setLoyaltyLoading(true)
+        try {
+          const account = await loyaltyApi.getAccount()
+          setLoyaltyAccount(account)
+        } catch (error) {
+          console.error('Failed to fetch loyalty points:', error)
+          setLoyaltyAccount(null)
+        } finally {
+          setLoyaltyLoading(false)
+        }
+      }
+    }
+
+    // Only fetch if user is authenticated and not loading
+    if (isAuthenticated && !isLoading) {
+      fetchLoyaltyPoints()
+    }
+  }, [user, isAuthenticated, isLoading])
 
   const navItems = [
     { href: "/rooms", label: "Rooms", icon: CalendarDays },
@@ -79,32 +126,37 @@ export function Navigation() {
             <>
               <div className="hidden sm:flex items-center space-x-2 px-3 py-1 bg-secondary/10 rounded-full">
                 <Star className="h-4 w-4 text-secondary" />
-                <span className="text-sm font-medium text-secondary">0</span>
+                <span className="text-sm font-medium text-secondary">
+                  {loyaltyLoading ? "Loading..." : 
+                   loyaltyAccount ? loyaltyAccount.pointsBalance : 
+                   "0"}
+                </span>
               </div>
 
               <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage src="/placeholder.svg" alt={user.firstName} />
-                      <AvatarFallback>
-                        {user.firstName[0]}
-                        {user.lastName[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                  </Button>
+                <DropdownMenuTrigger className="relative h-10 w-10 rounded-full border-0 bg-transparent hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src="/placeholder.svg" alt={user.name || 'User'} />
+                    <AvatarFallback>
+                      {user.name ? user.name[0] : 'U'}
+                    </AvatarFallback>
+                  </Avatar>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-64" align="end" forceMount>
                   <div className="flex items-center justify-start gap-2 p-2">
                     <div className="flex flex-col space-y-1 leading-none">
                       <p className="font-medium">
-                        {user.firstName} {user.lastName}
+                        {user.name || 'User'}
                       </p>
-                      <p className="w-[200px] truncate text-sm text-muted-foreground">{user.email}</p>
+                      <p className="w-[200px] truncate text-sm text-muted-foreground">{user.email || 'No email'}</p>
                       <div className="flex items-center space-x-2 mt-2">
                         <Badge variant="secondary" className="flex items-center space-x-1">
                           <Star className="h-3 w-3" />
-                          <span>0 Points</span>
+                          <span>
+                            {loyaltyLoading ? "Loading..." : 
+                             loyaltyAccount ? `${loyaltyAccount.pointsBalance} Points` : 
+                             "0 Points"}
+                          </span>
                         </Badge>
                       </div>
                     </div>
@@ -129,6 +181,20 @@ export function Navigation() {
                 <Link href="/my-events" className="flex items-center">
                   <PartyPopper className="mr-2 h-4 w-4" />
                   <span>My Events</span>
+                </Link>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem asChild>
+                <Link href="/my-loyalty" className="flex items-center">
+                  <Gift className="mr-2 h-4 w-4" />
+                  <span>Loyalty Points</span>
+                </Link>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem asChild>
+                <Link href="/my-feedback" className="flex items-center">
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                  <span>My Feedback</span>
                 </Link>
               </DropdownMenuItem>
 
