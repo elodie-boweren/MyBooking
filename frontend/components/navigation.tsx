@@ -52,7 +52,19 @@ export function Navigation() {
       role: user.role,
       fullUser: user
     } : null,
-    loyaltyAccount: loyaltyAccount ? { balance: loyaltyAccount.pointsBalance } : null
+    loyaltyAccount: loyaltyAccount ? { balance: loyaltyAccount.balance } : null,
+    loyaltyLoading
+  })
+  
+  // Debug loyalty points specifically
+  console.log('Loyalty Debug:', {
+    loyaltyAccount,
+    loyaltyLoading,
+    balance: loyaltyAccount?.balance,
+    pointsBalance: loyaltyAccount?.pointsBalance,
+    userRole: user?.role,
+    isClient: user?.role === 'CLIENT' || user?.role === 'client',
+    shouldFetch: user && (user.role === 'CLIENT' || user.role === 'client') && isAuthenticated
   })
 
   const handleLogout = () => {
@@ -63,10 +75,19 @@ export function Navigation() {
   // Fetch loyalty points for clients
   useEffect(() => {
     const fetchLoyaltyPoints = async () => {
-      if (user && user.role === 'CLIENT' && isAuthenticated) {
+      console.log('fetchLoyaltyPoints called:', {
+        user: !!user,
+        userRole: user?.role,
+        isAuthenticated,
+        shouldFetch: user && (user.role === 'CLIENT' || user.role === 'client') && isAuthenticated
+      })
+      
+      if (user && (user.role === 'CLIENT' || user.role === 'client') && isAuthenticated) {
+        console.log('Fetching loyalty points...')
         setLoyaltyLoading(true)
         try {
           const account = await loyaltyApi.getAccount()
+          console.log('Loyalty account fetched:', account)
           setLoyaltyAccount(account)
         } catch (error) {
           console.error('Failed to fetch loyalty points:', error)
@@ -74,6 +95,8 @@ export function Navigation() {
         } finally {
           setLoyaltyLoading(false)
         }
+      } else {
+        console.log('Not fetching loyalty points - conditions not met')
       }
     }
 
@@ -128,7 +151,7 @@ export function Navigation() {
                 <Star className="h-4 w-4 text-secondary" />
                 <span className="text-sm font-medium text-secondary">
                   {loyaltyLoading ? "Loading..." : 
-                   loyaltyAccount ? loyaltyAccount.pointsBalance : 
+                   loyaltyAccount ? loyaltyAccount.balance : 
                    "0"}
                 </span>
               </div>
@@ -154,7 +177,7 @@ export function Navigation() {
                           <Star className="h-3 w-3" />
                           <span>
                             {loyaltyLoading ? "Loading..." : 
-                             loyaltyAccount ? `${loyaltyAccount.pointsBalance} Points` : 
+                             loyaltyAccount ? `${loyaltyAccount.balance} Points` : 
                              "0 Points"}
                           </span>
                         </Badge>
