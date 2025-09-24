@@ -48,13 +48,21 @@ export default function AdminDashboardPage() {
               <h3 className="font-medium text-foreground">Reservations</h3>
               <p className="text-sm text-muted-foreground">Manage bookings and cancellations</p>
             </a>
-            <a 
-              href="/admin/tasks" 
-              className="p-4 border border-border rounded-lg hover:bg-muted transition-colors"
-            >
-              <h3 className="font-medium text-foreground">Task Management</h3>
-              <p className="text-sm text-muted-foreground">Assign and monitor employee tasks</p>
-            </a>
+    <a 
+      href="/admin/tasks" 
+      className="p-4 border border-border rounded-lg hover:bg-muted transition-colors"
+    >
+      <h3 className="font-medium text-foreground">Task Management</h3>
+      <p className="text-sm text-muted-foreground">Assign and monitor employee tasks</p>
+    </a>
+    
+    <a 
+      href="/admin/shifts" 
+      className="p-4 border border-border rounded-lg hover:bg-muted transition-colors"
+    >
+      <h3 className="font-medium text-foreground">Shift Management</h3>
+      <p className="text-sm text-muted-foreground">Schedule and manage employee shifts</p>
+    </a>
           </div>
         </div>
       </AdminLayout>

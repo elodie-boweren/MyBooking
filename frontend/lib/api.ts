@@ -140,11 +140,11 @@ export const apiClient = new ApiClient(API_BASE_URL)
 
 // API endpoints configuration matching Spring Boot backend
 export const API_ENDPOINTS = {
-      // Authentication
-      AUTH: {
-        LOGIN: "/auth/login",
-        REGISTER: "/auth/register",
-        PROFILE: "/auth/profile",
+  // Authentication
+  AUTH: {
+    LOGIN: "/auth/login",
+    REGISTER: "/auth/register",
+    PROFILE: "/auth/profile",
         CHANGE_PASSWORD: "/auth/change-password",
       },
 
@@ -156,7 +156,7 @@ export const API_ENDPOINTS = {
         UPDATE: (id: string) => `/auth/users/${id}`,
         DELETE: (id: string) => `/auth/users/${id}`,
         BY_ROLE: (role: string) => `/auth/users/role/${role}`,
-      },
+  },
 
   // Rooms
   ROOMS: {
@@ -598,30 +598,50 @@ export interface EmployeeTraining {
   updatedAt: string
 }
 
-// Employee Task interface - matches backend exactly
+// Employee Task interface - matches backend TaskResponseDto exactly
 export interface EmployeeTask {
   id: number
+  employeeId: number
+  employeeName: string
+  employeeEmail: string
   title: string
   description: string
-  priority: "LOW" | "MEDIUM" | "HIGH"
   status: "TODO" | "IN_PROGRESS" | "DONE"
-  assignedTo: number
-  assignedToName: string
-  dueDate: string
   note?: string
+  photoUrl?: string
   createdAt: string
   updatedAt: string
 }
 
-// Employee Shift interface - matches backend exactly
+// Employee Shift interface - matches backend ShiftResponseDto exactly
 export interface EmployeeShift {
   id: number
   employeeId: number
   employeeName: string
-  startAt: string // LocalDateTime from backend
-  endAt: string // LocalDateTime from backend
-  createdAt: string
-  updatedAt: string
+  employeeEmail: string
+  startAt: string
+  endAt: string
+}
+
+// Admin Shift Management interfaces
+export interface AdminShift {
+  id: number
+  employeeId: number
+  employeeName: string
+  employeeEmail: string
+  startAt: string
+  endAt: string
+}
+
+export interface CreateShiftRequest {
+  employeeId: number
+  startAt: string
+  endAt: string
+}
+
+export interface UpdateShiftRequest {
+  startAt: string
+  endAt: string
 }
 
 // Employee Leave Request interface - matches backend exactly
@@ -671,6 +691,7 @@ export interface AdminTask {
   title: string
   description: string
   status: "TODO" | "IN_PROGRESS" | "DONE"
+  priority: "LOW" | "MEDIUM" | "HIGH"
   note?: string
   photoUrl?: string
   createdAt: string
@@ -681,6 +702,7 @@ export interface CreateTaskRequest {
   employeeId: number
   title: string
   description: string
+  priority?: "LOW" | "MEDIUM" | "HIGH"
 }
 
 export interface UpdateTaskRequest {
@@ -1011,14 +1033,14 @@ export const employeeDashboardApi = {
       const today = new Date().toISOString().split('T')[0]
       
       return response.content
-        .filter(task => task.dueDate.startsWith(today))
+        .filter(task => task.createdAt.startsWith(today))
         .map(task => ({
           id: task.id,
           title: task.title,
           description: task.description,
-          priority: task.priority,
+          priority: "MEDIUM", // Default priority since backend doesn't have it yet
           status: task.status,
-          dueDate: task.dueDate,
+          dueDate: task.createdAt, // Use createdAt as dueDate for now
           canReply: true
         }))
     } catch (error) {
@@ -1105,6 +1127,20 @@ export const employeeDashboardApi = {
   }
 }
 
+// ==================== ADMIN EMPLOYEES API ====================
+
+export const adminEmployeesApi = {
+  // Get all employees
+  getAllEmployees: async (): Promise<Employee[]> => {
+    return apiClient.get<Employee[]>(`${API_ENDPOINTS.ADMIN_EMPLOYEES.ALL}/active`)
+  },
+
+  // Get employee by ID
+  getEmployeeById: async (employeeId: number): Promise<Employee> => {
+    return apiClient.get<Employee>(API_ENDPOINTS.ADMIN_EMPLOYEES.GET(employeeId.toString()))
+  }
+}
+
 // ==================== ADMIN TASK MANAGEMENT API ====================
 
 export const adminTaskApi = {
@@ -1133,5 +1169,39 @@ export const adminTaskApi = {
   // Get task by ID
   getTaskById: async (taskId: number): Promise<AdminTask> => {
     return apiClient.get<AdminTask>(API_ENDPOINTS.ADMIN_EMPLOYEES.TASK_BY_ID(taskId.toString()))
+  }
+}
+
+// ==================== ADMIN SHIFT MANAGEMENT API ====================
+
+export const adminShiftApi = {
+  // Get all shifts
+  getAllShifts: async (): Promise<PaginatedResponse<AdminShift>> => {
+    return apiClient.get<PaginatedResponse<AdminShift>>(API_ENDPOINTS.ADMIN_EMPLOYEES.SHIFTS)
+  },
+
+  // Get shifts for specific employee
+  getEmployeeShifts: async (employeeId: number): Promise<PaginatedResponse<AdminShift>> => {
+    return apiClient.get<PaginatedResponse<AdminShift>>(`${API_ENDPOINTS.ADMIN_EMPLOYEES.ALL}/${employeeId}/shifts`)
+  },
+
+  // Create new shift
+  createShift: async (request: CreateShiftRequest): Promise<AdminShift> => {
+    return apiClient.post<AdminShift>(API_ENDPOINTS.ADMIN_EMPLOYEES.SHIFTS, request)
+  },
+
+  // Update shift
+  updateShift: async (shiftId: number, request: UpdateShiftRequest): Promise<AdminShift> => {
+    return apiClient.put<AdminShift>(`${API_ENDPOINTS.ADMIN_EMPLOYEES.SHIFTS}/${shiftId}`, request)
+  },
+
+  // Delete shift
+  deleteShift: async (shiftId: number): Promise<void> => {
+    return apiClient.delete(`${API_ENDPOINTS.ADMIN_EMPLOYEES.SHIFTS}/${shiftId}`)
+  },
+
+  // Get shift by ID
+  getShiftById: async (shiftId: number): Promise<AdminShift> => {
+    return apiClient.get<AdminShift>(`${API_ENDPOINTS.ADMIN_EMPLOYEES.SHIFTS}/${shiftId}`)
   }
 }

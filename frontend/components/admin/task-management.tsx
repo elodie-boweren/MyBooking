@@ -23,14 +23,16 @@ import {
   MessageSquare,
   Award,
   Users,
-  BarChart3
+  BarChart3,
+  ArrowLeft
 } from "lucide-react"
-import { adminTaskApi, AdminTask, CreateTaskRequest, UpdateTaskRequest, Employee } from "@/lib/api"
+import { adminTaskApi, adminEmployeesApi, AdminTask, CreateTaskRequest, UpdateTaskRequest, Employee } from "@/lib/api"
 
 interface TaskFormData {
-  employeeId: number
+  userId: number
   title: string
   description: string
+  priority: "LOW" | "MEDIUM" | "HIGH"
 }
 
 interface TaskUpdateFormData {
@@ -42,6 +44,7 @@ export default function AdminTaskManagement() {
   const [tasks, setTasks] = useState<AdminTask[]>([])
   const [employees, setEmployees] = useState<Employee[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingEmployees, setIsLoadingEmployees] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [showUpdateDialog, setShowUpdateDialog] = useState(false)
@@ -51,9 +54,10 @@ export default function AdminTaskManagement() {
   const [searchTerm, setSearchTerm] = useState("")
   
   const [taskForm, setTaskForm] = useState<TaskFormData>({
-    employeeId: 0,
+    userId: 0,
     title: "",
-    description: ""
+    description: "",
+    priority: "MEDIUM"
   })
   
   const [updateForm, setUpdateForm] = useState<TaskUpdateFormData>({
@@ -84,25 +88,29 @@ export default function AdminTaskManagement() {
 
   const fetchEmployees = async () => {
     try {
-      const response = await fetch('/api/admin/employees', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        }
-      })
-      if (response.ok) {
-        const data = await response.json()
-        setEmployees(data)
+      setIsLoadingEmployees(true)
+      const employees = await adminEmployeesApi.getAllEmployees()
+      // Ensure employees is an array
+      if (Array.isArray(employees)) {
+        setEmployees(employees)
+      } else {
+        console.error('Employees response is not an array:', employees)
+        setEmployees([])
+        setError('Invalid employees data received.')
       }
     } catch (error) {
       console.error('Error fetching employees:', error)
+      setError('Failed to load employees. Please try again.')
+      setEmployees([])
+    } finally {
+      setIsLoadingEmployees(false)
     }
   }
 
   const handleCreateTask = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!taskForm.employeeId || !taskForm.title) {
+    if (!taskForm.userId || !taskForm.title) {
       setError('Employee and title are required.')
       return
     }
@@ -112,15 +120,16 @@ export default function AdminTaskManagement() {
       setError(null)
       
       const request: CreateTaskRequest = {
-        employeeId: taskForm.employeeId,
+        employeeId: taskForm.userId,
         title: taskForm.title,
-        description: taskForm.description
+        description: taskForm.description,
+        priority: taskForm.priority
       }
       
       await adminTaskApi.createTask(request)
       
       // Reset form and close dialog
-      setTaskForm({ employeeId: 0, title: "", description: "" })
+      setTaskForm({ userId: 0, title: "", description: "", priority: "MEDIUM" })
       setShowCreateDialog(false)
       
       // Refresh tasks list
@@ -195,6 +204,15 @@ export default function AdminTaskManagement() {
     }
   }
 
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'HIGH': return 'bg-red-100 text-red-800'
+      case 'MEDIUM': return 'bg-yellow-100 text-yellow-800'
+      case 'LOW': return 'bg-green-100 text-green-800'
+      default: return 'bg-gray-100 text-gray-800'
+    }
+  }
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -228,9 +246,20 @@ export default function AdminTaskManagement() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Task Management</h2>
-          <p className="text-gray-600 mt-1">Assign and monitor employee tasks</p>
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => window.location.href = '/admin'}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Dashboard
+          </Button>
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">Task Management</h2>
+            <p className="text-gray-600 mt-1">Assign and monitor employee tasks</p>
+          </div>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={fetchTasks} disabled={isLoading}>
@@ -351,6 +380,9 @@ export default function AdminTaskManagement() {
                         {getStatusIcon(task.status)}
                         <span className="ml-1">{task.status.replace('_', ' ')}</span>
                       </Badge>
+                      <Badge className={getPriorityColor(task.priority)}>
+                        {task.priority}
+                      </Badge>
                     </div>
                     
                     <p className="text-gray-700 mb-4">{task.description}</p>
@@ -417,15 +449,18 @@ export default function AdminTaskManagement() {
             <div className="space-y-2">
               <Label htmlFor="employeeId">Employee</Label>
               <select
-                id="employeeId"
-                value={taskForm.employeeId}
-                onChange={(e) => setTaskForm(prev => ({ ...prev, employeeId: parseInt(e.target.value) }))}
+                id="userId"
+                value={taskForm.userId}
+                onChange={(e) => setTaskForm(prev => ({ ...prev, userId: parseInt(e.target.value) }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 required
+                disabled={isLoadingEmployees}
               >
-                <option value={0}>Select an employee</option>
+                <option value={0}>
+                  {isLoadingEmployees ? 'Loading employees...' : 'Select an employee'}
+                </option>
                 {employees.map(employee => (
-                  <option key={employee.id} value={employee.id}>
+                  <option key={employee.userId} value={employee.userId}>
                     {employee.firstName} {employee.lastName} ({employee.email})
                   </option>
                 ))}
@@ -452,6 +487,21 @@ export default function AdminTaskManagement() {
                 onChange={(e) => setTaskForm(prev => ({ ...prev, description: e.target.value }))}
                 rows={3}
               />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="priority">Priority</Label>
+              <select
+                id="priority"
+                value={taskForm.priority}
+                onChange={(e) => setTaskForm(prev => ({ ...prev, priority: e.target.value as "LOW" | "MEDIUM" | "HIGH" }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                required
+              >
+                <option value="LOW">Low Priority</option>
+                <option value="MEDIUM">Medium Priority</option>
+                <option value="HIGH">High Priority</option>
+              </select>
             </div>
             
             <div className="flex justify-end gap-2">
