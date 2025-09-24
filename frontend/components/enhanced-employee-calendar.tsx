@@ -59,34 +59,17 @@ export default function EnhancedEmployeeCalendar() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Fetch real events when component mounts or selectedDate/viewMode changes
+  // Fetch events only once when component mounts
   useEffect(() => {
     const loadEvents = async () => {
       setIsLoading(true)
       setError(null)
       
       try {
-        // Calculate date range based on view mode
-        let startDate: string
-        let endDate: string
-        
-        if (viewMode === 'day') {
-          startDate = selectedDate.toISOString().split('T')[0]
-          endDate = startDate
-        } else if (viewMode === 'week') {
-          const startOfWeek = new Date(selectedDate)
-          startOfWeek.setDate(selectedDate.getDate() - selectedDate.getDay())
-          const endOfWeek = new Date(startOfWeek)
-          endOfWeek.setDate(startOfWeek.getDate() + 6)
-          startDate = startOfWeek.toISOString().split('T')[0]
-          endDate = endOfWeek.toISOString().split('T')[0]
-        } else {
-          // Month view
-          const monthStart = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1)
-          const monthEnd = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0)
-          startDate = monthStart.toISOString().split('T')[0]
-          endDate = monthEnd.toISOString().split('T')[0]
-        }
+        // Fetch events for a broader date range to avoid frequent API calls
+        const today = new Date()
+        const startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1).toISOString().split('T')[0]
+        const endDate = new Date(today.getFullYear(), today.getMonth() + 2, 0).toISOString().split('T')[0]
         
         const fetchedEvents = await fetchCalendarEvents(startDate, endDate)
         setEvents(fetchedEvents)
@@ -100,7 +83,7 @@ export default function EnhancedEmployeeCalendar() {
     }
     
     loadEvents()
-  }, [selectedDate, viewMode])
+  }, []) // Only run once on mount
 
   const getEventColor = (type: CalendarEvent["type"]) => {
     switch (type) {
@@ -250,7 +233,7 @@ export default function EnhancedEmployeeCalendar() {
     if (viewMode === 'day') {
       // Show events for the selected day
       const targetDate = currentDate.toISOString().split('T')[0]
-      return events.filter(event => {
+      const filtered = events.filter(event => {
         // For training events, show if they span the selected day
         if (event.type === 'training') {
           return true // Training events are shown for the entire period
@@ -258,6 +241,9 @@ export default function EnhancedEmployeeCalendar() {
         // For shifts and tasks, show if they're on the selected day
         return event.date === targetDate
       })
+      
+      
+      return filtered
     } else if (viewMode === 'week') {
       // Show events for the selected week
       const startOfWeek = new Date(currentDate)
@@ -265,7 +251,7 @@ export default function EnhancedEmployeeCalendar() {
       const endOfWeek = new Date(startOfWeek)
       endOfWeek.setDate(startOfWeek.getDate() + 6)
       
-      return events.filter(event => {
+      const filtered = events.filter(event => {
         if (event.type === 'training') {
           return true // Training events span multiple days
         }
@@ -274,12 +260,15 @@ export default function EnhancedEmployeeCalendar() {
         const eventDate = new Date(event.date)
         return eventDate >= startOfWeek && eventDate <= endOfWeek
       })
+      
+      
+      return filtered
     } else {
       // Month view - show all events for the month
       const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
       const monthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0)
       
-      return events.filter(event => {
+      const filtered = events.filter(event => {
         if (event.type === 'training') {
           return true // Training events span multiple days
         }
@@ -288,6 +277,9 @@ export default function EnhancedEmployeeCalendar() {
         const eventDate = new Date(event.date)
         return eventDate >= monthStart && eventDate <= monthEnd
       })
+      
+      
+      return filtered
     }
   }
 

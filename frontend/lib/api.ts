@@ -1066,58 +1066,75 @@ export const employeeDashboardApi = {
       const events: CalendarEvent[] = []
 
       // Add tasks
-      tasksResponse.content.forEach(task => {
-        events.push({
-          id: `task-${task.id}`,
-          title: task.title,
-          type: "task",
-          startTime: task.dueDate,
-          endTime: task.dueDate,
-          description: task.description,
-          status: task.status === "DONE" ? "completed" : "pending",
-          canReply: true,
-          date: task.dueDate.split('T')[0]
+      if (tasksResponse.content) {
+        tasksResponse.content.forEach(task => {
+          // Use createdAt as the task date since there's no dueDate in the backend
+          const taskDate = new Date(task.createdAt).toISOString().split('T')[0]
+          
+          events.push({
+            id: `task-${task.id}`,
+            title: task.title,
+            type: "task",
+            startTime: task.createdAt,
+            endTime: task.createdAt,
+            description: task.description,
+            status: task.status === "DONE" ? "completed" : "pending",
+            canReply: true,
+            date: taskDate
+          })
         })
-      })
+      }
 
       // Add shifts
-      shiftsResponse.content.forEach(shift => {
-        const startTime = new Date(shift.startAt).toLocaleTimeString('en-US', { 
-          hour: '2-digit', 
-          minute: '2-digit',
-          hour12: false 
+      if (shiftsResponse.content) {
+        shiftsResponse.content.forEach(shift => {
+          const startTime = new Date(shift.startAt).toLocaleTimeString('en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: false 
+          })
+          const endTime = new Date(shift.endAt).toLocaleTimeString('en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: false 
+          })
+          
+          // Ensure we have a proper date string
+          const shiftDate = new Date(shift.startAt).toISOString().split('T')[0]
+          
+          events.push({
+            id: `shift-${shift.id}`,
+            title: "Work Shift",
+            type: "shift",
+            startTime,
+            endTime,
+            location: "Hotel",
+            status: "in-progress",
+            date: shiftDate
+          })
         })
-        const endTime = new Date(shift.endAt).toLocaleTimeString('en-US', { 
-          hour: '2-digit', 
-          minute: '2-digit',
-          hour12: false 
-        })
-        
-        events.push({
-          id: `shift-${shift.id}`,
-          title: "Work Shift",
-          type: "shift",
-          startTime,
-          endTime,
-          location: "Hotel",
-          status: "in-progress",
-          date: shift.startAt.split('T')[0]
-        })
-      })
+      }
 
       // Add trainings
-      trainingsResponse.content.forEach(training => {
-        events.push({
-          id: `training-${training.id}`,
-          title: training.trainingTitle,
-          type: "training",
-          startTime: "All Day",
-          endTime: "All Day",
-          description: "Training session",
-          status: training.status === "COMPLETED" ? "completed" : "in-progress",
-          date: training.assignedDate.split('T')[0]
+      if (trainingsResponse.content) {
+        trainingsResponse.content.forEach(training => {
+          // Use assignedAt as the training date, fallback to current date if not available
+          const trainingDate = training.assignedAt ? 
+            new Date(training.assignedAt).toISOString().split('T')[0] : 
+            new Date().toISOString().split('T')[0]
+          
+          events.push({
+            id: `training-${training.id}`,
+            title: training.trainingTitle,
+            type: "training",
+            startTime: "All Day",
+            endTime: "All Day",
+            description: "Training session",
+            status: training.status === "COMPLETED" ? "completed" : "in-progress",
+            date: trainingDate
+          })
         })
-      })
+      }
 
       return events
     } catch (error) {
