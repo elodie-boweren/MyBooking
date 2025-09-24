@@ -286,6 +286,8 @@ export const API_ENDPOINTS = {
     DELETE: (id: string) => `/admin/employees/${id}`,
     SEARCH: "/admin/employees/search",
     TASKS: "/admin/employees/tasks",
+    TASK_BY_ID: (id: string) => `/admin/employees/tasks/${id}`,
+    EMPLOYEE_TASKS: (employeeId: string) => `/admin/employees/${employeeId}/tasks`,
     SHIFTS: "/admin/employees/shifts",
     TRAINING: "/admin/employees/training",
     LEAVE: "/admin/employees/leave",
@@ -658,6 +660,33 @@ export interface Announcement {
   isActive: boolean
   createdAt: string
   updatedAt: string
+}
+
+// Admin Task Management interfaces
+export interface AdminTask {
+  id: number
+  employeeId: number
+  employeeName: string
+  employeeEmail: string
+  title: string
+  description: string
+  status: "TODO" | "IN_PROGRESS" | "DONE"
+  note?: string
+  photoUrl?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateTaskRequest {
+  employeeId: number
+  title: string
+  description: string
+}
+
+export interface UpdateTaskRequest {
+  status: "TODO" | "IN_PROGRESS" | "DONE"
+  note?: string
+  photoUrl?: string
 }
 
 // ==================== AUTHENTICATION TYPES ====================
@@ -1073,5 +1102,36 @@ export const employeeDashboardApi = {
       console.error("Error fetching calendar events:", error)
       return []
     }
+  }
+}
+
+// ==================== ADMIN TASK MANAGEMENT API ====================
+
+export const adminTaskApi = {
+  // Get all tasks with filtering
+  getAllTasks: async (status?: "TODO" | "IN_PROGRESS" | "DONE"): Promise<PaginatedResponse<AdminTask>> => {
+    const params = status ? `?status=${status}` : ""
+    return apiClient.get<PaginatedResponse<AdminTask>>(`${API_ENDPOINTS.ADMIN_EMPLOYEES.TASKS}${params}`)
+  },
+
+  // Get tasks for specific employee
+  getEmployeeTasks: async (employeeId: number, status?: "TODO" | "IN_PROGRESS" | "DONE"): Promise<PaginatedResponse<AdminTask>> => {
+    const params = status ? `?status=${status}` : ""
+    return apiClient.get<PaginatedResponse<AdminTask>>(`${API_ENDPOINTS.ADMIN_EMPLOYEES.EMPLOYEE_TASKS(employeeId.toString())}${params}`)
+  },
+
+  // Create new task
+  createTask: async (request: CreateTaskRequest): Promise<AdminTask> => {
+    return apiClient.post<AdminTask>(API_ENDPOINTS.ADMIN_EMPLOYEES.TASKS, request)
+  },
+
+  // Update task
+  updateTask: async (taskId: number, request: UpdateTaskRequest): Promise<AdminTask> => {
+    return apiClient.put<AdminTask>(API_ENDPOINTS.ADMIN_EMPLOYEES.TASK_BY_ID(taskId.toString()), request)
+  },
+
+  // Get task by ID
+  getTaskById: async (taskId: number): Promise<AdminTask> => {
+    return apiClient.get<AdminTask>(API_ENDPOINTS.ADMIN_EMPLOYEES.TASK_BY_ID(taskId.toString()))
   }
 }

@@ -49,11 +49,11 @@ export default function AdminDashboardPage() {
               <p className="text-sm text-muted-foreground">Manage bookings and cancellations</p>
             </a>
             <a 
-              href="/admin/analytics" 
+              href="/admin/tasks" 
               className="p-4 border border-border rounded-lg hover:bg-muted transition-colors"
             >
-              <h3 className="font-medium text-foreground">Analytics</h3>
-              <p className="text-sm text-muted-foreground">View detailed reports and insights</p>
+              <h3 className="font-medium text-foreground">Task Management</h3>
+              <p className="text-sm text-muted-foreground">Assign and monitor employee tasks</p>
             </a>
           </div>
         </div>
