@@ -16,7 +16,9 @@ import {
   Star,
   Wifi,
   Car,
-  Coffee
+  Coffee,
+  CreditCard,
+  CheckCircle
 } from 'lucide-react'
 import { COMPONENT_TEMPLATES } from '@/lib/style-constants'
 import { apiClient, API_ENDPOINTS, Room } from '@/lib/api'
@@ -46,6 +48,17 @@ export function RoomSearch({ onRoomSelect }: RoomSearchProps) {
     roomType: 'all',
     maxPrice: ''
   })
+  
+  // Booking state
+  const [showBookingForm, setShowBookingForm] = useState(false)
+  const [selectedRoom, setSelectedRoom] = useState<Room | null>(null)
+  const [booking, setBooking] = useState(false)
+  const [bookingData, setBookingData] = useState({
+    checkIn: '',
+    checkOut: '',
+    numberOfGuests: 1,
+    pointsUsed: 0
+  })
 
   // Fetch all available rooms on component mount
   useEffect(() => {
@@ -55,6 +68,13 @@ export function RoomSearch({ onRoomSelect }: RoomSearchProps) {
   const fetchAllRooms = async () => {
     try {
       setLoading(true)
+      
+      // If dates are provided, use the search endpoint with availability checking
+      if (searchParams.checkIn && searchParams.checkOut) {
+        await handleSearch()
+        return
+      }
+      
       const response = await apiClient.get<any>(API_ENDPOINTS.ROOMS.SEARCH)
       
       // Handle paginated response from Spring Boot
@@ -62,7 +82,22 @@ export function RoomSearch({ onRoomSelect }: RoomSearchProps) {
       const allRooms = Array.isArray(roomsData) ? roomsData : []
       
       // Filter out OUT_OF_SERVICE rooms for client interface - clients should only see bookable rooms
-      const availableRooms = allRooms.filter((room: Room) => room.status === 'AVAILABLE')
+      let availableRooms = allRooms.filter((room: Room) => room.status === 'AVAILABLE')
+      
+      // Apply additional client-side filtering
+      if (searchParams.maxPrice) {
+        const maxPrice = parseFloat(searchParams.maxPrice)
+        availableRooms = availableRooms.filter((room: Room) => room.price <= maxPrice)
+      }
+      
+      if (searchParams.roomType !== 'all') {
+        availableRooms = availableRooms.filter((room: Room) => room.roomType === searchParams.roomType)
+      }
+      
+      if (searchParams.guests > 1) {
+        availableRooms = availableRooms.filter((room: Room) => room.capacity >= searchParams.guests)
+      }
+      
       setRooms(availableRooms)
     } catch (error) {
       console.error('Failed to fetch rooms:', error)
@@ -127,6 +162,87 @@ export function RoomSearch({ onRoomSelect }: RoomSearchProps) {
     }
   }
 
+  // Booking functions
+  const handleBookRoom = (room: Room) => {
+    setSelectedRoom(room)
+    setBookingData({
+      checkIn: searchParams.checkIn || '',
+      checkOut: searchParams.checkOut || '',
+      numberOfGuests: searchParams.guests,
+      pointsUsed: 0
+    })
+    setShowBookingForm(true)
+  }
+
+  const handleBookingSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (booking || !selectedRoom) return
+
+    try {
+      setBooking(true)
+      
+      // Create reservation request
+      const reservationData = {
+        roomId: selectedRoom.id,
+        checkIn: bookingData.checkIn,
+        checkOut: bookingData.checkOut,
+        numberOfGuests: bookingData.numberOfGuests,
+        pointsUsed: bookingData.pointsUsed || 0,
+        currency: selectedRoom.currency
+      }
+
+      // Submit booking
+      await apiClient.post(API_ENDPOINTS.CLIENT_RESERVATIONS.CREATE, reservationData)
+      
+      // Success
+      alert(`Booking confirmed! You have successfully booked ${selectedRoom.number} for ${bookingData.numberOfGuests} guests.`)
+      
+      // Reset form and close modal
+      setShowBookingForm(false)
+      setSelectedRoom(null)
+      setBookingData({
+        checkIn: '',
+        checkOut: '',
+        numberOfGuests: 1,
+        pointsUsed: 0
+      })
+      
+      // Refresh rooms to update availability
+      fetchAllRooms()
+      
+    } catch (error: any) {
+      console.error('Failed to book room:', error)
+      const errorMessage = error?.response?.data?.message || error?.message || 'Unknown error'
+      alert(`Failed to book room: ${errorMessage}`)
+    } finally {
+      setBooking(false)
+    }
+  }
+
+  const handleBookingChange = (field: string, value: string | number) => {
+    setBookingData(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }
+
+  // Calculate total price for booking
+  const calculateTotalPrice = () => {
+    if (!selectedRoom || !bookingData.checkIn || !bookingData.checkOut) {
+      return { nights: 0, subtotal: 0, tax: 0, total: 0 }
+    }
+
+    const checkIn = new Date(bookingData.checkIn)
+    const checkOut = new Date(bookingData.checkOut)
+    const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24))
+    
+    const subtotal = nights * selectedRoom.price
+    const tax = subtotal * 0.1 // 10% tax
+    const total = subtotal + tax
+
+    return { nights, subtotal, tax, total }
+  }
+
   const handleSearch = async () => {
     try {
       setLoading(true)
@@ -156,7 +272,22 @@ export function RoomSearch({ onRoomSelect }: RoomSearchProps) {
       const allRooms = Array.isArray(roomsData) ? roomsData : []
       
       // Filter out OUT_OF_SERVICE rooms for client interface - clients should only see bookable rooms
-      const availableRooms = allRooms.filter((room: Room) => room.status === 'AVAILABLE')
+      let availableRooms = allRooms.filter((room: Room) => room.status === 'AVAILABLE')
+      
+      // Apply additional client-side filtering
+      if (searchParams.maxPrice) {
+        const maxPrice = parseFloat(searchParams.maxPrice)
+        availableRooms = availableRooms.filter((room: Room) => room.price <= maxPrice)
+      }
+      
+      if (searchParams.roomType !== 'all') {
+        availableRooms = availableRooms.filter((room: Room) => room.roomType === searchParams.roomType)
+      }
+      
+      if (searchParams.guests > 1) {
+        availableRooms = availableRooms.filter((room: Room) => room.capacity >= searchParams.guests)
+      }
+      
       setRooms(availableRooms)
     } catch (error) {
       console.error('Failed to search rooms:', error)
@@ -335,9 +466,16 @@ export function RoomSearch({ onRoomSelect }: RoomSearchProps) {
       {(rooms || []).length > 0 && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">
-              Available Rooms ({(rooms || []).length})
-            </h2>
+            <div>
+              <h2 className="text-xl font-semibold">
+                Available Rooms ({(rooms || []).length})
+              </h2>
+              {searchParams.checkIn && searchParams.checkOut && (
+                <p className="text-sm text-muted-foreground">
+                  Available from {new Date(searchParams.checkIn).toLocaleDateString()} to {new Date(searchParams.checkOut).toLocaleDateString()}
+                </p>
+              )}
+            </div>
             <div className="flex items-center space-x-2">
               <Filter className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm text-muted-foreground">Filter results</span>
@@ -442,10 +580,10 @@ export function RoomSearch({ onRoomSelect }: RoomSearchProps) {
                   <div className="mt-4">
                     <Button 
                       className="w-full"
-                      onClick={() => onRoomSelect?.(room)}
+                      onClick={() => handleBookRoom(room)}
                     >
-                      <Calendar className="h-4 w-4 mr-2" />
-                      Book This Room
+                      <CreditCard className="h-4 w-4 mr-2" />
+                      Book Now
                     </Button>
                   </div>
                 </CardContent>
@@ -462,10 +600,157 @@ export function RoomSearch({ onRoomSelect }: RoomSearchProps) {
             <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-medium text-foreground mb-2">No rooms available</h3>
             <p className="text-muted-foreground">
-              Try adjusting your search criteria or dates
+              {searchParams.checkIn && searchParams.checkOut 
+                ? 'Try adjusting your search criteria or dates'
+                : 'Select check-in and check-out dates to see room availability'
+              }
             </p>
+            {!searchParams.checkIn || !searchParams.checkOut ? (
+              <p className="text-sm text-muted-foreground mt-2">
+                💡 Tip: Select dates to check real-time availability and avoid booking conflicts
+              </p>
+            ) : null}
           </CardContent>
         </Card>
+      )}
+
+      {/* Booking Form Modal */}
+      {showBookingForm && selectedRoom && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <Card className="w-full max-w-md mx-4">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <CreditCard className="h-5 w-5" />
+                <span>Book Room {selectedRoom.number}</span>
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Complete your booking for {getRoomTypeName(selectedRoom.roomType)}
+              </p>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleBookingSubmit} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium">Check-in Date</label>
+                    <Input
+                      type="date"
+                      value={bookingData.checkIn}
+                      onChange={(e) => handleBookingChange('checkIn', e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Check-out Date</label>
+                    <Input
+                      type="date"
+                      value={bookingData.checkOut}
+                      onChange={(e) => handleBookingChange('checkOut', e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium">Number of Guests</label>
+                  <Input
+                    type="number"
+                    min="1"
+                    max={selectedRoom.capacity}
+                    value={bookingData.numberOfGuests}
+                    onChange={(e) => handleBookingChange('numberOfGuests', parseInt(e.target.value))}
+                    required
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Maximum capacity: {selectedRoom.capacity} guests
+                  </p>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium">Loyalty Points to Use (Optional)</label>
+                  <Input
+                    type="number"
+                    min="0"
+                    placeholder="0"
+                    value={bookingData.pointsUsed}
+                    onChange={(e) => handleBookingChange('pointsUsed', parseInt(e.target.value) || 0)}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Enter 0 if you don't want to use loyalty points
+                  </p>
+                </div>
+
+                <div className="bg-muted p-3 rounded-md">
+                  {(() => {
+                    const { nights, subtotal, tax, total } = calculateTotalPrice()
+                    return (
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">Price per night:</span>
+                          <span className="text-sm">${selectedRoom.price} {selectedRoom.currency}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">Number of nights:</span>
+                          <span className="text-sm">{nights} night{nights !== 1 ? 's' : ''}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">Subtotal:</span>
+                          <span className="text-sm">${subtotal.toFixed(2)} {selectedRoom.currency}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">Tax (10%):</span>
+                          <span className="text-sm">${tax.toFixed(2)} {selectedRoom.currency}</span>
+                        </div>
+                        <div className="border-t pt-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-lg font-bold">Total Price:</span>
+                            <span className="text-lg font-bold text-primary">
+                              ${total.toFixed(2)} {selectedRoom.currency}
+                            </span>
+                          </div>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          For {bookingData.numberOfGuests} guest{bookingData.numberOfGuests > 1 ? 's' : ''} • {nights} night{nights !== 1 ? 's' : ''}
+                        </p>
+                      </div>
+                    )
+                  })()}
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setShowBookingForm(false)
+                      setSelectedRoom(null)
+                    }}
+                    className="flex-1"
+                    disabled={booking}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="flex-1"
+                    disabled={booking}
+                  >
+                    {booking ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Booking...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Confirm Booking
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
       )}
     </div>
   )

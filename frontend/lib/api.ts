@@ -199,6 +199,7 @@ export const API_ENDPOINTS = {
     DELETE: (id: string) => `/admin/reservations/${id}`,
   },
 
+
   // Events
   EVENTS: {
     LIST: "/events",
