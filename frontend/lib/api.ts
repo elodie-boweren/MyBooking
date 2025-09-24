@@ -86,37 +86,14 @@ class ApiClient {
       const response = await fetch(url, config)
 
       if (!response.ok) {
-        // Handle 401/403 errors by attempting token refresh
-        if ((response.status === 401 || response.status === 403) && retryCount === 0) {
-          console.log("Token expired, attempting refresh...")
+        // Handle 401/403 errors with better user experience
+        if (response.status === 401 || response.status === 403) {
+          console.log("Authentication error, clearing session...")
           
-          try {
-            // Try to refresh the token by calling the profile endpoint
-            const refreshResponse = await fetch(`${this.baseURL}/auth/profile`, {
-              headers: {
-                "Content-Type": "application/json",
-                ...(token && { Authorization: `Bearer ${token}` }),
-                ...(user?.id && { "X-User-Id": user.id }),
-              },
-            })
-            
-            if (refreshResponse.ok) {
-              const newUserData = await refreshResponse.json()
-              localStorage.setItem('user', JSON.stringify(newUserData))
-              localStorage.setItem('token', newUserData.token)
-              
-              console.log("Token refreshed successfully, retrying request...")
-              // Retry the original request with the new token
-              return this.request(endpoint, options, retryCount + 1)
-            }
-          } catch (refreshError) {
-            console.error("Token refresh failed:", refreshError)
-            // If refresh fails, redirect to login
-            if (typeof window !== "undefined") {
-              localStorage.removeItem("token")
-              localStorage.removeItem("user")
-              window.location.href = "/login"
-            }
+          // Clear stored auth data
+          if (typeof window !== "undefined") {
+            localStorage.removeItem("token")
+            localStorage.removeItem("user")
           }
         }
         
@@ -1309,5 +1286,33 @@ export const adminTrainingApi = {
     // This endpoint doesn't exist in backend, we need to get all employee trainings and filter
     // For now, let's return empty array and handle this differently
     return { content: [], totalElements: 0, totalPages: 0, size: 0, number: 0 }
+  }
+}
+
+// Admin Leave Management API
+export const adminLeaveApi = {
+  // Get all pending leave requests
+  getPendingLeaveRequests: async (): Promise<PaginatedResponse<LeaveRequest>> => {
+    return apiClient.get<PaginatedResponse<LeaveRequest>>(`${API_ENDPOINTS.ADMIN_EMPLOYEES.ALL}/leave-requests/pending`)
+  },
+  
+  // Get all leave requests (with pagination and filtering)
+  getAllLeaveRequests: async (): Promise<PaginatedResponse<LeaveRequest>> => {
+    return apiClient.get<PaginatedResponse<LeaveRequest>>(`${API_ENDPOINTS.ADMIN_EMPLOYEES.ALL}/leave-requests`)
+  },
+  
+  // Approve a leave request
+  approveLeaveRequest: async (requestId: number): Promise<LeaveRequest> => {
+    return apiClient.put<LeaveRequest>(`${API_ENDPOINTS.ADMIN_EMPLOYEES.ALL}/leave-requests/${requestId}/approve`)
+  },
+  
+  // Reject a leave request
+  rejectLeaveRequest: async (requestId: number): Promise<LeaveRequest> => {
+    return apiClient.put<LeaveRequest>(`${API_ENDPOINTS.ADMIN_EMPLOYEES.ALL}/leave-requests/${requestId}/reject`)
+  },
+  
+  // Get leave requests for a specific employee
+  getEmployeeLeaveRequests: async (employeeId: number): Promise<PaginatedResponse<LeaveRequest>> => {
+    return apiClient.get<PaginatedResponse<LeaveRequest>>(`${API_ENDPOINTS.ADMIN_EMPLOYEES.ALL}/${employeeId}/leave-requests`)
   }
 }

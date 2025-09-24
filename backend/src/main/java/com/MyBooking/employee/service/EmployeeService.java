@@ -306,6 +306,18 @@ public class EmployeeService {
         return leaveRequestRepository.findByStatus(LeaveRequestStatus.PENDING, pageable);
     }
 
+    /**
+     * Get all leave requests with optional status filter
+     */
+    @Transactional(readOnly = true)
+    public Page<LeaveRequest> getAllLeaveRequests(LeaveRequestStatus status, Pageable pageable) {
+        if (status != null) {
+            return leaveRequestRepository.findByStatus(status, pageable);
+        } else {
+            return leaveRequestRepository.findAll(pageable);
+        }
+    }
+
     // ==================== TRAINING MANAGEMENT ====================
 
     /**

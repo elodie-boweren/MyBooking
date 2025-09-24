@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { ArrowLeft, Plus, Users, BookOpen, Calendar, CheckCircle, Clock, AlertCircle } from "lucide-react"
+import { ArrowLeft, Plus, Users, BookOpen, Calendar, CheckCircle, Clock, AlertCircle, RefreshCw } from "lucide-react"
 import { adminTrainingApi, adminEmployeesApi, Training, EmployeeTraining, Employee, EmployeeTrainingCreateRequest, UpdateTrainingStatusRequest, TrainingCreateRequest } from "@/lib/api"
 import { toast } from "sonner"
 
@@ -310,8 +310,7 @@ export default function AdminTrainingManagement() {
             onClick={loadData}
             className="flex items-center gap-2"
           >
-            <ArrowLeft className="h-4 w-4" />
-            Refresh Data
+            <RefreshCw className="h-4 w-4" />
           </Button>
           
           <Dialog open={isCreateTrainingDialogOpen} onOpenChange={setIsCreateTrainingDialogOpen}>

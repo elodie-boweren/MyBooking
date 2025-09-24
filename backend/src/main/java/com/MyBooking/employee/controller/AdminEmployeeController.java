@@ -144,6 +144,15 @@ public class AdminEmployeeController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/leave-requests")
+    public ResponseEntity<Page<LeaveRequestResponseDto>> getAllLeaveRequests(
+            @RequestParam(required = false) LeaveRequestStatus status,
+            Pageable pageable) {
+        Page<LeaveRequest> requests = employeeService.getAllLeaveRequests(status, pageable);
+        Page<LeaveRequestResponseDto> response = requests.map(this::convertToLeaveRequestResponseDto);
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/{employeeId}/leave-requests")
     public ResponseEntity<Page<LeaveRequestResponseDto>> getEmployeeLeaveRequests(
             @PathVariable Long employeeId,
