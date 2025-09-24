@@ -289,6 +289,8 @@ export const API_ENDPOINTS = {
     TASK_BY_ID: (id: string) => `/admin/employees/tasks/${id}`,
     EMPLOYEE_TASKS: (employeeId: string) => `/admin/employees/${employeeId}/tasks`,
     SHIFTS: "/admin/employees/shifts",
+    TRAININGS: "/admin/employees/trainings",
+    TRAINING_ASSIGN: "/admin/employees/trainings/assign",
     TRAINING: "/admin/employees/training",
     LEAVE: "/admin/employees/leave",
     STATISTICS: "/admin/employees/statistics",
@@ -799,6 +801,12 @@ export interface UpdateTrainingStatusRequest {
   status: "ASSIGNED" | "IN_PROGRESS" | "COMPLETED"
 }
 
+// Employee Training Assignment Request
+export interface EmployeeTrainingCreateRequest {
+  employeeId: number
+  trainingId: number
+}
+
 // Employee Dashboard Data interfaces
 export interface EmployeeStats {
   shiftsThisWeek: number
@@ -1220,5 +1228,45 @@ export const adminShiftApi = {
   // Get shift by ID
   getShiftById: async (shiftId: number): Promise<AdminShift> => {
     return apiClient.get<AdminShift>(`${API_ENDPOINTS.ADMIN_EMPLOYEES.SHIFTS}/${shiftId}`)
+  }
+}
+
+// Training Creation Request
+export interface TrainingCreateRequest {
+  title: string
+  startDate: string
+  endDate: string
+}
+
+// Admin Training Management API
+export const adminTrainingApi = {
+  // Get all trainings
+  getAllTrainings: async (): Promise<PaginatedResponse<Training>> => {
+    return apiClient.get<PaginatedResponse<Training>>(API_ENDPOINTS.ADMIN_EMPLOYEES.TRAININGS)
+  },
+  
+  // Create new training
+  createTraining: async (request: TrainingCreateRequest): Promise<Training> => {
+    return apiClient.post<Training>(API_ENDPOINTS.ADMIN_EMPLOYEES.TRAININGS, request)
+  },
+  
+  // Get training by ID
+  getTrainingById: async (trainingId: number): Promise<Training> => {
+    return apiClient.get<Training>(`${API_ENDPOINTS.ADMIN_EMPLOYEES.TRAININGS}/${trainingId}`)
+  },
+  
+  // Assign training to employee
+  assignTraining: async (request: EmployeeTrainingCreateRequest): Promise<EmployeeTraining> => {
+    return apiClient.post<EmployeeTraining>(API_ENDPOINTS.ADMIN_EMPLOYEES.TRAINING_ASSIGN, request)
+  },
+  
+  // Update training status
+  updateTrainingStatus: async (employeeId: number, trainingId: number, request: UpdateTrainingStatusRequest): Promise<EmployeeTraining> => {
+    return apiClient.put<EmployeeTraining>(`${API_ENDPOINTS.ADMIN_EMPLOYEES.TRAININGS}/${employeeId}/${trainingId}/status`, request)
+  },
+  
+  // Get employee trainings
+  getEmployeeTrainings: async (employeeId: number): Promise<PaginatedResponse<EmployeeTraining>> => {
+    return apiClient.get<PaginatedResponse<EmployeeTraining>>(`${API_ENDPOINTS.ADMIN_EMPLOYEES.ALL}/${employeeId}/trainings`)
   }
 }
