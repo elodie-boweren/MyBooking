@@ -34,10 +34,9 @@ import type { LoyaltyAccount } from "@/lib/api"
 export function Navigation() {
   const router = useRouter()
   const pathname = usePathname()
-  const { user, logout, isLoading } = useAuth()
-  const isAuthenticated = !!user
-  const isAdmin = user?.role === 'admin'
-  const isEmployee = false // This auth provider doesn't have employee role
+  const { user, logout, isLoading, isAuthenticated } = useAuth()
+  const isAdmin = user?.role === 'ADMIN'
+  const isEmployee = user?.role === 'EMPLOYEE'
   const [loyaltyAccount, setLoyaltyAccount] = useState<LoyaltyAccount | null>(null)
   const [loyaltyLoading, setLoyaltyLoading] = useState(false)
 
@@ -159,9 +158,9 @@ export function Navigation() {
               <DropdownMenu>
                 <DropdownMenuTrigger className="relative h-10 w-10 rounded-full border-0 bg-transparent hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
                   <Avatar className="h-10 w-10">
-                    <AvatarImage src="/placeholder.svg" alt={user.name || 'User'} />
+                    <AvatarImage src="/placeholder.svg" alt={user.firstName || 'User'} />
                     <AvatarFallback>
-                      {user.name ? user.name[0] : 'U'}
+                      {user.firstName ? user.firstName[0] : 'U'}
                     </AvatarFallback>
                   </Avatar>
                 </DropdownMenuTrigger>
@@ -169,7 +168,7 @@ export function Navigation() {
                   <div className="flex items-center justify-start gap-2 p-2">
                     <div className="flex flex-col space-y-1 leading-none">
                       <p className="font-medium">
-                        {user.name || 'User'}
+                        {user.firstName} {user.lastName}
                       </p>
                       <p className="w-[200px] truncate text-sm text-muted-foreground">{user.email || 'No email'}</p>
                       <div className="flex items-center space-x-2 mt-2">

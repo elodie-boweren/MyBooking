@@ -87,10 +87,10 @@ class ApiClient {
 
       if (!response.ok) {
         // Handle 401/403 errors with better user experience
-        if (response.status === 401 || response.status === 403) {
+        if (response.status === 401) {
           console.log("Authentication error, clearing session...")
           
-          // Clear stored auth data
+          // Clear stored auth data only on 401 (unauthorized)
           if (typeof window !== "undefined") {
             localStorage.removeItem("token")
             localStorage.removeItem("user")
@@ -480,6 +480,18 @@ export interface CreateEventRequest {
   price: number
   currency: string
   installationId: number
+}
+
+// Event Search Criteria interface
+export interface EventSearchCriteria {
+  name?: string
+  eventType?: "SPA" | "CONFERENCE" | "YOGA_CLASS" | "FITNESS" | "WEDDING"
+  installationId?: number
+  minPrice?: number
+  maxPrice?: number
+  minCapacity?: number
+  page?: number
+  size?: number
 }
 
 // Update Event Request interface
@@ -995,6 +1007,30 @@ export interface SystemPerformance {
   healthIndicators: Record<string, any>
 }
 
+// ==================== AUTHENTICATION API ====================
+
+export const authApi = {
+  // Login user
+  login: async (credentials: { email: string; password: string }): Promise<{ token: string; user: User }> => {
+    return apiClient.post<{ token: string; user: User }>(API_ENDPOINTS.AUTH.LOGIN, credentials)
+  },
+
+  // Register user
+  register: async (userData: { firstName: string; lastName: string; email: string; password: string }): Promise<User> => {
+    return apiClient.post<User>(API_ENDPOINTS.AUTH.REGISTER, userData)
+  },
+
+  // Get user profile
+  getProfile: async (): Promise<User> => {
+    return apiClient.get<User>(API_ENDPOINTS.AUTH.PROFILE)
+  },
+
+  // Change password
+  changePassword: async (passwordData: { currentPassword: string; newPassword: string }): Promise<void> => {
+    return apiClient.put<void>(API_ENDPOINTS.AUTH.CHANGE_PASSWORD, passwordData)
+  }
+}
+
 // ==================== EMPLOYEE API SERVICE FUNCTIONS ====================
 
 // Employee Profile API
@@ -1275,6 +1311,46 @@ export const feedbackApi = {
 // ==================== EVENT API ====================
 
 export const eventApi = {
+  // Get all available events (for browsing)
+  getAllEvents: async (page: number = 0, size: number = 20): Promise<PaginatedResponse<Event>> => {
+    return apiClient.get<PaginatedResponse<Event>>(`${API_ENDPOINTS.EVENTS.LIST}?page=${page}&size=${size}`)
+  },
+
+  // Get event by ID
+  getEventById: async (eventId: number): Promise<Event> => {
+    return apiClient.get<Event>(API_ENDPOINTS.EVENTS.GET(eventId.toString()))
+  },
+
+  // Search events with criteria
+  searchEvents: async (criteria: EventSearchCriteria): Promise<PaginatedResponse<Event>> => {
+    const params = new URLSearchParams()
+    if (criteria.name) params.append('name', criteria.name)
+    if (criteria.eventType) params.append('eventType', criteria.eventType)
+    if (criteria.installationId) params.append('installationId', criteria.installationId.toString())
+    if (criteria.minPrice) params.append('minPrice', criteria.minPrice.toString())
+    if (criteria.maxPrice) params.append('maxPrice', criteria.maxPrice.toString())
+    if (criteria.minCapacity) params.append('minCapacity', criteria.minCapacity.toString())
+    if (criteria.page) params.append('page', criteria.page.toString())
+    if (criteria.size) params.append('size', criteria.size.toString())
+    
+    return apiClient.get<PaginatedResponse<Event>>(`${API_ENDPOINTS.EVENTS.SEARCH}?${params.toString()}`)
+  },
+
+  // Get upcoming events
+  getUpcomingEvents: async (page: number = 0, size: number = 20): Promise<PaginatedResponse<Event>> => {
+    return apiClient.get<PaginatedResponse<Event>>(`${API_ENDPOINTS.EVENTS.LIST}/upcoming?page=${page}&size=${size}`)
+  },
+
+  // Get events by type
+  getEventsByType: async (eventType: string, page: number = 0, size: number = 20): Promise<PaginatedResponse<Event>> => {
+    return apiClient.get<PaginatedResponse<Event>>(`${API_ENDPOINTS.EVENTS.LIST}/by-type/${eventType}?page=${page}&size=${size}`)
+  },
+
+  // Get events by installation
+  getEventsByInstallation: async (installationId: number, page: number = 0, size: number = 20): Promise<PaginatedResponse<Event>> => {
+    return apiClient.get<PaginatedResponse<Event>>(`${API_ENDPOINTS.EVENTS.LIST}/by-installation/${installationId}?page=${page}&size=${size}`)
+  },
+
   // Get user's event bookings
   getUserEventBookings: async (): Promise<EventBooking[]> => {
     return apiClient.get<EventBooking[]>(API_ENDPOINTS.EVENT_BOOKINGS.MY)
