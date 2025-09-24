@@ -67,13 +67,16 @@ class ApiClient {
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseURL}${endpoint}`
 
-    // Get token from localStorage
+    // Get token and user ID from localStorage
     const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
+    const userStr = typeof window !== "undefined" ? localStorage.getItem("user") : null
+    const user = userStr ? JSON.parse(userStr) : null
 
     const config: RequestInit = {
       headers: {
         "Content-Type": "application/json",
         ...(token && { Authorization: `Bearer ${token}` }),
+        ...(user?.id && { "X-User-Id": user.id }),
         ...options.headers,
       },
       ...options,
@@ -262,15 +265,16 @@ export const API_ENDPOINTS = {
     STATISTICS: "/admin/loyalty/statistics",
   },
 
-  // Employees
-  EMPLOYEES: {
-    MY_PROFILE: "/employees/my-profile",
-    MY_TASKS: "/employees/my-tasks",
-    MY_SHIFTS: "/employees/my-shifts",
-    MY_TRAINING: "/employees/my-training",
-    MY_LEAVE: "/employees/my-leave",
-    TASK_UPDATE: (id: string) => `/employees/tasks/${id}`,
-    LEAVE_REQUEST: "/employees/leave-requests",
+  // Employee Dashboard APIs
+  EMPLOYEE: {
+    PROFILE: "/employee/profile",
+    TASKS: "/employee/tasks",
+    TASK_UPDATE: (id: string) => `/employee/tasks/${id}`,
+    LEAVE_REQUESTS: "/employee/leave-requests",
+    LEAVE_REQUEST_CREATE: "/employee/leave-requests",
+    TRAININGS: "/employee/trainings",
+    TRAINING_UPDATE: (id: string) => `/employee/trainings/${id}/status`,
+    SHIFTS: "/employee/shifts",
   },
 
   // Admin Employees
@@ -419,6 +423,30 @@ export interface UpdateReservationRequest {
   status?: "CONFIRMED" | "CANCELLED"
 }
 
+// Employee interfaces
+export interface Employee {
+  userId: number
+  email: string
+  firstName: string
+  lastName: string
+  status: "ACTIVE" | "INACTIVE"
+  jobTitle: string
+  createdAt: string
+  updatedAt: string
+}
+
+// Create Employee Request interface
+export interface CreateEmployeeRequest {
+  userId: number
+  jobTitle: string
+}
+
+// Update Employee Request interface
+export interface UpdateEmployeeRequest {
+  jobTitle?: string
+  status?: "ACTIVE" | "INACTIVE"
+}
+
 // Event interface - matches backend exactly
 export interface Event {
   id: number
@@ -502,20 +530,6 @@ export interface LoyaltyTransaction {
   createdAt: string
 }
 
-// Employee interface - matches backend exactly
-export interface Employee {
-  id: number
-  userId: number
-  employeeNumber: string
-  jobTitle: string
-  department: string
-  hireDate: string
-  salary: number
-  status: "ACTIVE" | "INACTIVE"
-  user: User
-  createdAt: string
-  updatedAt: string
-}
 
 // Task interface - matches backend exactly
 export interface Task {
@@ -577,6 +591,59 @@ export interface EmployeeTraining {
   trainingId: number
   trainingTitle: string
   status: "ASSIGNED" | "COMPLETED"
+  completionDate?: string
+  createdAt: string
+  updatedAt: string
+}
+
+// Employee Task interface - matches backend exactly
+export interface EmployeeTask {
+  id: number
+  title: string
+  description: string
+  priority: "LOW" | "MEDIUM" | "HIGH"
+  status: "TODO" | "IN_PROGRESS" | "DONE"
+  assignedTo: number
+  assignedToName: string
+  dueDate: string
+  note?: string
+  createdAt: string
+  updatedAt: string
+}
+
+// Employee Shift interface - matches backend exactly
+export interface EmployeeShift {
+  id: number
+  employeeId: number
+  employeeName: string
+  startAt: string // LocalDateTime from backend
+  endAt: string // LocalDateTime from backend
+  createdAt: string
+  updatedAt: string
+}
+
+// Employee Leave Request interface - matches backend exactly
+export interface EmployeeLeaveRequest {
+  id: number
+  employeeId: number
+  employeeName: string
+  fromDate: string
+  toDate: string
+  reason: string
+  status: "PENDING" | "APPROVED" | "REJECTED"
+  createdAt: string
+  updatedAt: string
+}
+
+// Employee Training Assignment interface - matches backend exactly
+export interface EmployeeTrainingAssignment {
+  id: number
+  employeeId: number
+  employeeName: string
+  trainingId: number
+  trainingTitle: string
+  status: "ASSIGNED" | "IN_PROGRESS" | "COMPLETED"
+  assignedDate: string
   completionDate?: string
   createdAt: string
   updatedAt: string
@@ -667,7 +734,61 @@ export interface CreateLeaveRequestRequest {
 
 export interface UpdateTaskRequest {
   status: "TODO" | "IN_PROGRESS" | "DONE"
-  comment?: string
+  note?: string
+}
+
+// Employee Dashboard Request/Response DTOs
+export interface CreateLeaveRequestRequest {
+  fromDate: string
+  toDate: string
+  reason: string
+}
+
+export interface UpdateTrainingStatusRequest {
+  status: "ASSIGNED" | "IN_PROGRESS" | "COMPLETED"
+}
+
+// Employee Dashboard Data interfaces
+export interface EmployeeStats {
+  shiftsThisWeek: number
+  pendingTasks: number
+  trainingStatus: "NONE" | "ASSIGNED" | "IN_PROGRESS" | "COMPLETED"
+  leaveBalance: number
+  totalShifts: number
+  completedTasks: number
+  pendingLeaveRequests: number
+}
+
+export interface TodayTask {
+  id: number
+  title: string
+  description: string
+  priority: "LOW" | "MEDIUM" | "HIGH"
+  status: "TODO" | "IN_PROGRESS" | "DONE"
+  dueDate: string
+  canReply: boolean
+}
+
+export interface CalendarEvent {
+  id: string
+  title: string
+  type: "shift" | "task" | "training"
+  startTime: string
+  endTime: string
+  description?: string
+  location?: string
+  assignedBy?: string
+  status?: "pending" | "completed" | "in-progress"
+  canReply?: boolean
+  replies?: TaskReply[]
+  date?: string
+}
+
+export interface TaskReply {
+  id: number
+  message: string
+  createdAt: string
+  employeeName: string
 }
 
 // ==================== ANALYTICS DTOS ====================
@@ -731,4 +852,226 @@ export interface SystemPerformance {
   bookingSuccessRate: number
   responseMetrics: Record<string, any>
   healthIndicators: Record<string, any>
+}
+
+// ==================== EMPLOYEE API SERVICE FUNCTIONS ====================
+
+// Employee Profile API
+export const employeeApi = {
+  // Get employee profile
+  getProfile: async (): Promise<Employee> => {
+    return apiClient.get<Employee>(API_ENDPOINTS.EMPLOYEE.PROFILE)
+  },
+
+  // Get employee tasks
+  getTasks: async (status?: "TODO" | "IN_PROGRESS" | "DONE"): Promise<PaginatedResponse<EmployeeTask>> => {
+    const params = status ? `?status=${status}` : ""
+    return apiClient.get<PaginatedResponse<EmployeeTask>>(`${API_ENDPOINTS.EMPLOYEE.TASKS}${params}`)
+  },
+
+  // Update task status
+  updateTask: async (taskId: number, request: UpdateTaskRequest): Promise<EmployeeTask> => {
+    return apiClient.put<EmployeeTask>(API_ENDPOINTS.EMPLOYEE.TASK_UPDATE(taskId.toString()), request)
+  },
+
+  // Get employee shifts
+  getShifts: async (): Promise<PaginatedResponse<EmployeeShift>> => {
+    return apiClient.get<PaginatedResponse<EmployeeShift>>(API_ENDPOINTS.EMPLOYEE.SHIFTS)
+  },
+
+  // Get employee trainings
+  getTrainings: async (status?: "ASSIGNED" | "IN_PROGRESS" | "COMPLETED"): Promise<PaginatedResponse<EmployeeTrainingAssignment>> => {
+    const params = status ? `?status=${status}` : ""
+    return apiClient.get<PaginatedResponse<EmployeeTrainingAssignment>>(`${API_ENDPOINTS.EMPLOYEE.TRAININGS}${params}`)
+  },
+
+  // Update training status
+  updateTrainingStatus: async (trainingId: number, request: UpdateTrainingStatusRequest): Promise<EmployeeTrainingAssignment> => {
+    return apiClient.put<EmployeeTrainingAssignment>(API_ENDPOINTS.EMPLOYEE.TRAINING_UPDATE(trainingId.toString()), request)
+  },
+
+  // Get leave requests
+  getLeaveRequests: async (status?: "PENDING" | "APPROVED" | "REJECTED"): Promise<PaginatedResponse<EmployeeLeaveRequest>> => {
+    const params = status ? `?status=${status}` : ""
+    return apiClient.get<PaginatedResponse<EmployeeLeaveRequest>>(`${API_ENDPOINTS.EMPLOYEE.LEAVE_REQUESTS}${params}`)
+  },
+
+  // Create leave request
+  createLeaveRequest: async (request: CreateLeaveRequestRequest): Promise<EmployeeLeaveRequest> => {
+    return apiClient.post<EmployeeLeaveRequest>(API_ENDPOINTS.EMPLOYEE.LEAVE_REQUEST_CREATE, request)
+  },
+
+  // Get announcements
+  getAnnouncements: async (): Promise<PaginatedResponse<Announcement>> => {
+    return apiClient.get<PaginatedResponse<Announcement>>(API_ENDPOINTS.ANNOUNCEMENTS.LIST)
+  }
+}
+
+// Employee Dashboard Data Aggregation
+export const employeeDashboardApi = {
+  // Get employee stats (aggregated data)
+  getStats: async (): Promise<EmployeeStats> => {
+    try {
+      // Fetch all data in parallel
+      const [tasksResponse, shiftsResponse, trainingsResponse, leaveRequestsResponse] = await Promise.all([
+        employeeApi.getTasks(),
+        employeeApi.getShifts(),
+        employeeApi.getTrainings(),
+        employeeApi.getLeaveRequests()
+      ])
+
+      // Calculate stats
+      const tasks = tasksResponse.content
+      const shifts = shiftsResponse.content
+      const trainings = trainingsResponse.content
+      const leaveRequests = leaveRequestsResponse.content
+
+      // Calculate shifts this week
+      const now = new Date()
+      const startOfWeek = new Date(now)
+      startOfWeek.setDate(now.getDate() - now.getDay())
+      const endOfWeek = new Date(startOfWeek)
+      endOfWeek.setDate(startOfWeek.getDate() + 6)
+
+      const shiftsThisWeek = shifts.filter(shift => {
+        const shiftDate = new Date(shift.startAt)
+        return shiftDate >= startOfWeek && shiftDate <= endOfWeek
+      }).length
+
+      // Calculate pending tasks
+      const pendingTasks = tasks.filter(task => task.status === "TODO").length
+
+      // Calculate training status
+      const activeTraining = trainings.find(t => t.status === "ASSIGNED" || t.status === "IN_PROGRESS")
+      const trainingStatus = activeTraining ? activeTraining.status : "NONE"
+
+      // Calculate completed tasks
+      const completedTasks = tasks.filter(task => task.status === "DONE").length
+
+      // Calculate pending leave requests
+      const pendingLeaveRequests = leaveRequests.filter(request => request.status === "PENDING").length
+
+      return {
+        shiftsThisWeek,
+        pendingTasks,
+        trainingStatus: trainingStatus as "NONE" | "ASSIGNED" | "IN_PROGRESS" | "COMPLETED",
+        leaveBalance: 20, // Default leave balance - could be calculated from backend
+        totalShifts: shifts.length,
+        completedTasks,
+        pendingLeaveRequests
+      }
+    } catch (error) {
+      console.error("Error fetching employee stats:", error)
+      // Return default stats on error
+      return {
+        shiftsThisWeek: 0,
+        pendingTasks: 0,
+        trainingStatus: "NONE",
+        leaveBalance: 20,
+        totalShifts: 0,
+        completedTasks: 0,
+        pendingLeaveRequests: 0
+      }
+    }
+  },
+
+  // Get today's tasks
+  getTodayTasks: async (): Promise<TodayTask[]> => {
+    try {
+      const response = await employeeApi.getTasks()
+      const today = new Date().toISOString().split('T')[0]
+      
+      return response.content
+        .filter(task => task.dueDate.startsWith(today))
+        .map(task => ({
+          id: task.id,
+          title: task.title,
+          description: task.description,
+          priority: task.priority,
+          status: task.status,
+          dueDate: task.dueDate,
+          canReply: true
+        }))
+    } catch (error) {
+      console.error("Error fetching today's tasks:", error)
+      return []
+    }
+  },
+
+  // Get announcements
+  getAnnouncements: async (): Promise<PaginatedResponse<Announcement>> => {
+    return employeeApi.getAnnouncements()
+  },
+
+  // Get calendar events (shifts, tasks, trainings)
+  getCalendarEvents: async (startDate: string, endDate: string): Promise<CalendarEvent[]> => {
+    try {
+      const [tasksResponse, shiftsResponse, trainingsResponse] = await Promise.all([
+        employeeApi.getTasks(),
+        employeeApi.getShifts(),
+        employeeApi.getTrainings()
+      ])
+
+      const events: CalendarEvent[] = []
+
+      // Add tasks
+      tasksResponse.content.forEach(task => {
+        events.push({
+          id: `task-${task.id}`,
+          title: task.title,
+          type: "task",
+          startTime: task.dueDate,
+          endTime: task.dueDate,
+          description: task.description,
+          status: task.status === "DONE" ? "completed" : "pending",
+          canReply: true,
+          date: task.dueDate.split('T')[0]
+        })
+      })
+
+      // Add shifts
+      shiftsResponse.content.forEach(shift => {
+        const startTime = new Date(shift.startAt).toLocaleTimeString('en-US', { 
+          hour: '2-digit', 
+          minute: '2-digit',
+          hour12: false 
+        })
+        const endTime = new Date(shift.endAt).toLocaleTimeString('en-US', { 
+          hour: '2-digit', 
+          minute: '2-digit',
+          hour12: false 
+        })
+        
+        events.push({
+          id: `shift-${shift.id}`,
+          title: "Work Shift",
+          type: "shift",
+          startTime,
+          endTime,
+          location: "Hotel",
+          status: "in-progress",
+          date: shift.startAt.split('T')[0]
+        })
+      })
+
+      // Add trainings
+      trainingsResponse.content.forEach(training => {
+        events.push({
+          id: `training-${training.id}`,
+          title: training.trainingTitle,
+          type: "training",
+          startTime: "All Day",
+          endTime: "All Day",
+          description: "Training session",
+          status: training.status === "COMPLETED" ? "completed" : "in-progress",
+          date: training.assignedDate.split('T')[0]
+        })
+      })
+
+      return events
+    } catch (error) {
+      console.error("Error fetching calendar events:", error)
+      return []
+    }
+  }
 }

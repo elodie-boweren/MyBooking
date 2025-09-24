@@ -15,6 +15,9 @@ import com.MyBooking.auth.repository.UserRepository;
 import com.MyBooking.common.exception.BusinessRuleException;
 import com.MyBooking.common.exception.NotFoundException;
 import com.MyBooking.common.security.JwtService;
+import com.MyBooking.employee.domain.Employee;
+import com.MyBooking.employee.domain.EmployeeStatus;
+import com.MyBooking.employee.repository.EmployeeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -40,6 +43,9 @@ public class AuthService {
     
     @Autowired
     private JwtService jwtService;
+    
+    @Autowired
+    private EmployeeRepository employeeRepository;
 
     /**
      * Register a new user with default CLIENT role
@@ -73,6 +79,11 @@ public class AuthService {
         
         // Create default notification preferences
         createDefaultNotificationPreferences(savedUser);
+        
+        // If user has EMPLOYEE role, automatically create employee record
+        if (role == Role.EMPLOYEE) {
+            createEmployeeRecord(savedUser);
+        }
         
         return savedUser;
     }
@@ -302,5 +313,23 @@ public class AuthService {
             notificationPreferenceRepository.save(preference);
         }
     }
-}
+    }
+    
+    /**
+     * Create employee record for a user with EMPLOYEE role
+     */
+    private void createEmployeeRecord(User user) {
+        // Check if employee record already exists
+        if (employeeRepository.existsByUserId(user.getId())) {
+            return; // Employee record already exists
+        }
+        
+        // Create employee record with default values
+        Employee employee = new Employee();
+        employee.setUser(user);
+        employee.setStatus(EmployeeStatus.ACTIVE);
+        employee.setJobTitle("General Employee"); // Default job title
+        
+        employeeRepository.save(employee);
+    }
 }

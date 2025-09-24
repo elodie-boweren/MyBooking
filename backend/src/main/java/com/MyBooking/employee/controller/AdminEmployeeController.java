@@ -47,6 +47,12 @@ public class AdminEmployeeController {
         EmployeeResponseDto response = convertToEmployeeResponseDto(employee);
         return ResponseEntity.ok(response);
     }
+    
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<Void> deleteEmployee(@PathVariable Long userId) {
+        employeeService.deleteEmployee(userId);
+        return ResponseEntity.noContent().build();
+    }
 
     @GetMapping
     public ResponseEntity<Page<EmployeeResponseDto>> searchEmployees(
