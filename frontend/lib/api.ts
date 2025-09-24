@@ -419,6 +419,30 @@ export interface UpdateReservationRequest {
   status?: "CONFIRMED" | "CANCELLED"
 }
 
+// Employee interfaces
+export interface Employee {
+  userId: number
+  email: string
+  firstName: string
+  lastName: string
+  status: "ACTIVE" | "INACTIVE"
+  jobTitle: string
+  createdAt: string
+  updatedAt: string
+}
+
+// Create Employee Request interface
+export interface CreateEmployeeRequest {
+  userId: number
+  jobTitle: string
+}
+
+// Update Employee Request interface
+export interface UpdateEmployeeRequest {
+  jobTitle?: string
+  status?: "ACTIVE" | "INACTIVE"
+}
+
 // Event interface - matches backend exactly
 export interface Event {
   id: number
@@ -502,20 +526,6 @@ export interface LoyaltyTransaction {
   createdAt: string
 }
 
-// Employee interface - matches backend exactly
-export interface Employee {
-  id: number
-  userId: number
-  employeeNumber: string
-  jobTitle: string
-  department: string
-  hireDate: string
-  salary: number
-  status: "ACTIVE" | "INACTIVE"
-  user: User
-  createdAt: string
-  updatedAt: string
-}
 
 // Task interface - matches backend exactly
 export interface Task {

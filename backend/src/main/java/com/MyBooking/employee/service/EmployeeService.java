@@ -93,6 +93,15 @@ public class EmployeeService {
         employee.setStatus(EmployeeStatus.INACTIVE);
         employeeRepository.save(employee);
     }
+    
+    /**
+     * Delete an employee (soft delete by setting status to INACTIVE)
+     */
+    public void deleteEmployee(Long userId) {
+        Employee employee = getEmployeeByUserId(userId);
+        employee.setStatus(EmployeeStatus.INACTIVE);
+        employeeRepository.save(employee);
+    }
 
     /**
      * Get employee by user ID
@@ -108,7 +117,16 @@ public class EmployeeService {
      */
     @Transactional(readOnly = true)
     public Page<Employee> searchEmployees(EmployeeStatus status, String jobTitle, Pageable pageable) {
-        return employeeRepository.findByCriteria(status, jobTitle, pageable);
+        // Use a simpler approach to avoid the CONCAT issue
+        if (status != null && jobTitle != null) {
+            return employeeRepository.findByStatusAndJobTitle(status, jobTitle, pageable);
+        } else if (status != null) {
+            return employeeRepository.findByStatus(status, pageable);
+        } else if (jobTitle != null) {
+            return employeeRepository.findByJobTitle(jobTitle, pageable);
+        } else {
+            return employeeRepository.findAll(pageable);
+        }
     }
 
     /**
