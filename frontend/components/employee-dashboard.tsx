@@ -222,14 +222,25 @@ export default function EmployeeDashboard() {
                       View your shifts, tasks, and training sessions
                     </CardDescription>
                   </div>
-                  <Button 
-                    size="sm" 
-                    className="flex items-center gap-2"
-                    onClick={() => window.location.href = '/employee/leave'}
-                  >
-                    <Plus className="h-4 w-4" />
-                    Request Leave
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      className="flex items-center gap-2"
+                      onClick={() => window.location.href = '/employee/tasks'}
+                    >
+                      <CheckCircle className="h-4 w-4" />
+                      View Tasks
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      className="flex items-center gap-2"
+                      onClick={() => window.location.href = '/employee/leave'}
+                    >
+                      <Plus className="h-4 w-4" />
+                      Request Leave
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
@@ -321,14 +332,22 @@ export default function EmployeeDashboard() {
                   <User className="h-4 w-4 mr-2" />
                   View Profile
                 </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-                  onClick={() => window.location.href = '/employee/leave'}
-                >
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Request Leave
-                </Button>
+        <Button 
+          variant="outline" 
+          className="w-full justify-start"
+          onClick={() => window.location.href = '/employee/tasks'}
+        >
+          <CheckCircle className="h-4 w-4 mr-2" />
+          View Tasks
+        </Button>
+        <Button 
+          variant="outline" 
+          className="w-full justify-start"
+          onClick={() => window.location.href = '/employee/leave'}
+        >
+          <Calendar className="h-4 w-4 mr-2" />
+          Request Leave
+        </Button>
                 <Button variant="outline" className="w-full justify-start">
                   <Bell className="h-4 w-4 mr-2" />
                   View Announcements
