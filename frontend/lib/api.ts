@@ -380,11 +380,11 @@ export interface AddRoomPhotoRequest {
   isPrimary?: boolean
 }
 
-// Reservation interface - matches backend exactly
+// Reservation interfaces
 export interface Reservation {
   id: number
-  checkIn: string
-  checkOut: string
+  checkIn: string // LocalDate from backend
+  checkOut: string // LocalDate from backend
   numberOfGuests: number
   totalPrice: number
   currency: string
@@ -394,9 +394,28 @@ export interface Reservation {
   clientEmail: string
   roomId: number
   roomNumber: string
-  roomType: string
+  roomType: "SINGLE" | "DOUBLE" | "DELUXE" | "FAMILY"
+  pointsUsed?: number
+  pointsDiscount?: number
   createdAt: string
   updatedAt: string
+}
+
+// Create Reservation Request interface
+export interface CreateReservationRequest {
+  roomId: number
+  checkIn: string
+  checkOut: string
+  numberOfGuests: number
+  pointsUsed?: number
+}
+
+// Update Reservation Request interface
+export interface UpdateReservationRequest {
+  checkIn?: string
+  checkOut?: string
+  numberOfGuests?: number
+  status?: "CONFIRMED" | "CANCELLED"
 }
 
 // Event interface - matches backend exactly
