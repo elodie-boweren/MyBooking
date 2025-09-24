@@ -137,20 +137,48 @@ export const apiClient = new ApiClient(API_BASE_URL)
 
 // API endpoints configuration matching Spring Boot backend
 export const API_ENDPOINTS = {
-  // Authentication
-  AUTH: {
-    LOGIN: "/auth/login",
-    REGISTER: "/auth/register",
-    PROFILE: "/auth/profile",
-    CHANGE_PASSWORD: "/auth/change-password",
-  },
+      // Authentication
+      AUTH: {
+        LOGIN: "/auth/login",
+        REGISTER: "/auth/register",
+        PROFILE: "/auth/profile",
+        CHANGE_PASSWORD: "/auth/change-password",
+      },
+
+      // Admin User Management
+      ADMIN_USERS: {
+        ALL: "/auth/users",
+        GET: (id: string) => `/auth/users/${id}`,
+        CREATE: "/auth/users",
+        UPDATE: (id: string) => `/auth/users/${id}`,
+        DELETE: (id: string) => `/auth/users/${id}`,
+        BY_ROLE: (role: string) => `/auth/users/role/${role}`,
+      },
 
   // Rooms
   ROOMS: {
     LIST: "/rooms",
     GET: (id: string) => `/rooms/${id}`,
     AVAILABILITY: (id: string) => `/rooms/${id}/availability`,
-    SEARCH: "/rooms/search",
+    SEARCH: "/rooms",
+  },
+
+  // Admin Room Management
+  ADMIN_ROOMS: {
+    ALL: "/rooms",
+    GET: (id: string) => `/rooms/${id}`,
+    CREATE: "/rooms",
+    UPDATE: (id: string) => `/rooms/${id}`,
+    DELETE: (id: string) => `/rooms/${id}`,
+    SEARCH: "/rooms",
+  },
+
+  // Room Photo Management
+  ROOM_PHOTOS: {
+    ADD: (roomId: string) => `/rooms/${roomId}/photos`,
+    GET: (roomId: string) => `/rooms/${roomId}/photos`,
+    DELETE: (photoId: string) => `/rooms/photos/${photoId}`,
+    SET_PRIMARY: (photoId: string) => `/rooms/photos/${photoId}/primary`,
   },
 
   // Reservations - Client
@@ -170,6 +198,7 @@ export const API_ENDPOINTS = {
     UPDATE: (id: string) => `/admin/reservations/${id}`,
     DELETE: (id: string) => `/admin/reservations/${id}`,
   },
+
 
   // Events
   EVENTS: {
@@ -319,11 +348,44 @@ export interface Room {
   updatedAt: string
 }
 
-// Reservation interface - matches backend exactly
+// Room Photo interface
+export interface RoomPhoto {
+  id: number
+  photoUrl: string
+  caption?: string
+  roomId: number
+  displayOrder: number
+  isPrimary: boolean
+  isActive: boolean
+  photoType?: string
+  fileSize?: number
+  fileName?: string
+  createdAt: string
+  updatedAt: string
+}
+
+// Create Room Request interface
+export interface CreateRoomRequest {
+  number: string
+  roomType: "SINGLE" | "DOUBLE" | "DELUXE" | "FAMILY"
+  capacity: number
+  price: number
+  currency: string
+  description?: string
+}
+
+// Add Room Photo Request interface
+export interface AddRoomPhotoRequest {
+  photoUrl: string
+  caption?: string
+  isPrimary?: boolean
+}
+
+// Reservation interfaces
 export interface Reservation {
   id: number
-  checkIn: string
-  checkOut: string
+  checkIn: string // LocalDate from backend
+  checkOut: string // LocalDate from backend
   numberOfGuests: number
   totalPrice: number
   currency: string
@@ -333,9 +395,28 @@ export interface Reservation {
   clientEmail: string
   roomId: number
   roomNumber: string
-  roomType: string
+  roomType: "SINGLE" | "DOUBLE" | "DELUXE" | "FAMILY"
+  pointsUsed?: number
+  pointsDiscount?: number
   createdAt: string
   updatedAt: string
+}
+
+// Create Reservation Request interface
+export interface CreateReservationRequest {
+  roomId: number
+  checkIn: string
+  checkOut: string
+  numberOfGuests: number
+  pointsUsed?: number
+}
+
+// Update Reservation Request interface
+export interface UpdateReservationRequest {
+  checkIn?: string
+  checkOut?: string
+  numberOfGuests?: number
+  status?: "CONFIRMED" | "CANCELLED"
 }
 
 // Event interface - matches backend exactly
