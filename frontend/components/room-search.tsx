@@ -47,25 +47,117 @@ export function RoomSearch({ onRoomSelect }: RoomSearchProps) {
     maxPrice: ''
   })
 
-  const handleSearch = async () => {
-    if (!searchParams.checkIn || !searchParams.checkOut) {
-      alert('Please select check-in and check-out dates')
-      return
-    }
+  // Fetch all available rooms on component mount
+  useEffect(() => {
+    fetchAllRooms()
+  }, [])
 
+  const fetchAllRooms = async () => {
     try {
       setLoading(true)
-      const response = await apiClient.get<any>(API_ENDPOINTS.ROOMS.SEARCH, {
-        checkIn: searchParams.checkIn,
-        checkOut: searchParams.checkOut,
-        minCapacity: searchParams.guests,
-        roomType: searchParams.roomType !== 'all' ? searchParams.roomType : undefined,
-        maxPrice: searchParams.maxPrice ? parseFloat(searchParams.maxPrice) : undefined
-      })
+      const response = await apiClient.get<any>(API_ENDPOINTS.ROOMS.SEARCH)
       
       // Handle paginated response from Spring Boot
       const roomsData = response.content || response
-      setRooms(Array.isArray(roomsData) ? roomsData : [])
+      const allRooms = Array.isArray(roomsData) ? roomsData : []
+      
+      // Filter out OUT_OF_SERVICE rooms for client interface - clients should only see bookable rooms
+      const availableRooms = allRooms.filter((room: Room) => room.status === 'AVAILABLE')
+      setRooms(availableRooms)
+    } catch (error) {
+      console.error('Failed to fetch rooms:', error)
+      // Fallback to mock data
+      const mockRooms: Room[] = [
+        {
+          id: 1,
+          number: '101',
+          roomType: 'SINGLE',
+          capacity: 1,
+          price: 120,
+          currency: 'USD',
+          status: 'AVAILABLE',
+          description: 'Comfortable single room with city view',
+          equipment: 'WiFi, TV, Mini-bar',
+          createdAt: '2024-01-01T00:00:00Z',
+          updatedAt: '2024-01-01T00:00:00Z'
+        },
+        {
+          id: 2,
+          number: '102',
+          roomType: 'DOUBLE',
+          capacity: 2,
+          price: 180,
+          currency: 'USD',
+          status: 'AVAILABLE',
+          description: 'Spacious double room with balcony',
+          equipment: 'WiFi, TV, Mini-bar, Balcony',
+          createdAt: '2024-01-01T00:00:00Z',
+          updatedAt: '2024-01-01T00:00:00Z'
+        },
+        {
+          id: 3,
+          number: '201',
+          roomType: 'DELUXE',
+          capacity: 2,
+          price: 280,
+          currency: 'USD',
+          status: 'AVAILABLE',
+          description: 'Luxurious deluxe suite with panoramic view',
+          equipment: 'WiFi, TV, Mini-bar, Balcony, Jacuzzi',
+          createdAt: '2024-01-01T00:00:00Z',
+          updatedAt: '2024-01-01T00:00:00Z'
+        },
+        {
+          id: 4,
+          number: '301',
+          roomType: 'FAMILY',
+          capacity: 4,
+          price: 350,
+          currency: 'USD',
+          status: 'AVAILABLE',
+          description: 'Spacious family room perfect for families',
+          equipment: 'WiFi, TV, Mini-bar, Balcony, Kitchenette',
+          createdAt: '2024-01-01T00:00:00Z',
+          updatedAt: '2024-01-01T00:00:00Z'
+        }
+      ]
+      setRooms(mockRooms)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSearch = async () => {
+    try {
+      setLoading(true)
+      
+      // If no dates provided, show all available rooms
+      if (!searchParams.checkIn || !searchParams.checkOut) {
+        await fetchAllRooms()
+        return
+      }
+
+      // Build query parameters
+      const queryParams = new URLSearchParams()
+      queryParams.append('checkIn', searchParams.checkIn)
+      queryParams.append('checkOut', searchParams.checkOut)
+      queryParams.append('minCapacity', searchParams.guests.toString())
+      if (searchParams.roomType !== 'all') {
+        queryParams.append('roomType', searchParams.roomType)
+      }
+      if (searchParams.maxPrice) {
+        queryParams.append('maxPrice', searchParams.maxPrice)
+      }
+
+      const response = await apiClient.get<any>(`${API_ENDPOINTS.ROOMS.SEARCH}?${queryParams.toString()}`)
+      
+      // Handle paginated response from Spring Boot
+      const roomsData = response.content || response
+      const allRooms = Array.isArray(roomsData) ? roomsData : []
+      
+      // Filter out OUT_OF_SERVICE rooms for client interface - clients should only see bookable rooms
+      const availableRooms = allRooms.filter((room: Room) => room.status === 'AVAILABLE')
+      setRooms(availableRooms)
     } catch (error) {
       console.error('Failed to search rooms:', error)
       // Fallback to mock data
@@ -231,7 +323,7 @@ export function RoomSearch({ onRoomSelect }: RoomSearchProps) {
               ) : (
                 <>
                   <Search className="h-4 w-4 mr-2" />
-                  Search Rooms
+                  {searchParams.checkIn && searchParams.checkOut ? 'Search Rooms' : 'Show All Rooms'}
                 </>
               )}
             </Button>
