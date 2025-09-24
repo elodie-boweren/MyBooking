@@ -64,7 +64,7 @@ class ApiClient {
     this.baseURL = baseURL
   }
 
-  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  private async request<T>(endpoint: string, options: RequestInit = {}, retryCount = 0): Promise<T> {
     const url = `${this.baseURL}${endpoint}`
 
     // Get token and user ID from localStorage
@@ -86,6 +86,40 @@ class ApiClient {
       const response = await fetch(url, config)
 
       if (!response.ok) {
+        // Handle 401/403 errors by attempting token refresh
+        if ((response.status === 401 || response.status === 403) && retryCount === 0) {
+          console.log("Token expired, attempting refresh...")
+          
+          try {
+            // Try to refresh the token by calling the profile endpoint
+            const refreshResponse = await fetch(`${this.baseURL}/auth/profile`, {
+              headers: {
+                "Content-Type": "application/json",
+                ...(token && { Authorization: `Bearer ${token}` }),
+                ...(user?.id && { "X-User-Id": user.id }),
+              },
+            })
+            
+            if (refreshResponse.ok) {
+              const newUserData = await refreshResponse.json()
+              localStorage.setItem('user', JSON.stringify(newUserData))
+              localStorage.setItem('token', newUserData.token)
+              
+              console.log("Token refreshed successfully, retrying request...")
+              // Retry the original request with the new token
+              return this.request(endpoint, options, retryCount + 1)
+            }
+          } catch (refreshError) {
+            console.error("Token refresh failed:", refreshError)
+            // If refresh fails, redirect to login
+            if (typeof window !== "undefined") {
+              localStorage.removeItem("token")
+              localStorage.removeItem("user")
+              window.location.href = "/login"
+            }
+          }
+        }
+        
         const errorData = await response.json().catch(() => ({}))
         throw new ApiError(
           errorData.message || `HTTP error! status: ${response.status}`,
@@ -1268,5 +1302,12 @@ export const adminTrainingApi = {
   // Get employee trainings
   getEmployeeTrainings: async (employeeId: number): Promise<PaginatedResponse<EmployeeTraining>> => {
     return apiClient.get<PaginatedResponse<EmployeeTraining>>(`${API_ENDPOINTS.ADMIN_EMPLOYEES.ALL}/${employeeId}/trainings`)
+  },
+  
+  // Get employee trainings by training ID (for statistics)
+  getEmployeeTrainingsByTrainingId: async (trainingId: number): Promise<PaginatedResponse<EmployeeTraining>> => {
+    // This endpoint doesn't exist in backend, we need to get all employee trainings and filter
+    // For now, let's return empty array and handle this differently
+    return { content: [], totalElements: 0, totalPages: 0, size: 0, number: 0 }
   }
 }

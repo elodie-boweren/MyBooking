@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { ArrowLeft, Plus, Users, BookOpen, Calendar, CheckCircle, Clock, AlertCircle } from "lucide-react"
 import { adminTrainingApi, adminEmployeesApi, Training, EmployeeTraining, Employee, EmployeeTrainingCreateRequest, UpdateTrainingStatusRequest, TrainingCreateRequest } from "@/lib/api"
@@ -15,6 +14,7 @@ import { toast } from "sonner"
 export default function AdminTrainingManagement() {
   const [trainings, setTrainings] = useState<Training[]>([])
   const [employeeTrainings, setEmployeeTrainings] = useState<EmployeeTraining[]>([])
+  const [allEmployeeTrainings, setAllEmployeeTrainings] = useState<EmployeeTraining[]>([])
   const [employees, setEmployees] = useState<Employee[]>([])
   const [loading, setLoading] = useState(false)
   const [isLoadingEmployees, setIsLoadingEmployees] = useState(false)
@@ -36,27 +36,21 @@ export default function AdminTrainingManagement() {
   const loadData = async () => {
     setLoading(true)
     try {
-      console.log("🔄 Loading training data...")
-      
       // Load trainings and employees separately to identify which one is failing
       let trainingsResponse, employeesResponse
       
       try {
-        console.log("📚 Fetching trainings...")
         trainingsResponse = await adminTrainingApi.getAllTrainings()
-        console.log("✅ Trainings response:", trainingsResponse)
         setTrainings(trainingsResponse.content)
       } catch (error) {
-        console.error("❌ Error loading trainings:", error)
+        console.error("Error loading trainings:", error)
         toast.error("Failed to load training programs")
         setTrainings([])
       }
       
       try {
-        console.log("👥 Fetching employees...")
         setIsLoadingEmployees(true)
         employeesResponse = await adminEmployeesApi.getAllEmployees()
-        console.log("✅ Employees response:", employeesResponse)
         // Ensure employees is an array
         if (Array.isArray(employeesResponse)) {
           setEmployees(employeesResponse)
@@ -66,7 +60,7 @@ export default function AdminTrainingManagement() {
           toast.error('Invalid employees data received.')
         }
       } catch (error) {
-        console.error("❌ Error loading employees:", error)
+        console.error("Error loading employees:", error)
         toast.error("Failed to load employees")
         setEmployees([])
       } finally {
@@ -75,11 +69,14 @@ export default function AdminTrainingManagement() {
       
       // Load employee trainings for the first training if available
       if (trainingsResponse && trainingsResponse.content.length > 0) {
-        console.log("🔄 Loading employee trainings for training:", trainingsResponse.content[0].id)
         loadEmployeeTrainings(trainingsResponse.content[0].id)
+        // Also load all employee trainings for statistics
+        setTimeout(() => {
+          loadAllEmployeeTrainings()
+        }, 100) // Small delay to ensure trainings are set
       }
     } catch (error) {
-      console.error("❌ General error loading data:", error)
+      console.error("General error loading data:", error)
       toast.error("Failed to load training data")
     } finally {
       setLoading(false)
@@ -88,11 +85,38 @@ export default function AdminTrainingManagement() {
 
   const loadEmployeeTrainings = async (trainingId: number) => {
     try {
-      const response = await adminTrainingApi.getEmployeeTrainings(trainingId)
-      setEmployeeTrainings(response.content)
+      // Since we can't get employee trainings by training ID directly,
+      // we'll filter from all employee trainings
+      const filteredTrainings = allEmployeeTrainings.filter(et => et.trainingId === trainingId)
+      setEmployeeTrainings(filteredTrainings)
     } catch (error) {
       console.error("Error loading employee trainings:", error)
       toast.error("Failed to load employee trainings")
+    }
+  }
+
+  const loadAllEmployeeTrainings = async () => {
+    try {
+      // Load all employee trainings for statistics
+      const allTrainings = []
+      
+      // Get all employees first
+      const employeesResponse = await adminEmployeesApi.getAllEmployees()
+      const allEmployees = employeesResponse.content
+      
+      // For each employee, get their trainings
+      for (const employee of allEmployees) {
+        try {
+          const response = await adminTrainingApi.getEmployeeTrainings(employee.userId)
+          allTrainings.push(...response.content)
+        } catch (error) {
+          console.error(`Error loading trainings for employee ${employee.userId}:`, error)
+        }
+      }
+      
+      setAllEmployeeTrainings(allTrainings)
+    } catch (error) {
+      console.error("Error loading all employee trainings:", error)
     }
   }
 
@@ -147,6 +171,10 @@ export default function AdminTrainingManagement() {
   }
 
   const handleAssignTraining = async () => {
+    console.log("Assign training clicked")
+    console.log("Selected training:", selectedTraining)
+    console.log("Selected employee:", selectedEmployee)
+    
     if (!selectedTraining || !selectedEmployee) {
       toast.error("Please select both training and employee")
       return
@@ -157,12 +185,15 @@ export default function AdminTrainingManagement() {
         employeeId: selectedEmployee.userId,
         trainingId: selectedTraining.id
       }
-
+      
+      console.log("Assignment request:", request)
       await adminTrainingApi.assignTraining(request)
       toast.success(`Training "${selectedTraining.title}" assigned to ${selectedEmployee.firstName} ${selectedEmployee.lastName}`)
       
-      // Refresh data
-      loadData()
+      // Refresh data to update statistics and employee trainings
+      await loadData()
+      // Also refresh all employee trainings for statistics
+      await loadAllEmployeeTrainings()
       setIsAssignDialogOpen(false)
       setSelectedTraining(null)
       setSelectedEmployee(null)
@@ -178,7 +209,9 @@ export default function AdminTrainingManagement() {
       await adminTrainingApi.updateTrainingStatus(employeeTraining.employeeId, employeeTraining.trainingId, request)
       
       toast.success(`Training status updated to ${newStatus}`)
-      loadData()
+      await loadData()
+      // Also refresh all employee trainings for statistics
+      await loadAllEmployeeTrainings()
     } catch (error) {
       console.error("Error updating training status:", error)
       toast.error("Failed to update training status")
@@ -335,50 +368,57 @@ export default function AdminTrainingManagement() {
             <div className="space-y-4">
               <div>
                 <Label htmlFor="training-select">Training Program</Label>
-                <Select onValueChange={(value) => {
-                  const training = trainings.find(t => t.id.toString() === value)
-                  setSelectedTraining(training || null)
-                }}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a training program" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {trainings.map((training) => (
-                      <SelectItem key={training.id} value={training.id.toString()}>
-                        {training.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <select
+                  id="training-select"
+                  value={selectedTraining?.id || ""}
+                  onChange={(e) => {
+                    const training = trainings.find(t => t.id.toString() === e.target.value)
+                    setSelectedTraining(training || null)
+                    // Load employee trainings for the selected training
+                    if (training) {
+                      // Filter from already loaded all employee trainings
+                      const filteredTrainings = allEmployeeTrainings.filter(et => et.trainingId === training.id)
+                      setEmployeeTrainings(filteredTrainings)
+                    } else {
+                      setEmployeeTrainings([])
+                    }
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">
+                    Select a training program
+                  </option>
+                  {trainings.map((training) => (
+                    <option key={training.id} value={training.id}>
+                      {training.title}
+                    </option>
+                  ))}
+                </select>
               </div>
               
               <div>
                 <Label htmlFor="employee-select">Employee</Label>
-                <Select onValueChange={(value) => {
-                  const employee = employees.find(e => e.userId.toString() === value)
-                  setSelectedEmployee(employee || null)
-                }}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={isLoadingEmployees ? "Loading employees..." : "Select an employee"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {isLoadingEmployees ? (
-                      <SelectItem value="loading" disabled>
-                        Loading employees...
-                      </SelectItem>
-                    ) : employees.length === 0 ? (
-                      <SelectItem value="no-employees" disabled>
-                        No employees available
-                      </SelectItem>
-                    ) : (
-                      employees.map((employee) => (
-                        <SelectItem key={employee.userId} value={employee.userId.toString()}>
-                          {employee.firstName} {employee.lastName} ({employee.email})
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
+                <select
+                  id="employee-select"
+                  value={selectedEmployee?.userId || ""}
+                  onChange={(e) => {
+                    console.log("Employee selection changed:", e.target.value)
+                    const employee = employees.find(emp => emp.userId.toString() === e.target.value)
+                    console.log("Found employee:", employee)
+                    setSelectedEmployee(employee || null)
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  disabled={isLoadingEmployees}
+                >
+                  <option value="">
+                    {isLoadingEmployees ? 'Loading employees...' : 'Select an employee'}
+                  </option>
+                  {employees.map((employee) => (
+                    <option key={employee.userId} value={employee.userId}>
+                      {employee.firstName} {employee.lastName} ({employee.email})
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
             
@@ -395,20 +435,6 @@ export default function AdminTrainingManagement() {
         </div>
       </div>
 
-      {/* Debug Information */}
-      <Card className="bg-yellow-50 border-yellow-200">
-        <CardHeader>
-          <CardTitle className="text-sm">Debug Information</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-sm space-y-1">
-            <p>📚 Trainings loaded: {trainings.length}</p>
-            <p>👥 Employees loaded: {employees.length}</p>
-            <p>📋 Employee trainings: {employeeTrainings.length}</p>
-            <p>🔄 Loading: {loading ? 'Yes' : 'No'}</p>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -430,9 +456,9 @@ export default function AdminTrainingManagement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {employeeTrainings.filter(et => et.status === "ASSIGNED").length}
+              {allEmployeeTrainings.filter(et => et.status === "ASSIGNED").length}
             </div>
-            <p className="text-xs text-muted-foreground">Pending assignments</p>
+            <p className="text-xs text-muted-foreground">Assigned trainings</p>
           </CardContent>
         </Card>
         
@@ -443,7 +469,7 @@ export default function AdminTrainingManagement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {employeeTrainings.filter(et => et.status === "IN_PROGRESS").length}
+              {allEmployeeTrainings.filter(et => et.status === "IN_PROGRESS").length}
             </div>
             <p className="text-xs text-muted-foreground">Currently active</p>
           </CardContent>
@@ -456,7 +482,7 @@ export default function AdminTrainingManagement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {employeeTrainings.filter(et => et.status === "COMPLETED").length}
+              {allEmployeeTrainings.filter(et => et.status === "COMPLETED").length}
             </div>
             <p className="text-xs text-muted-foreground">Finished training</p>
           </CardContent>
