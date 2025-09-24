@@ -214,14 +214,27 @@ export const API_ENDPOINTS = {
   },
 
 
-  // Events
+  // Events - Public
   EVENTS: {
     LIST: "/events",
     GET: (id: string) => `/events/${id}`,
-    CREATE: "/events",
-    UPDATE: (id: string) => `/events/${id}`,
-    DELETE: (id: string) => `/events/${id}`,
     SEARCH: "/events/search",
+  },
+
+  // Events - Admin
+  ADMIN_EVENTS: {
+    ALL: "/admin/events",
+    GET: (id: string) => `/admin/events/${id}`,
+    CREATE: "/admin/events",
+    UPDATE: (id: string) => `/admin/events/${id}`,
+    DELETE: (id: string) => `/admin/events/${id}`,
+    STATISTICS: "/admin/events/statistics",
+  },
+
+  // Installations
+  INSTALLATIONS: {
+    ALL: "/installations",
+    GET: (id: string) => `/installations/${id}`,
   },
 
   // Event Bookings
@@ -436,6 +449,64 @@ export interface UpdateReservationRequest {
   checkOut?: string
   numberOfGuests?: number
   status?: "CONFIRMED" | "CANCELLED"
+}
+
+// Event interfaces
+export interface Event {
+  id: number
+  name: string
+  description?: string
+  eventType: "SPA" | "CONFERENCE" | "YOGA_CLASS" | "FITNESS" | "WEDDING"
+  startAt: string // LocalDateTime from backend
+  endAt: string // LocalDateTime from backend
+  capacity: number
+  price: number
+  currency: string
+  installationId: number
+  installationName: string
+  installationType: string
+  createdAt: string
+  updatedAt: string
+}
+
+// Create Event Request interface
+export interface CreateEventRequest {
+  name: string
+  description?: string
+  eventType: "SPA" | "CONFERENCE" | "YOGA_CLASS" | "FITNESS" | "WEDDING"
+  startAt: string
+  endAt: string
+  capacity: number
+  price: number
+  currency: string
+  installationId: number
+}
+
+// Update Event Request interface
+export interface UpdateEventRequest {
+  name?: string
+  description?: string
+  eventType?: "SPA" | "CONFERENCE" | "YOGA_CLASS" | "FITNESS" | "WEDDING"
+  startAt?: string
+  endAt?: string
+  capacity?: number
+  price?: number
+  currency?: string
+  installationId?: number
+}
+
+// Installation interfaces
+export interface Installation {
+  id: number
+  name: string
+  description?: string
+  installationType: "SPA_ROOM" | "CONFERENCE_ROOM" | "GYM" | "POOL" | "TENNIS_COURT" | "WEDDING_ROOM"
+  capacity: number
+  hourlyRate: number
+  currency: string
+  equipment?: string
+  createdAt: string
+  updatedAt: string
 }
 
 // Employee interfaces
@@ -1314,5 +1385,51 @@ export const adminLeaveApi = {
   // Get leave requests for a specific employee
   getEmployeeLeaveRequests: async (employeeId: number): Promise<PaginatedResponse<LeaveRequest>> => {
     return apiClient.get<PaginatedResponse<LeaveRequest>>(`${API_ENDPOINTS.ADMIN_EMPLOYEES.ALL}/${employeeId}/leave-requests`)
+  }
+}
+
+// Admin Event Management API
+export const adminEventApi = {
+  // Get all events
+  getAllEvents: async (): Promise<PaginatedResponse<Event>> => {
+    return apiClient.get<PaginatedResponse<Event>>(API_ENDPOINTS.ADMIN_EVENTS.ALL)
+  },
+  
+  // Get event by ID
+  getEventById: async (eventId: number): Promise<Event> => {
+    return apiClient.get<Event>(API_ENDPOINTS.ADMIN_EVENTS.GET(eventId.toString()))
+  },
+  
+  // Create new event
+  createEvent: async (eventData: CreateEventRequest): Promise<Event> => {
+    return apiClient.post<Event>(API_ENDPOINTS.ADMIN_EVENTS.CREATE, eventData)
+  },
+  
+  // Update event
+  updateEvent: async (eventId: number, eventData: UpdateEventRequest): Promise<Event> => {
+    return apiClient.put<Event>(API_ENDPOINTS.ADMIN_EVENTS.UPDATE(eventId.toString()), eventData)
+  },
+  
+  // Delete event
+  deleteEvent: async (eventId: number): Promise<void> => {
+    return apiClient.delete<void>(API_ENDPOINTS.ADMIN_EVENTS.DELETE(eventId.toString()))
+  },
+  
+  // Get event statistics
+  getEventStatistics: async (): Promise<any> => {
+    return apiClient.get<any>(API_ENDPOINTS.ADMIN_EVENTS.STATISTICS)
+  }
+}
+
+// Installation API
+export const installationApi = {
+  // Get all installations
+  getAllInstallations: async (): Promise<Installation[]> => {
+    return apiClient.get<Installation[]>(API_ENDPOINTS.INSTALLATIONS.ALL)
+  },
+  
+  // Get installation by ID
+  getInstallationById: async (installationId: number): Promise<Installation> => {
+    return apiClient.get<Installation>(API_ENDPOINTS.INSTALLATIONS.GET(installationId.toString()))
   }
 }
