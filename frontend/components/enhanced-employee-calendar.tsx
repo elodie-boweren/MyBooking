@@ -25,6 +25,7 @@ import {
 } from "lucide-react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { employeeDashboardApi, CalendarEvent } from "@/lib/api"
 
 interface TaskReply {
   id: string
@@ -33,78 +34,16 @@ interface TaskReply {
   attachments?: string[]
 }
 
-interface CalendarEvent {
-  id: string
-  title: string
-  type: "shift" | "task" | "training"
-  startTime: string
-  endTime: string
-  description?: string
-  location?: string
-  assignedBy?: string
-  status?: "pending" | "completed" | "in-progress"
-  canReply?: boolean
-  replies?: TaskReply[]
-  date?: string // Added date field for filtering
-}
+// CalendarEvent interface is now imported from @/lib/api
 
-// Enhanced mock events with proper dates for testing
-const generateMockEvents = (baseDate: Date): CalendarEvent[] => {
-  const events: CalendarEvent[] = []
-  
-  // Generate events for the current week
-  for (let i = 0; i < 7; i++) {
-    const eventDate = new Date(baseDate)
-    eventDate.setDate(baseDate.getDate() - baseDate.getDay() + i)
-    
-    // Add shift for Monday, Wednesday, Friday
-    if (i === 1 || i === 3 || i === 5) {
-      events.push({
-        id: `shift-${i}`,
-        title: `${['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][i]} Shift`,
-        type: "shift",
-        startTime: "09:00",
-        endTime: "17:00",
-        location: "Main Floor",
-        status: i === 1 ? "in-progress" : "pending",
-        date: eventDate.toISOString().split('T')[0]
-      })
-    }
-    
-    // Add tasks for Tuesday and Thursday
-    if (i === 2 || i === 4) {
-      events.push({
-        id: `task-${i}`,
-        title: `Daily Task - ${eventDate.toLocaleDateString()}`,
-        type: "task",
-        startTime: "10:30",
-        endTime: "11:30",
-        description: `Task assigned for ${eventDate.toLocaleDateString()}`,
-        assignedBy: "Sarah Johnson",
-        status: "pending",
-        canReply: true,
-        replies: [],
-        date: eventDate.toISOString().split('T')[0]
-      })
-    }
+// Fetch real calendar events from backend
+const fetchCalendarEvents = async (startDate: string, endDate: string): Promise<CalendarEvent[]> => {
+  try {
+    return await employeeDashboardApi.getCalendarEvents(startDate, endDate)
+  } catch (error) {
+    console.error('Error fetching calendar events:', error)
+    return []
   }
-  
-  // Add training for the entire week
-  const weekStart = new Date(baseDate)
-  weekStart.setDate(baseDate.getDate() - baseDate.getDay())
-  events.push({
-    id: "training-week",
-    title: "Safety Training Week",
-    type: "training",
-    startTime: "All Day",
-    endTime: "All Day",
-    location: "Training Room B",
-    description: "Full week safety training program",
-    status: "in-progress",
-    date: weekStart.toISOString().split('T')[0]
-  })
-  
-  return events
 }
 
 type ViewMode = "day" | "week" | "month"
@@ -117,12 +56,51 @@ export default function EnhancedEmployeeCalendar() {
   const [replyText, setReplyText] = useState("")
   const [attachments, setAttachments] = useState<File[]>([])
   const [viewMode, setViewMode] = useState<ViewMode>("week")
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  // Generate events when component mounts or selectedDate changes
+  // Fetch real events when component mounts or selectedDate/viewMode changes
   useEffect(() => {
-    const generatedEvents = generateMockEvents(selectedDate)
-    setEvents(generatedEvents)
-  }, [selectedDate])
+    const loadEvents = async () => {
+      setIsLoading(true)
+      setError(null)
+      
+      try {
+        // Calculate date range based on view mode
+        let startDate: string
+        let endDate: string
+        
+        if (viewMode === 'day') {
+          startDate = selectedDate.toISOString().split('T')[0]
+          endDate = startDate
+        } else if (viewMode === 'week') {
+          const startOfWeek = new Date(selectedDate)
+          startOfWeek.setDate(selectedDate.getDate() - selectedDate.getDay())
+          const endOfWeek = new Date(startOfWeek)
+          endOfWeek.setDate(startOfWeek.getDate() + 6)
+          startDate = startOfWeek.toISOString().split('T')[0]
+          endDate = endOfWeek.toISOString().split('T')[0]
+        } else {
+          // Month view
+          const monthStart = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1)
+          const monthEnd = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0)
+          startDate = monthStart.toISOString().split('T')[0]
+          endDate = monthEnd.toISOString().split('T')[0]
+        }
+        
+        const fetchedEvents = await fetchCalendarEvents(startDate, endDate)
+        setEvents(fetchedEvents)
+      } catch (error) {
+        console.error('Error loading calendar events:', error)
+        setError('Failed to load calendar events')
+        setEvents([])
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    
+    loadEvents()
+  }, [selectedDate, viewMode])
 
   const getEventColor = (type: CalendarEvent["type"]) => {
     switch (type) {
@@ -381,7 +359,25 @@ export default function EnhancedEmployeeCalendar() {
 
       {/* Events List */}
       <div className="space-y-3">
-        {getFilteredEvents().length === 0 ? (
+        {isLoading ? (
+          <div className="text-center py-8 text-gray-500">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p>Loading calendar events...</p>
+          </div>
+        ) : error ? (
+          <div className="text-center py-8 text-red-500">
+            <CalendarIcon className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <p>{error}</p>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => window.location.reload()}
+              className="mt-2"
+            >
+              Try Again
+            </Button>
+          </div>
+        ) : getFilteredEvents().length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             <CalendarIcon className="h-12 w-12 mx-auto mb-4 opacity-50" />
             <p>No events scheduled for this {viewMode}</p>
