@@ -18,23 +18,7 @@ import {
   Filter
 } from "lucide-react"
 import EnhancedEmployeeCalendar from "@/components/enhanced-employee-calendar"
-import { apiClient } from "@/lib/api"
-
-interface EmployeeStats {
-  shiftsThisWeek: number
-  pendingTasks: number
-  trainingStatus: 'ACTIVE' | 'COMPLETED' | 'NONE'
-  leaveBalance: number
-}
-
-interface TodayTask {
-  id: string
-  title: string
-  description: string
-  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED'
-  priority: 'LOW' | 'MEDIUM' | 'HIGH'
-  dueDate: string
-}
+import { employeeDashboardApi, EmployeeStats, TodayTask, Announcement } from "@/lib/api"
 
 // Removed Notification interface - notifications don't exist in backend
 
@@ -43,10 +27,15 @@ export default function EmployeeDashboard() {
     shiftsThisWeek: 0,
     pendingTasks: 0,
     trainingStatus: 'NONE',
-    leaveBalance: 0
+    leaveBalance: 0,
+    totalShifts: 0,
+    completedTasks: 0,
+    pendingLeaveRequests: 0
   })
   const [todayTasks, setTodayTasks] = useState<TodayTask[]>([])
+  const [announcements, setAnnouncements] = useState<Announcement[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     fetchEmployeeData()
@@ -55,48 +44,36 @@ export default function EmployeeDashboard() {
   const fetchEmployeeData = async () => {
     try {
       setIsLoading(true)
+      setError(null)
       
-      // Fetch employee stats, tasks, and notifications
-      // For now, we'll use mock data since we need to implement the backend endpoints
-      const mockStats: EmployeeStats = {
-        shiftsThisWeek: 5,
-        pendingTasks: 3,
-        trainingStatus: 'ACTIVE',
-        leaveBalance: 12
-      }
+      // Fetch real data from backend (announcements not implemented yet)
+      const [statsData, tasksData] = await Promise.all([
+        employeeDashboardApi.getStats(),
+        employeeDashboardApi.getTodayTasks()
+      ])
       
-      const mockTasks: TodayTask[] = [
-        {
-          id: '1',
-          title: 'Room Cleaning - Floor 3',
-          description: 'Clean all rooms on the 3rd floor',
-          status: 'PENDING',
-          priority: 'HIGH',
-          dueDate: new Date().toISOString()
-        },
-        {
-          id: '2',
-          title: 'Equipment Check',
-          description: 'Check conference room equipment',
-          status: 'IN_PROGRESS',
-          priority: 'MEDIUM',
-          dueDate: new Date().toISOString()
-        },
-        {
-          id: '3',
-          title: 'Safety Training',
-          description: 'Complete safety protocol training',
-          status: 'PENDING',
-          priority: 'LOW',
-          dueDate: new Date().toISOString()
-        }
-      ]
+      setStats(statsData)
+      setTodayTasks(tasksData)
       
-      setStats(mockStats)
-      setTodayTasks(mockTasks)
+      // Set empty announcements for now (endpoint not implemented)
+      setAnnouncements([])
       
     } catch (error) {
       console.error('Error fetching employee data:', error)
+      setError('Failed to load dashboard data. Please try again.')
+      
+      // Set fallback data on error
+      setStats({
+        shiftsThisWeek: 0,
+        pendingTasks: 0,
+        trainingStatus: 'NONE',
+        leaveBalance: 20,
+        totalShifts: 0,
+        completedTasks: 0,
+        pendingLeaveRequests: 0
+      })
+      setTodayTasks([])
+      setAnnouncements([])
     } finally {
       setIsLoading(false)
     }
@@ -113,9 +90,9 @@ export default function EmployeeDashboard() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'COMPLETED': return 'bg-green-100 text-green-800'
+      case 'DONE': return 'bg-green-100 text-green-800'
       case 'IN_PROGRESS': return 'bg-blue-100 text-blue-800'
-      case 'PENDING': return 'bg-yellow-100 text-yellow-800'
+      case 'TODO': return 'bg-yellow-100 text-yellow-800'
       default: return 'bg-gray-100 text-gray-800'
     }
   }
@@ -128,6 +105,21 @@ export default function EmployeeDashboard() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-2 text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Dashboard</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <Button onClick={fetchEmployeeData} variant="outline">
+            Try Again
+          </Button>
         </div>
       </div>
     )
@@ -282,7 +274,7 @@ export default function EmployeeDashboard() {
               </CardContent>
             </Card>
 
-            {/* Announcements - Using existing backend */}
+            {/* Announcements - Using real backend data */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
@@ -291,16 +283,24 @@ export default function EmployeeDashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="border-l-4 border-blue-500 pl-4">
-                  <h4 className="font-semibold text-sm">New Safety Protocol</h4>
-                  <p className="text-sm text-gray-600">Updated guidelines for equipment handling...</p>
-                  <p className="text-xs text-gray-500 mt-1">2 hours ago</p>
-                </div>
-                <div className="border-l-4 border-green-500 pl-4">
-                  <h4 className="font-semibold text-sm">Team Meeting Tomorrow</h4>
-                  <p className="text-sm text-gray-600">Monthly operations review at 10 AM...</p>
-                  <p className="text-xs text-gray-500 mt-1">1 day ago</p>
-                </div>
+                {announcements.length > 0 ? (
+                  announcements.slice(0, 3).map((announcement) => (
+                    <div key={announcement.id} className={`border-l-4 pl-4 ${
+                      announcement.priority === 'HIGH' ? 'border-red-500' :
+                      announcement.priority === 'MEDIUM' ? 'border-yellow-500' : 'border-blue-500'
+                    }`}>
+                      <h4 className="font-semibold text-sm">{announcement.title}</h4>
+                      <p className="text-sm text-gray-600">{announcement.content}</p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {new Date(announcement.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-4">
+                    <p className="text-sm text-gray-500">No announcements available</p>
+                  </div>
+                )}
                 <Button variant="outline" className="w-full">
                   View All Announcements
                 </Button>
