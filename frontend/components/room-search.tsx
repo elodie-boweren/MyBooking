@@ -22,6 +22,7 @@ import {
 } from 'lucide-react'
 import { COMPONENT_TEMPLATES } from '@/lib/style-constants'
 import { apiClient, API_ENDPOINTS, Room } from '@/lib/api'
+import { EnhancedRoomBookingModal } from './enhanced-room-booking-modal'
 
 // Helper function to get placeholder image based on room type - 4 UNIQUE HIGH-QUALITY HOTEL ROOM IMAGES
 const getPlaceholderImage = (roomType: string): string => {
@@ -614,143 +615,23 @@ export function RoomSearch({ onRoomSelect }: RoomSearchProps) {
         </Card>
       )}
 
-      {/* Booking Form Modal */}
+      {/* Enhanced Booking Modal with Loyalty Integration */}
       {showBookingForm && selectedRoom && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <Card className="w-full max-w-md mx-4">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <CreditCard className="h-5 w-5" />
-                <span>Book Room {selectedRoom.number}</span>
-              </CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Complete your booking for {getRoomTypeName(selectedRoom.roomType)}
-              </p>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleBookingSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium">Check-in Date</label>
-                    <Input
-                      type="date"
-                      value={bookingData.checkIn}
-                      onChange={(e) => handleBookingChange('checkIn', e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Check-out Date</label>
-                    <Input
-                      type="date"
-                      value={bookingData.checkOut}
-                      onChange={(e) => handleBookingChange('checkOut', e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium">Number of Guests</label>
-                  <Input
-                    type="number"
-                    min="1"
-                    max={selectedRoom.capacity}
-                    value={bookingData.numberOfGuests}
-                    onChange={(e) => handleBookingChange('numberOfGuests', parseInt(e.target.value))}
-                    required
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Maximum capacity: {selectedRoom.capacity} guests
-                  </p>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium">Loyalty Points to Use (Optional)</label>
-                  <Input
-                    type="number"
-                    min="0"
-                    placeholder="0"
-                    value={bookingData.pointsUsed}
-                    onChange={(e) => handleBookingChange('pointsUsed', parseInt(e.target.value) || 0)}
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Enter 0 if you don't want to use loyalty points
-                  </p>
-                </div>
-
-                <div className="bg-muted p-3 rounded-md">
-                  {(() => {
-                    const { nights, subtotal, tax, total } = calculateTotalPrice()
-                    return (
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm font-medium">Price per night:</span>
-                          <span className="text-sm">${selectedRoom.price} {selectedRoom.currency}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm font-medium">Number of nights:</span>
-                          <span className="text-sm">{nights} night{nights !== 1 ? 's' : ''}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm font-medium">Subtotal:</span>
-                          <span className="text-sm">${subtotal.toFixed(2)} {selectedRoom.currency}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm font-medium">Tax (10%):</span>
-                          <span className="text-sm">${tax.toFixed(2)} {selectedRoom.currency}</span>
-                        </div>
-                        <div className="border-t pt-2">
-                          <div className="flex justify-between items-center">
-                            <span className="text-lg font-bold">Total Price:</span>
-                            <span className="text-lg font-bold text-primary">
-                              ${total.toFixed(2)} {selectedRoom.currency}
-                            </span>
-                          </div>
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          For {bookingData.numberOfGuests} guest{bookingData.numberOfGuests > 1 ? 's' : ''} • {nights} night{nights !== 1 ? 's' : ''}
-                        </p>
-                      </div>
-                    )
-                  })()}
-                </div>
-
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setShowBookingForm(false)
-                      setSelectedRoom(null)
-                    }}
-                    className="flex-1"
-                    disabled={booking}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    className="flex-1"
-                    disabled={booking}
-                  >
-                    {booking ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        Booking...
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle className="h-4 w-4 mr-2" />
-                        Confirm Booking
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
+        <EnhancedRoomBookingModal
+          isOpen={showBookingForm}
+          onClose={() => {
+            setShowBookingForm(false)
+            setSelectedRoom(null)
+          }}
+          room={selectedRoom}
+          checkIn={bookingData.checkIn}
+          checkOut={bookingData.checkOut}
+          numberOfGuests={bookingData.numberOfGuests}
+          onBookingSuccess={() => {
+            // Refresh rooms to update availability
+            fetchAllRooms()
+          }}
+        />
       )}
     </div>
   )

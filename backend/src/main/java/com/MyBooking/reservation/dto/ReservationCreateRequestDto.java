@@ -29,6 +29,9 @@ public class ReservationCreateRequestDto {
     @Size(min = 3, max = 3, message = "Currency must be exactly 3 characters")
     private String currency;
     
+    @Min(value = 0, message = "Points used must be non-negative")
+    private Integer pointsUsed = 0;
+    
     // Constructors
     public ReservationCreateRequestDto() {}
     
@@ -82,6 +85,14 @@ public class ReservationCreateRequestDto {
         this.currency = currency;
     }
     
+    public Integer getPointsUsed() {
+        return pointsUsed;
+    }
+    
+    public void setPointsUsed(Integer pointsUsed) {
+        this.pointsUsed = pointsUsed;
+    }
+    
     @Override
     public String toString() {
         return "ReservationCreateRequestDto{" +
@@ -90,6 +101,7 @@ public class ReservationCreateRequestDto {
                 ", checkOut=" + checkOut +
                 ", numberOfGuests=" + numberOfGuests +
                 ", currency='" + currency + '\'' +
+                ", pointsUsed=" + pointsUsed +
                 '}';
     }
 }

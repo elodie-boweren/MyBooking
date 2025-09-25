@@ -156,8 +156,9 @@ export const API_ENDPOINTS = {
     LOGIN: "/auth/login",
     REGISTER: "/auth/register",
     PROFILE: "/auth/profile",
-        CHANGE_PASSWORD: "/auth/change-password",
-      },
+    CHANGE_PASSWORD: "/auth/change-password",
+    NOTIFICATION_PREFERENCES: "/auth/notification-preferences",
+  },
 
       // Admin User Management
       ADMIN_USERS: {
@@ -608,11 +609,9 @@ export interface FeedbackReply {
 export interface LoyaltyAccount {
   id: number
   userId: number
-  clientName: string
-  clientEmail: string
-  pointsBalance: number
-  totalPointsEarned: number
-  totalPointsRedeemed: number
+  userName: string
+  userEmail: string
+  balance: number
   createdAt: string
   updatedAt: string
 }
@@ -621,10 +620,13 @@ export interface LoyaltyAccount {
 export interface LoyaltyTransaction {
   id: number
   accountId: number
-  transactionType: "EARN" | "REDEEM"
+  userId: number
+  userName: string
+  userEmail: string
+  type: "EARN" | "REDEEM"
   points: number
-  description: string
   reservationId?: number
+  reservationNumber?: string
   createdAt: string
 }
 
@@ -1028,6 +1030,16 @@ export const authApi = {
   // Change password
   changePassword: async (passwordData: { currentPassword: string; newPassword: string }): Promise<void> => {
     return apiClient.put<void>(API_ENDPOINTS.AUTH.CHANGE_PASSWORD, passwordData)
+  },
+
+  // Update user profile
+  updateProfile: async (profileData: Partial<User>): Promise<User> => {
+    return apiClient.put<User>(API_ENDPOINTS.AUTH.PROFILE, profileData)
+  },
+
+  // Update notification preferences
+  updateNotificationPreferences: async (preferences: any): Promise<void> => {
+    return apiClient.put<void>(API_ENDPOINTS.AUTH.NOTIFICATION_PREFERENCES, preferences)
   }
 }
 
@@ -1284,13 +1296,23 @@ export const loyaltyApi = {
   },
 
   // Get loyalty transactions for current user
-  getTransactions: async (): Promise<LoyaltyTransaction[]> => {
-    return apiClient.get<LoyaltyTransaction[]>(API_ENDPOINTS.LOYALTY.TRANSACTIONS)
+  getTransactions: async (): Promise<PaginatedResponse<LoyaltyTransaction>> => {
+    return apiClient.get<PaginatedResponse<LoyaltyTransaction>>(API_ENDPOINTS.LOYALTY.TRANSACTIONS)
   },
 
   // Get loyalty statistics
   getStatistics: async (): Promise<any> => {
     return apiClient.get<any>(API_ENDPOINTS.LOYALTY.STATISTICS)
+  },
+
+  // Admin: Get all loyalty accounts
+  getAllAccounts: async (): Promise<LoyaltyAccount[]> => {
+    return apiClient.get<LoyaltyAccount[]>(API_ENDPOINTS.ADMIN_LOYALTY.ACCOUNTS)
+  },
+
+  // Admin: Get all loyalty transactions
+  getAllTransactions: async (): Promise<LoyaltyTransaction[]> => {
+    return apiClient.get<LoyaltyTransaction[]>(API_ENDPOINTS.ADMIN_LOYALTY.TRANSACTIONS)
   }
 }
 
@@ -1305,6 +1327,16 @@ export const feedbackApi = {
   // Create feedback
   createFeedback: async (request: CreateFeedbackRequest): Promise<Feedback> => {
     return apiClient.post<Feedback>(API_ENDPOINTS.FEEDBACK.CREATE, request)
+  },
+
+  // Admin: Get all feedbacks
+  getAllFeedbacks: async (): Promise<PaginatedResponse<Feedback>> => {
+    return apiClient.get<PaginatedResponse<Feedback>>(API_ENDPOINTS.ADMIN_FEEDBACK.ALL)
+  },
+
+  // Admin: Reply to feedback
+  replyToFeedback: async (feedbackId: number, reply: string): Promise<Feedback> => {
+    return apiClient.post<Feedback>(`/feedback-replies/feedback/${feedbackId}`, { message: reply })
   }
 }
 
@@ -1636,5 +1668,78 @@ export const eventBookingApi = {
       : API_ENDPOINTS.EVENT_BOOKINGS.MY
     
     return apiClient.get<PaginatedResponse<EventBookingResponse>>(url)
+  }
+}
+
+// ==================== RESERVATION API ====================
+
+// Reservation Interfaces
+export interface CreateReservationRequest {
+  roomId: number
+  checkIn: string
+  checkOut: string
+  numberOfGuests: number
+  pointsUsed?: number
+  currency?: string
+}
+
+export interface ReservationResponse {
+  id: number
+  roomId: number
+  roomNumber: string
+  roomType: string
+  checkIn: string
+  checkOut: string
+  numberOfGuests: number
+  totalPrice: number
+  currency: string
+  status: 'PENDING' | 'CONFIRMED' | 'CANCELLED'
+  pointsUsed?: number
+  pointsDiscount?: number
+  clientId: number
+  createdAt: string
+  updatedAt: string
+}
+
+// Reservation API
+export const reservationApi = {
+  // Create reservation
+  createReservation: async (request: CreateReservationRequest): Promise<ReservationResponse> => {
+    return apiClient.post<ReservationResponse>(API_ENDPOINTS.CLIENT_RESERVATIONS.CREATE, request)
+  },
+
+  // Get my reservations
+  getMyReservations: async (page: number = 0, size: number = 10): Promise<PaginatedResponse<ReservationResponse>> => {
+    return apiClient.get<PaginatedResponse<ReservationResponse>>(`${API_ENDPOINTS.CLIENT_RESERVATIONS.MY}?page=${page}&size=${size}`)
+  },
+
+  // Get reservation by ID
+  getReservationById: async (reservationId: number): Promise<ReservationResponse> => {
+    return apiClient.get<ReservationResponse>(API_ENDPOINTS.CLIENT_RESERVATIONS.GET(reservationId.toString()))
+  },
+
+  // Cancel reservation
+  cancelReservation: async (reservationId: number, reason?: string): Promise<ReservationResponse> => {
+    const url = reason 
+      ? `${API_ENDPOINTS.CLIENT_RESERVATIONS.CANCEL(reservationId.toString())}?reason=${encodeURIComponent(reason)}`
+      : API_ENDPOINTS.CLIENT_RESERVATIONS.CANCEL(reservationId.toString())
+    return apiClient.put<ReservationResponse>(url, {})
+  },
+
+  // Search reservations
+  searchReservations: async (criteria: any): Promise<PaginatedResponse<ReservationResponse>> => {
+    const params = new URLSearchParams()
+    if (criteria.status) params.append('status', criteria.status)
+    if (criteria.fromDate) params.append('fromDate', criteria.fromDate)
+    if (criteria.toDate) params.append('toDate', criteria.toDate)
+    if (criteria.page) params.append('page', criteria.page.toString())
+    if (criteria.size) params.append('size', criteria.size.toString())
+    
+    const queryString = params.toString()
+    const url = queryString 
+      ? `${API_ENDPOINTS.CLIENT_RESERVATIONS.SEARCH}?${queryString}`
+      : API_ENDPOINTS.CLIENT_RESERVATIONS.MY
+    
+    return apiClient.get<PaginatedResponse<ReservationResponse>>(url)
   }
 }

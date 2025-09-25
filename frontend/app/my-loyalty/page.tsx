@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ArrowLeft, Star, TrendingUp, Award, Download, Plus, Minus } from "lucide-react"
+import { ArrowLeft, Star, TrendingUp, Award, Download, Plus, Minus, Gift } from "lucide-react"
 import Link from "next/link"
 import { loyaltyApi } from "@/lib/api"
 import type { LoyaltyAccount, LoyaltyTransaction } from "@/lib/api"
@@ -27,12 +27,15 @@ export default function MyLoyaltyPage() {
         const account = await loyaltyApi.getAccount()
         setLoyaltyAccount(account)
         
-        // Fetch transactions
-        const transactionData = await loyaltyApi.getTransactions()
-        setTransactions(transactionData)
+        // Fetch transactions - handle paginated response
+        const transactionResponse = await loyaltyApi.getTransactions()
+        setTransactions(transactionResponse.content || [])
       } catch (error) {
         console.error('Failed to fetch loyalty data:', error)
         toast.error("Failed to load loyalty data")
+        // Set default values to prevent undefined errors
+        setLoyaltyAccount(null)
+        setTransactions([])
       } finally {
         setLoading(false)
       }
@@ -42,12 +45,21 @@ export default function MyLoyaltyPage() {
   }, [])
 
   const filteredTransactions = transactions.filter(transaction => {
-    if (selectedType !== "all" && transaction.transactionType !== selectedType) {
+    if (selectedType !== "all" && transaction.type !== selectedType) {
       return false
     }
     // Add date filtering logic here if needed
     return true
   })
+
+  // Calculate totals from transactions
+  const totalPointsEarned = transactions
+    .filter(t => t.type === "EARN")
+    .reduce((sum, t) => sum + t.points, 0)
+
+  const totalPointsRedeemed = transactions
+    .filter(t => t.type === "REDEEM")
+    .reduce((sum, t) => sum + t.points, 0)
 
   const getTransactionIcon = (type: string) => {
     switch (type) {
@@ -83,10 +95,10 @@ export default function MyLoyaltyPage() {
     <div className="container mx-auto px-4 py-8 max-w-6xl">
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
-          <Link href="/">
+          <Link href="/rooms">
             <Button variant="outline" size="sm">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Home
+              Back to Dashboard
             </Button>
           </Link>
           <div>
@@ -101,14 +113,14 @@ export default function MyLoyaltyPage() {
       </div>
 
       {/* Points Overview */}
-      {loyaltyAccount && (
+      {loyaltyAccount ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card>
             <CardHeader className="text-center">
               <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-2">
                 <Star className="h-6 w-6 text-primary" />
               </div>
-              <CardTitle className="text-2xl">{loyaltyAccount.pointsBalance.toLocaleString()}</CardTitle>
+              <CardTitle className="text-2xl">{loyaltyAccount.balance?.toLocaleString() || '0'}</CardTitle>
               <CardDescription>Current Balance</CardDescription>
             </CardHeader>
           </Card>
@@ -118,7 +130,7 @@ export default function MyLoyaltyPage() {
               <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-2">
                 <TrendingUp className="h-6 w-6 text-green-600" />
               </div>
-              <CardTitle className="text-2xl">{loyaltyAccount.totalPointsEarned.toLocaleString()}</CardTitle>
+              <CardTitle className="text-2xl">{totalPointsEarned.toLocaleString()}</CardTitle>
               <CardDescription>Total Earned</CardDescription>
             </CardHeader>
           </Card>
@@ -128,10 +140,16 @@ export default function MyLoyaltyPage() {
               <div className="mx-auto w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-2">
                 <Award className="h-6 w-6 text-red-600" />
               </div>
-              <CardTitle className="text-2xl">{loyaltyAccount.totalPointsRedeemed.toLocaleString()}</CardTitle>
+              <CardTitle className="text-2xl">{totalPointsRedeemed.toLocaleString()}</CardTitle>
               <CardDescription>Total Redeemed</CardDescription>
             </CardHeader>
           </Card>
+        </div>
+      ) : (
+        <div className="text-center py-8 mb-8">
+          <Star className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+          <h3 className="text-xl font-semibold">No Loyalty Account Found</h3>
+          <p className="text-muted-foreground mt-2">You don't have a loyalty account yet. Make a reservation to start earning points!</p>
         </div>
       )}
 
@@ -188,9 +206,9 @@ export default function MyLoyaltyPage() {
                   {filteredTransactions.map((transaction) => (
                     <div key={transaction.id} className="flex items-center justify-between p-4 border rounded-lg">
                       <div className="flex items-center gap-3">
-                        {getTransactionIcon(transaction.transactionType)}
+                        {getTransactionIcon(transaction.type)}
                         <div>
-                          <p className="font-medium">{transaction.description}</p>
+                          <p className="font-medium">{transaction.type === "EARN" ? "Points Earned" : "Points Redeemed"}</p>
                           <p className="text-sm text-muted-foreground">
                             {new Date(transaction.createdAt).toLocaleDateString()} at{" "}
                             {new Date(transaction.createdAt).toLocaleTimeString()}
@@ -198,12 +216,12 @@ export default function MyLoyaltyPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
-                        {getTransactionBadge(transaction.transactionType)}
+                        {getTransactionBadge(transaction.type)}
                         <div className="text-right">
                           <p className={`font-semibold ${
-                            transaction.transactionType === "EARN" ? "text-green-600" : "text-red-600"
+                            transaction.type === "EARN" ? "text-green-600" : "text-red-600"
                           }`}>
-                            {transaction.transactionType === "EARN" ? "+" : "-"}{Math.abs(transaction.points)}
+                            {transaction.type === "EARN" ? "+" : "-"}{Math.abs(transaction.points)}
                           </p>
                           <p className="text-sm text-muted-foreground">points</p>
                         </div>
