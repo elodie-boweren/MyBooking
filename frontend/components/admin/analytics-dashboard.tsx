@@ -31,6 +31,7 @@ interface AnalyticsData {
     daily: number
     trend: number
   }
+  roomRevenue: number
   occupancy: {
     rate: number
     totalRooms: number
@@ -168,14 +169,29 @@ export function AnalyticsDashboard() {
       const positiveFeedback = feedbacks.filter((f: any) => f.rating >= 4).length
       const negativeFeedback = feedbacks.filter((f: any) => f.rating < 3).length
       
+      // Calculate actual revenue breakdown
+      const roomRevenue = totalRevenue // All revenue from reservations is room revenue
+      const eventRevenueAmount = eventRevenue // Event revenue from events data
+      const totalCalculatedRevenue = roomRevenue + eventRevenueAmount
+      
+      console.log('Revenue Debug:', {
+        totalRevenue,
+        roomRevenue,
+        eventRevenue: eventRevenueAmount,
+        totalCalculatedRevenue,
+        reservations: confirmedReservations.length,
+        events: events.length
+      })
+      
       // Transform data to match our interface
       setData({
         revenue: {
-          total: totalRevenue,
-          monthly: totalRevenue * 0.8, // Estimate monthly from total
-          daily: totalRevenue / 30, // Estimate daily
+          total: totalCalculatedRevenue, // Use calculated total
+          monthly: totalCalculatedRevenue, // Use same as total for now (can be improved with date filtering)
+          daily: totalCalculatedRevenue / 30, // Estimate daily
           trend: 12.5 // Placeholder trend
         },
+        roomRevenue: roomRevenue, // Add room revenue
         occupancy: {
           rate: occupancyRate,
           totalRooms: totalRooms,
@@ -230,6 +246,7 @@ export function AnalyticsDashboard() {
           daily: 500,
           trend: 12.5
         },
+        roomRevenue: 100000, // Add room revenue to fallback
         occupancy: {
           rate: 78.5,
           totalRooms: 50,
@@ -492,9 +509,9 @@ export function AnalyticsDashboard() {
                 <CardDescription>Revenue from room bookings</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">{formatCurrency(data.revenue.total * 0.8)}</div>
+                <div className="text-3xl font-bold">{formatCurrency(data.roomRevenue)}</div>
                 <div className="text-sm text-muted-foreground mt-2">
-                  80% of total revenue
+                  From room bookings
                 </div>
               </CardContent>
             </Card>
@@ -507,7 +524,7 @@ export function AnalyticsDashboard() {
               <CardContent>
                 <div className="text-3xl font-bold">{formatCurrency(data.events.revenue)}</div>
                 <div className="text-sm text-muted-foreground mt-2">
-                  20% of total revenue
+                  From {data.events.total} events
                 </div>
               </CardContent>
             </Card>
