@@ -684,21 +684,33 @@ public class EventService {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new NotFoundException("User not found with ID: " + userId));
         
-        // Get reservation and validate
-        Reservation reservation = reservationRepository.findById(request.getReservationId())
-            .orElseThrow(() -> new NotFoundException("Reservation not found with ID: " + request.getReservationId()));
+        // Get reservation if provided (optional for standalone event bookings)
+        Reservation reservation = null;
+        if (request.getReservationId() != null) {
+            reservation = reservationRepository.findById(request.getReservationId())
+                .orElseThrow(() -> new NotFoundException("Reservation not found with ID: " + request.getReservationId()));
+        }
+        
+        // Validate participant count
+        Integer numberOfParticipants = request.getNumberOfParticipants() != null ? request.getNumberOfParticipants() : 1;
+        if (numberOfParticipants < 1) {
+            throw new IllegalArgumentException("Number of participants must be at least 1");
+        }
+        if (numberOfParticipants > event.getCapacity()) {
+            throw new IllegalArgumentException("Number of participants exceeds event capacity of " + event.getCapacity());
+        }
         
         // Create event booking
         EventBooking booking = new EventBooking();
         booking.setEvent(event);
         booking.setClient(user);
-        booking.setReservation(reservation);
+        booking.setReservation(reservation); // Can be null for standalone bookings
         booking.setStatus(EventBookingStatus.CONFIRMED);
         booking.setEventDateTime(event.getStartAt());
         booking.setBookingDate(LocalDateTime.now());
-        booking.setNumberOfParticipants(1); // Default to 1 participant
+        booking.setNumberOfParticipants(numberOfParticipants);
         booking.setDurationHours((int) ChronoUnit.HOURS.between(event.getStartAt(), event.getEndAt()));
-        booking.setTotalPrice(event.getPrice());
+        booking.setTotalPrice(event.getPrice().multiply(BigDecimal.valueOf(numberOfParticipants)));
         
         EventBooking savedBooking = eventBookingRepository.save(booking);
         return convertToEventBookingResponseDto(savedBooking);

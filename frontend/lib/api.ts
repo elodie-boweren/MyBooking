@@ -1556,3 +1556,85 @@ export const installationApi = {
     return apiClient.get<Installation>(API_ENDPOINTS.INSTALLATIONS.GET(installationId.toString()))
   }
 }
+
+// ==================== EVENT BOOKING API ====================
+
+// Event Booking Interfaces
+export interface EventBookingCreateRequest {
+  eventId: number
+  reservationId?: number | null
+  numberOfParticipants?: number
+  specialRequests?: string
+}
+
+export interface EventBookingResponse {
+  id: number
+  eventId: number
+  eventName: string
+  eventType: string
+  eventStartAt: string
+  eventEndAt: string
+  eventPrice: number
+  eventCurrency: string
+  userId: number
+  userFirstName: string
+  userLastName: string
+  userEmail: string
+  reservationId: number
+  status: 'PENDING' | 'CONFIRMED' | 'CANCELLED'
+  createdAt: string
+  updatedAt: string
+}
+
+export interface EventBookingSearchCriteria {
+  status?: string
+  eventType?: string
+  fromDate?: string
+  toDate?: string
+  page?: number
+  size?: number
+}
+
+// Event Booking API
+export const eventBookingApi = {
+  // Create event booking
+  createBooking: async (request: EventBookingCreateRequest): Promise<EventBookingResponse> => {
+    return apiClient.post<EventBookingResponse>(API_ENDPOINTS.EVENT_BOOKINGS.CREATE, request)
+  },
+
+  // Get my event bookings
+  getMyBookings: async (page: number = 0, size: number = 10): Promise<PaginatedResponse<EventBookingResponse>> => {
+    return apiClient.get<PaginatedResponse<EventBookingResponse>>(`${API_ENDPOINTS.EVENT_BOOKINGS.MY}?page=${page}&size=${size}`)
+  },
+
+  // Get event booking by ID
+  getBookingById: async (bookingId: number): Promise<EventBookingResponse> => {
+    return apiClient.get<EventBookingResponse>(API_ENDPOINTS.EVENT_BOOKINGS.GET(bookingId.toString()))
+  },
+
+  // Cancel event booking
+  cancelBooking: async (bookingId: number, reason?: string): Promise<EventBookingResponse> => {
+    const url = reason 
+      ? `${API_ENDPOINTS.EVENT_BOOKINGS.CANCEL(bookingId.toString())}?reason=${encodeURIComponent(reason)}`
+      : API_ENDPOINTS.EVENT_BOOKINGS.CANCEL(bookingId.toString())
+    return apiClient.put<EventBookingResponse>(url, {})
+  },
+
+  // Search event bookings
+  searchBookings: async (criteria: EventBookingSearchCriteria): Promise<PaginatedResponse<EventBookingResponse>> => {
+    const params = new URLSearchParams()
+    if (criteria.status) params.append('status', criteria.status)
+    if (criteria.eventType) params.append('eventType', criteria.eventType)
+    if (criteria.fromDate) params.append('fromDate', criteria.fromDate)
+    if (criteria.toDate) params.append('toDate', criteria.toDate)
+    if (criteria.page) params.append('page', criteria.page.toString())
+    if (criteria.size) params.append('size', criteria.size.toString())
+    
+    const queryString = params.toString()
+    const url = queryString 
+      ? `${API_ENDPOINTS.EVENT_BOOKINGS.MY}?${queryString}`
+      : API_ENDPOINTS.EVENT_BOOKINGS.MY
+    
+    return apiClient.get<PaginatedResponse<EventBookingResponse>>(url)
+  }
+}

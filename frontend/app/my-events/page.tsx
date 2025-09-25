@@ -2,272 +2,339 @@
 
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ArrowLeft, Calendar, Clock, Users, MapPin, Star, PartyPopper } from "lucide-react"
-import Link from "next/link"
-import { eventApi } from "@/lib/api"
-import type { EventBooking } from "@/lib/api"
+import { 
+  Calendar, 
+  Clock, 
+  Users, 
+  MapPin, 
+  DollarSign, 
+  Search, 
+  Filter,
+  RefreshCw,
+  X,
+  AlertCircle
+} from "lucide-react"
+import { eventBookingApi } from "@/lib/api"
+import type { EventBookingResponse, EventBookingSearchCriteria } from "@/lib/api"
 import { toast } from "sonner"
 
-export default function MyEventsPage() {
-  const [eventBookings, setEventBookings] = useState<EventBooking[]>([])
-  const [loading, setLoading] = useState(true)
-  const [selectedStatus, setSelectedStatus] = useState("all")
+const getEventTypeBadge = (eventType: string) => {
+  const badges: Record<string, string> = {
+    WEDDING: "bg-pink-100 text-pink-800 border-pink-200",
+    CONFERENCE: "bg-blue-100 text-blue-800 border-blue-200",
+    BIRTHDAY: "bg-yellow-100 text-yellow-800 border-yellow-200",
+    CORPORATE: "bg-purple-100 text-purple-800 border-purple-200",
+    SPA: "bg-green-100 text-green-800 border-green-200",
+    FITNESS: "bg-orange-100 text-orange-800 border-orange-200"
+  }
+  return badges[eventType] || "bg-gray-100 text-gray-800 border-gray-200"
+}
 
-  useEffect(() => {
-    const fetchEventBookings = async () => {
-      try {
-        setLoading(true)
-        const bookings = await eventApi.getUserEventBookings()
-        setEventBookings(bookings)
-      } catch (error) {
-        console.error('Failed to fetch event bookings:', error)
-        toast.error("Failed to load event bookings")
-      } finally {
-        setLoading(false)
-      }
-    }
+const getStatusBadge = (status: string) => {
+  const badges: Record<string, string> = {
+    PENDING: "bg-yellow-100 text-yellow-800 border-yellow-200",
+    CONFIRMED: "bg-green-100 text-green-800 border-green-200",
+    CANCELLED: "bg-red-100 text-red-800 border-red-200"
+  }
+  return badges[status] || "bg-gray-100 text-gray-800 border-gray-200"
+}
 
-    fetchEventBookings()
-  }, [])
-
-  const filteredBookings = eventBookings.filter(booking => {
-    if (selectedStatus !== "all" && booking.status !== selectedStatus) {
-      return false
-    }
-    return true
+const formatDateTime = (dateTime: string) => {
+  return new Date(dateTime).toLocaleString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
   })
+}
 
-  const getStatusBadge = (status: string) => {
-    const statusColors: { [key: string]: string } = {
-      CONFIRMED: "bg-green-100 text-green-800",
-      PENDING: "bg-yellow-100 text-yellow-800",
-      CANCELLED: "bg-red-100 text-red-800",
-      COMPLETED: "bg-blue-100 text-blue-800"
+export default function MyEventsPage() {
+  const [bookings, setBookings] = useState<EventBookingResponse[]>([])
+  const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [statusFilter, setStatusFilter] = useState<string>("all")
+  const [eventTypeFilter, setEventTypeFilter] = useState<string>("all")
+  const [currentPage, setCurrentPage] = useState(0)
+  const [totalPages, setTotalPages] = useState(0)
+
+  // Load bookings
+  const loadBookings = async () => {
+    try {
+      setLoading(true)
+      const criteria: EventBookingSearchCriteria = {
+        page: currentPage,
+        size: 10
+      }
+      
+      if (statusFilter !== "all") criteria.status = statusFilter
+      if (eventTypeFilter !== "all") criteria.eventType = eventTypeFilter
+      
+      const response = await eventBookingApi.searchBookings(criteria)
+      setBookings(response.content)
+      setTotalPages(response.totalPages)
+    } catch (error: any) {
+      console.error("Failed to load bookings:", error)
+      toast.error("Failed to load your event bookings")
+    } finally {
+      setLoading(false)
     }
-    
-    return (
-      <Badge className={statusColors[status] || "bg-gray-100 text-gray-800"}>
-        {status}
-      </Badge>
-    )
   }
 
-  const getEventTypeBadge = (eventType: string) => {
-    const typeColors: { [key: string]: string } = {
-      SPA: "bg-purple-100 text-purple-800",
-      CONFERENCE: "bg-blue-100 text-blue-800",
-      YOGA_CLASS: "bg-green-100 text-green-800",
-      FITNESS: "bg-orange-100 text-orange-800",
-      WEDDING: "bg-pink-100 text-pink-800"
+  // Load bookings on component mount and when filters change
+  useEffect(() => {
+    loadBookings()
+  }, [currentPage, statusFilter, eventTypeFilter])
+
+  // Handle booking cancellation
+  const handleCancelBooking = async (bookingId: number, eventName: string) => {
+    if (!confirm(`Are you sure you want to cancel your booking for "${eventName}"?`)) {
+      return
     }
-    
-    return (
-      <Badge className={typeColors[eventType] || "bg-gray-100 text-gray-800"}>
-        {eventType}
-      </Badge>
-    )
+
+    try {
+      await eventBookingApi.cancelBooking(bookingId, "Cancelled by user")
+      toast.success("Booking cancelled successfully")
+      loadBookings() // Refresh the list
+    } catch (error: any) {
+      console.error("Failed to cancel booking:", error)
+      toast.error("Failed to cancel booking. Please try again.")
+    }
   }
 
-  const formatDateTime = (dateTime: string) => {
-    return new Date(dateTime).toLocaleString()
+  // Handle search
+  const handleSearch = () => {
+    setCurrentPage(0)
+    loadBookings()
   }
 
-  if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
-        <div className="text-center py-8">Loading event bookings...</div>
-      </div>
-    )
+  // Clear filters
+  const handleClearFilters = () => {
+    setSearchTerm("")
+    setStatusFilter("all")
+    setEventTypeFilter("all")
+    setCurrentPage(0)
   }
+
+  // Filter bookings by search term
+  const filteredBookings = bookings.filter(booking =>
+    booking.eventName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    booking.eventType.toLowerCase().includes(searchTerm.toLowerCase())
+  )
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl">
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
-          <Link href="/">
-            <Button variant="outline" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Home
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">My Events</h1>
-            <p className="text-muted-foreground mt-2">View and manage your event bookings</p>
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-foreground mb-2">My Event Bookings</h1>
+          <p className="text-muted-foreground">
+            Manage your event bookings and view booking history
+          </p>
+        </div>
+
+        {/* Filters */}
+        <div className="bg-muted/50 rounded-lg p-6 mb-8">
+          <div className="flex flex-col lg:flex-row gap-4">
+            {/* Search */}
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input
+                  placeholder="Search events..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+
+            {/* Status Filter */}
+            <div className="lg:w-48">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="PENDING">Pending</SelectItem>
+                  <SelectItem value="CONFIRMED">Confirmed</SelectItem>
+                  <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Event Type Filter */}
+            <div className="lg:w-48">
+              <Select value={eventTypeFilter} onValueChange={setEventTypeFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter by type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="WEDDING">Wedding</SelectItem>
+                  <SelectItem value="CONFERENCE">Conference</SelectItem>
+                  <SelectItem value="SPA">Spa</SelectItem>
+                  <SelectItem value="FITNESS">Fitness</SelectItem>
+                  <SelectItem value="CORPORATE">Corporate</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-2">
+              <Button onClick={handleSearch} variant="outline" size="sm">
+                <Search className="h-4 w-4 mr-2" />
+                Search
+              </Button>
+              <Button onClick={handleClearFilters} variant="outline" size="sm">
+                <X className="h-4 w-4 mr-2" />
+                Clear
+              </Button>
+              <Button onClick={loadBookings} variant="outline" size="sm" disabled={loading}>
+                <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+            </div>
           </div>
         </div>
-        
-        <Link href="/events">
-          <Button>
-            <PartyPopper className="h-4 w-4 mr-2" />
-            Browse Events
-          </Button>
-        </Link>
-      </div>
 
-      {/* Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <Card>
-          <CardHeader className="text-center">
-            <div className="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-2">
-              <Calendar className="h-6 w-6 text-blue-600" />
-            </div>
-            <CardTitle className="text-2xl">{eventBookings.length}</CardTitle>
-            <CardDescription>Total Bookings</CardDescription>
-          </CardHeader>
-        </Card>
-
-        <Card>
-          <CardHeader className="text-center">
-            <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-2">
-              <Star className="h-6 w-6 text-green-600" />
-            </div>
-            <CardTitle className="text-2xl">
-              {eventBookings.filter(b => b.status === "CONFIRMED").length}
-            </CardTitle>
-            <CardDescription>Confirmed</CardDescription>
-          </CardHeader>
-        </Card>
-
-        <Card>
-          <CardHeader className="text-center">
-            <div className="mx-auto w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mb-2">
-              <Clock className="h-6 w-6 text-yellow-600" />
-            </div>
-            <CardTitle className="text-2xl">
-              {eventBookings.filter(b => b.status === "PENDING").length}
-            </CardTitle>
-            <CardDescription>Pending</CardDescription>
-          </CardHeader>
-        </Card>
-
-        <Card>
-          <CardHeader className="text-center">
-            <div className="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-2">
-              <Users className="h-6 w-6 text-blue-600" />
-            </div>
-            <CardTitle className="text-2xl">
-              {eventBookings.filter(b => b.status === "COMPLETED").length}
-            </CardTitle>
-            <CardDescription>Completed</CardDescription>
-          </CardHeader>
-        </Card>
-      </div>
-
-      <Tabs defaultValue="bookings" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="bookings">My Bookings</TabsTrigger>
-          <TabsTrigger value="upcoming">Upcoming Events</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="bookings" className="space-y-6">
-          {/* Filters */}
-          <div className="flex gap-4">
-            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Bookings</SelectItem>
-                <SelectItem value="CONFIRMED">Confirmed</SelectItem>
-                <SelectItem value="PENDING">Pending</SelectItem>
-                <SelectItem value="CANCELLED">Cancelled</SelectItem>
-                <SelectItem value="COMPLETED">Completed</SelectItem>
-              </SelectContent>
-            </Select>
+        {/* Bookings List */}
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-muted-foreground">Loading your bookings...</span>
           </div>
-
-          {/* Bookings List */}
-          {filteredBookings.length === 0 ? (
-            <Card>
-              <CardContent className="text-center py-12">
-                <PartyPopper className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No event bookings found</h3>
-                <p className="text-muted-foreground mb-4">
-                  You haven't booked any events yet. Explore our exciting events!
-                </p>
-                <Link href="/events">
-                  <Button>
-                    <PartyPopper className="h-4 w-4 mr-2" />
-                    Browse Events
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-4">
-              {filteredBookings.map((booking) => (
-                <Card key={booking.id}>
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-semibold text-lg">{booking.eventName}</h3>
-                          {getEventTypeBadge(booking.eventType)}
-                          {getStatusBadge(booking.status)}
-                        </div>
-                        <p className="text-muted-foreground">{booking.eventDescription}</p>
+        ) : filteredBookings.length === 0 ? (
+          <div className="text-center py-12">
+            <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-foreground mb-2">No bookings found</h3>
+            <p className="text-muted-foreground mb-4">
+              {searchTerm || statusFilter !== "all" || eventTypeFilter !== "all"
+                ? "Try adjusting your search criteria"
+                : "You haven't booked any events yet"
+              }
+            </p>
+            {!searchTerm && statusFilter === "all" && eventTypeFilter === "all" && (
+              <Button asChild>
+                <a href="/events">Browse Events</a>
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {filteredBookings.map((booking) => (
+              <Card key={booking.id} className="overflow-hidden">
+                <CardHeader className="pb-4">
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-2">
+                      <CardTitle className="text-xl">{booking.eventName}</CardTitle>
+                      <div className="flex items-center gap-2">
+                        <Badge className={getEventTypeBadge(booking.eventType)}>
+                          {booking.eventType}
+                        </Badge>
+                        <Badge className={getStatusBadge(booking.status)}>
+                          {booking.status}
+                        </Badge>
                       </div>
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-sm">
-                          <Clock className="h-4 w-4" />
-                          <span>{formatDateTime(booking.startAt)}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm">
-                          <Clock className="h-4 w-4" />
-                          <span>Ends: {formatDateTime(booking.endAt)}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm">
-                          <Users className="h-4 w-4" />
-                          <span>{booking.participants} participants</span>
-                        </div>
+                    <div className="text-right">
+                      <div className="flex items-center gap-1 text-lg font-semibold text-foreground">
+                        <DollarSign className="h-4 w-4" />
+                        {booking.eventPrice} {booking.eventCurrency}
                       </div>
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-sm">
-                          <MapPin className="h-4 w-4" />
-                          <span>{booking.installationName}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm">
-                          <span className="font-medium">Total Cost: {booking.totalCost} {booking.currency}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Calendar className="h-4 w-4" />
-                          <span>Booked on {new Date(booking.createdAt).toLocaleDateString()}</span>
-                        </div>
-                      </div>
+                      <p className="text-sm text-muted-foreground">per person</p>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
+                  </div>
+                </CardHeader>
 
-        <TabsContent value="upcoming" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Upcoming Events</CardTitle>
-              <CardDescription>
-                Your confirmed events happening soon
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <Calendar className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold">Upcoming Events Feature</h3>
-                <p className="text-muted-foreground">This feature will show your upcoming confirmed events.</p>
+                <CardContent className="space-y-4">
+                  {/* Event Details */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Calendar className="h-4 w-4" />
+                      <span>Start: {formatDateTime(booking.eventStartAt)}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Clock className="h-4 w-4" />
+                      <span>End: {formatDateTime(booking.eventEndAt)}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Users className="h-4 w-4" />
+                      <span>Booking ID: #{booking.id}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Calendar className="h-4 w-4" />
+                      <span>Booked: {formatDateTime(booking.createdAt)}</span>
+                    </div>
+                  </div>
+
+                  {/* Booking Actions */}
+                  <div className="flex items-center justify-between pt-4 border-t border-border">
+                    <div className="text-sm text-muted-foreground">
+                      Booking created on {formatDateTime(booking.createdAt)}
+                    </div>
+                    <div className="flex gap-2">
+                      {booking.status === "PENDING" && (
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleCancelBooking(booking.id, booking.eventName)}
+                        >
+                          Cancel Booking
+                        </Button>
+                      )}
+                      {booking.status === "CONFIRMED" && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleCancelBooking(booking.id, booking.eventName)}
+                        >
+                          Cancel Booking
+                        </Button>
+                      )}
+                      {booking.status === "CANCELLED" && (
+                        <span className="text-sm text-muted-foreground">
+                          This booking has been cancelled
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 pt-6">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+                  disabled={currentPage === 0}
+                >
+                  Previous
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  Page {currentPage + 1} of {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
+                  disabled={currentPage >= totalPages - 1}
+                >
+                  Next
+                </Button>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

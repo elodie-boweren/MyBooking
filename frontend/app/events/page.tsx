@@ -20,6 +20,7 @@ import {
 import { eventApi, installationApi } from "@/lib/api"
 import type { Event, EventSearchCriteria, Installation } from "@/lib/api"
 import { toast } from "sonner"
+import { EventBookingModal } from "@/components/event-booking-modal"
 
 // Event type images mapping
 const getEventTypeImage = (eventType: string) => {
@@ -68,6 +69,10 @@ export default function EventsPage() {
     page: 0,
     size: 20
   })
+  
+  // Booking modal state
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false)
 
   // Load events and installations
   useEffect(() => {
@@ -123,14 +128,14 @@ export default function EventsPage() {
     setSearchCriteria({ page: 0, size: 20 })
   }
 
-  const handleBookEvent = async (eventId: number) => {
-    try {
-      // TODO: Implement event booking
-      toast.success('Event booking functionality coming soon!')
-    } catch (error) {
-      console.error('Failed to book event:', error)
-      toast.error('Failed to book event')
-    }
+  const handleBookEvent = (event: Event) => {
+    setSelectedEvent(event)
+    setIsBookingModalOpen(true)
+  }
+
+  const handleBookingSuccess = () => {
+    // Refresh events after successful booking
+    loadEvents()
   }
 
   return (
@@ -290,7 +295,7 @@ export default function EventsPage() {
                     </div>
 
                     <Button 
-                      onClick={() => handleBookEvent(event.id)}
+                      onClick={() => handleBookEvent(event)}
                       className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-2"
                       size="lg"
                     >
@@ -303,6 +308,19 @@ export default function EventsPage() {
           </div>
         )}
       </div>
+
+      {/* Event Booking Modal */}
+      {selectedEvent && (
+        <EventBookingModal
+          isOpen={isBookingModalOpen}
+          onClose={() => {
+            setIsBookingModalOpen(false)
+            setSelectedEvent(null)
+          }}
+          event={selectedEvent}
+          onBookingSuccess={handleBookingSuccess}
+        />
+      )}
     </div>
   )
 }
