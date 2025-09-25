@@ -68,8 +68,6 @@ export default function MyReservationsPage() {
     switch (status) {
       case "CONFIRMED":
         return <Badge className="bg-green-100 text-green-800">Confirmed</Badge>
-      case "PENDING":
-        return <Badge variant="secondary">Pending</Badge>
       case "CANCELLED":
         return <Badge variant="destructive">Cancelled</Badge>
       default:
@@ -147,7 +145,6 @@ export default function MyReservationsPage() {
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
             <SelectItem value="CONFIRMED">Confirmed</SelectItem>
-            <SelectItem value="PENDING">Pending</SelectItem>
             <SelectItem value="CANCELLED">Cancelled</SelectItem>
           </SelectContent>
         </Select>
