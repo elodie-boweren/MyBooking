@@ -38,15 +38,17 @@ export default function AdminLoyaltyPage() {
       try {
         setLoading(true)
         // Fetch all loyalty accounts
-        const accountsData = await loyaltyApi.getAllAccounts()
-        setAccounts(accountsData)
+        const accountsResponse = await loyaltyApi.getAllAccounts()
+        setAccounts(accountsResponse.content || [])
         
         // Fetch all transactions
-        const transactionsData = await loyaltyApi.getAllTransactions()
-        setTransactions(transactionsData)
+        const transactionsResponse = await loyaltyApi.getAllTransactions()
+        setTransactions(transactionsResponse.content || [])
       } catch (error) {
         console.error('Failed to fetch loyalty data:', error)
         toast.error("Failed to load loyalty data")
+        setAccounts([])
+        setTransactions([])
       } finally {
         setLoading(false)
       }

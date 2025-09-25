@@ -32,15 +32,17 @@ export default function MyFeedbackPage() {
       try {
         setLoading(true)
         // Fetch user's feedback
-        const feedbackData = await feedbackApi.getUserFeedbacks()
-        setFeedbacks(feedbackData)
+        const feedbackResponse = await feedbackApi.getUserFeedbacks()
+        setFeedbacks(feedbackResponse.content || [])
         
         // Fetch user's reservations for feedback submission
-        const reservationData = await reservationApi.getUserReservations()
-        setReservations(reservationData)
+        const reservationResponse = await reservationApi.getMyReservations()
+        setReservations(reservationResponse.content || [])
       } catch (error) {
         console.error('Failed to fetch feedback data:', error)
         toast.error("Failed to load feedback data")
+        setFeedbacks([])
+        setReservations([])
       } finally {
         setLoading(false)
       }
@@ -52,6 +54,12 @@ export default function MyFeedbackPage() {
   const handleSubmitFeedback = async () => {
     if (!selectedReservation) {
       toast.error("Please select a reservation")
+      return
+    }
+
+    // Double-check that feedback doesn't already exist
+    if (feedbacks.some(feedback => feedback.reservationId === selectedReservation.id)) {
+      toast.error("You have already submitted feedback for this reservation")
       return
     }
 
@@ -68,11 +76,18 @@ export default function MyFeedbackPage() {
       setSelectedReservation(null)
       
       // Refresh feedback list
-      const feedbackData = await feedbackApi.getUserFeedbacks()
-      setFeedbacks(feedbackData)
-    } catch (error) {
+      const feedbackResponse = await feedbackApi.getUserFeedbacks()
+      setFeedbacks(feedbackResponse.content || [])
+    } catch (error: any) {
       console.error('Failed to submit feedback:', error)
-      toast.error("Failed to submit feedback")
+      if (error.message && error.message.includes("already exists")) {
+        toast.error("You have already submitted feedback for this reservation")
+        // Refresh the feedback list to update the UI
+        const feedbackResponse = await feedbackApi.getUserFeedbacks()
+        setFeedbacks(feedbackResponse.content || [])
+      } else {
+        toast.error("Failed to submit feedback. Please try again.")
+      }
     }
   }
 
@@ -88,19 +103,6 @@ export default function MyFeedbackPage() {
   }
 
 
-  const getStatusBadge = (status: string) => {
-    const statusColors: { [key: string]: string } = {
-      PENDING: "bg-yellow-100 text-yellow-800",
-      APPROVED: "bg-green-100 text-green-800",
-      REJECTED: "bg-red-100 text-red-800"
-    }
-    
-    return (
-      <Badge className={statusColors[status] || "bg-gray-100 text-gray-800"}>
-        {status}
-      </Badge>
-    )
-  }
 
   if (loading) {
     return (
@@ -153,11 +155,26 @@ export default function MyFeedbackPage() {
                     <SelectValue placeholder="Choose a reservation to provide feedback for" />
                   </SelectTrigger>
                   <SelectContent>
-                    {reservations.map((reservation) => (
-                      <SelectItem key={reservation.id} value={reservation.id.toString()}>
-                        Room {reservation.roomNumber} - {new Date(reservation.checkInDate).toLocaleDateString()} to {new Date(reservation.checkOutDate).toLocaleDateString()}
-                      </SelectItem>
-                    ))}
+                    {(() => {
+                      const availableReservations = reservations.filter(reservation => {
+                        // Filter out reservations that already have feedback
+                        return !feedbacks.some(feedback => feedback.reservationId === reservation.id)
+                      })
+                      
+                      if (availableReservations.length === 0) {
+                        return (
+                          <div className="p-4 text-center text-muted-foreground">
+                            No reservations available for feedback
+                          </div>
+                        )
+                      }
+                      
+                      return availableReservations.map((reservation) => (
+                        <SelectItem key={reservation.id} value={reservation.id.toString()}>
+                          Room {reservation.roomNumber} - {new Date(reservation.checkInDate).toLocaleDateString()} to {new Date(reservation.checkOutDate).toLocaleDateString()}
+                        </SelectItem>
+                      ))
+                    })()}
                   </SelectContent>
                 </Select>
               </div>
@@ -203,7 +220,10 @@ export default function MyFeedbackPage() {
                 <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                   Cancel
                 </Button>
-                <Button onClick={handleSubmitFeedback}>
+                <Button 
+                  onClick={handleSubmitFeedback}
+                  disabled={!selectedReservation || reservations.filter(r => !feedbacks.some(f => f.reservationId === r.id)).length === 0}
+                >
                   Submit Feedback
                 </Button>
               </div>
@@ -235,14 +255,16 @@ export default function MyFeedbackPage() {
                 <div className="flex items-start justify-between">
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-semibold">Room {feedback.reservation?.roomNumber}</h3>
-                      {getStatusBadge(feedback.status)}
+                      <h3 className="font-semibold">Reservation #{feedback.reservationNumber}</h3>
+                      <Badge variant="outline">
+                        {feedback.replies && feedback.replies.length > 0 ? "Replied" : "Pending"}
+                      </Badge>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Calendar className="h-4 w-4" />
                       {new Date(feedback.createdAt).toLocaleDateString()}
                       <User className="h-4 w-4 ml-4" />
-                      {feedback.reservation?.clientName}
+                      {feedback.userName}
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
@@ -253,16 +275,25 @@ export default function MyFeedbackPage() {
               <CardContent>
                 <p className="text-muted-foreground mb-4">{feedback.comment}</p>
                 
-                {feedback.reply && (
-                  <div className="bg-muted/50 p-4 rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <MessageSquare className="h-4 w-4" />
-                      <span className="font-medium text-sm">Hotel Response</span>
-                    </div>
-                    <p className="text-sm">{feedback.reply}</p>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Replied on {new Date(feedback.updatedAt).toLocaleDateString()}
-                    </p>
+                {feedback.replies && feedback.replies.length > 0 && (
+                  <div className="space-y-3">
+                    {feedback.replies.map((reply, index) => (
+                      <div key={reply.id} className="bg-muted/50 p-4 rounded-lg">
+                        <div className="flex items-center gap-2 mb-2">
+                          <MessageSquare className="h-4 w-4" />
+                          <span className="font-medium text-sm">
+                            Hotel Response {feedback.replies.length > 1 ? `#${index + 1}` : ''}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            by {reply.adminUserName}
+                          </span>
+                        </div>
+                        <p className="text-sm">{reply.message}</p>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          Replied on {new Date(reply.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    ))}
                   </div>
                 )}
               </CardContent>

@@ -1306,13 +1306,13 @@ export const loyaltyApi = {
   },
 
   // Admin: Get all loyalty accounts
-  getAllAccounts: async (): Promise<LoyaltyAccount[]> => {
-    return apiClient.get<LoyaltyAccount[]>(API_ENDPOINTS.ADMIN_LOYALTY.ACCOUNTS)
+  getAllAccounts: async (): Promise<PaginatedResponse<LoyaltyAccount>> => {
+    return apiClient.get<PaginatedResponse<LoyaltyAccount>>(API_ENDPOINTS.ADMIN_LOYALTY.ACCOUNTS)
   },
 
   // Admin: Get all loyalty transactions
-  getAllTransactions: async (): Promise<LoyaltyTransaction[]> => {
-    return apiClient.get<LoyaltyTransaction[]>(API_ENDPOINTS.ADMIN_LOYALTY.TRANSACTIONS)
+  getAllTransactions: async (): Promise<PaginatedResponse<LoyaltyTransaction>> => {
+    return apiClient.get<PaginatedResponse<LoyaltyTransaction>>(API_ENDPOINTS.ADMIN_LOYALTY.TRANSACTIONS)
   }
 }
 
@@ -1320,8 +1320,8 @@ export const loyaltyApi = {
 
 export const feedbackApi = {
   // Get user's feedback
-  getUserFeedbacks: async (): Promise<Feedback[]> => {
-    return apiClient.get<Feedback[]>(API_ENDPOINTS.FEEDBACK.MY)
+  getUserFeedbacks: async (): Promise<PaginatedResponse<Feedback>> => {
+    return apiClient.get<PaginatedResponse<Feedback>>(API_ENDPOINTS.FEEDBACK.MY)
   },
 
   // Create feedback
