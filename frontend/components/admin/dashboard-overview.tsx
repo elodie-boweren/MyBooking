@@ -85,7 +85,7 @@ export function DashboardOverview() {
         console.log('🧪 API CLIENT ERROR:', apiClientError)
       }
       
-      const [reservationsData, roomsData, loyaltyData, feedbackData, usersData] = await Promise.all([
+      const [reservationsData, roomsData, eventsData, loyaltyData, feedbackData, usersData] = await Promise.all([
         // Get reservations data for revenue and occupancy
         apiClient.get<PaginatedResponse<any>>('/admin/reservations?page=0&size=1000')
           .then(data => {
@@ -104,6 +104,16 @@ export function DashboardOverview() {
           })
           .catch(error => {
             console.error('❌ Rooms API FAILED:', error)
+            return { content: [] }
+          }),
+        // Get events data for event revenue
+        adminApi.getAllEvents()
+          .then(data => {
+            console.log('✅ Events API SUCCESS:', data)
+            return data
+          })
+          .catch(error => {
+            console.error('❌ Events API FAILED:', error)
             return { content: [] }
           }),
         // Get loyalty data for customer insights
@@ -141,6 +151,7 @@ export function DashboardOverview() {
       // Calculate real metrics from backend data
       const reservations = reservationsData?.content || []
       const rooms = roomsData?.content || []
+      const events = eventsData?.content || []
       const loyaltyAccounts = loyaltyData?.content || []
       const feedbacks = feedbackData?.content || []
       const allUsers = usersData || []
@@ -178,7 +189,19 @@ export function DashboardOverview() {
         return sum + price
       }, 0)
       
-      console.log('Total Revenue Calculated:', totalRevenue)
+      console.log('Total Room Revenue Calculated:', totalRevenue)
+      
+      // Calculate event revenue from events
+      const eventRevenue = events.reduce((sum: number, event: any) => {
+        const price = parseFloat(event.price) || 0
+        return sum + price
+      }, 0)
+      
+      console.log('Event Revenue Calculated:', eventRevenue)
+      
+      // Calculate total revenue (room + event)
+      const totalCombinedRevenue = totalRevenue + eventRevenue
+      console.log('Total Combined Revenue (Room + Event):', totalCombinedRevenue)
       
       // Calculate today's revenue (reservations with check-in today)
       const today = new Date().toISOString().split('T')[0]
@@ -332,7 +355,9 @@ export function DashboardOverview() {
       // Transform data to match our interface
       console.log('✅ SUCCESS: Using real data from APIs')
       console.log('Real data summary:', {
-        totalRevenue,
+        totalRoomRevenue: totalRevenue,
+        eventRevenue,
+        totalCombinedRevenue,
         todayRevenue,
         totalRooms,
         occupiedRooms,
@@ -344,8 +369,8 @@ export function DashboardOverview() {
       
       const dashboardStats: DashboardStats = {
         revenue: {
-          today: todayRevenue,
-          monthly: totalRevenue, // Use total revenue as monthly
+          today: totalCombinedRevenue, // Show total revenue (room + event) instead of just room revenue
+          monthly: totalCombinedRevenue, // Use total combined revenue as monthly
           trend: 12.5 // Placeholder trend - can be calculated from historical data
         },
         occupancy: {
@@ -432,7 +457,7 @@ export function DashboardOverview() {
           <CardContent>
             <div className="text-2xl font-bold">${stats.revenue.today.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">
-              Today • <span className="text-green-600">+{stats.revenue.trend}%</span> from last month
+              Total Revenue • <span className="text-green-600">+{stats.revenue.trend}%</span> from last month
             </p>
           </CardContent>
         </Card>
