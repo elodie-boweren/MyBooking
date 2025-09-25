@@ -97,14 +97,20 @@ export function EnhancedRoomBookingModal({
         currency: room.currency
       }
 
-      await reservationApi.createReservation(reservationData)
+      console.log('🔍 DEBUG: Creating reservation with data:', reservationData)
+      console.log('🔍 DEBUG: Current user from localStorage:', localStorage.getItem('user'))
+      console.log('🔍 DEBUG: Current token from localStorage:', localStorage.getItem('token'))
+
+      const createdReservation = await reservationApi.createReservation(reservationData)
       
+      console.log('✅ Reservation created successfully:', createdReservation)
       toast.success("Room booked successfully!")
       onBookingSuccess?.()
       onClose()
       
     } catch (error: any) {
-      console.error("Booking error:", error)
+      console.error("❌ CRITICAL: Failed to create reservation:", error)
+      console.error("❌ Error details:", error.message, error.status, error.response)
       toast.error(error.message || "Failed to book room. Please try again.")
     } finally {
       setIsLoading(false)

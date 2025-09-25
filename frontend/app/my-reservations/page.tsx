@@ -44,14 +44,110 @@ export default function MyReservationsPage() {
   const loadReservations = async () => {
     setLoading(true)
     try {
+      console.log('🔍 DEBUG: Loading reservations...')
+      console.log('🔍 DEBUG: Current user from localStorage:', localStorage.getItem('user'))
+      console.log('🔍 DEBUG: Current token from localStorage:', localStorage.getItem('token'))
+      
+      // Test direct API call to see what's happening
+      try {
+        console.log('🧪 TESTING: Direct API call to /client/reservations/my...')
+        const token = localStorage.getItem('token')
+        const user = JSON.parse(localStorage.getItem('user') || '{}')
+        console.log('🧪 USER ID FROM LOCALSTORAGE:', user.id)
+        console.log('🧪 USER EMAIL FROM LOCALSTORAGE:', user.email)
+        
+        const testResponse = await fetch('http://localhost:8080/api/client/reservations/my?page=0&size=100', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        })
+        console.log('🧪 TEST RESPONSE STATUS:', testResponse.status)
+        if (testResponse.ok) {
+          const testData = await testResponse.json()
+          console.log('🧪 TEST DATA:', testData)
+          console.log('🧪 TEST CONTENT LENGTH:', testData.content?.length || 0)
+          console.log('🧪 TEST SAMPLE RESERVATION:', testData.content?.[0])
+          
+          // Check if the reservation we know exists (ID 38) is in the response
+          const reservation38 = testData.content?.find((r: any) => r.id === 38)
+          if (reservation38) {
+            console.log('✅ FOUND RESERVATION 38:', reservation38)
+          } else {
+            console.log('❌ RESERVATION 38 NOT FOUND in API response')
+            console.log('❌ Available reservation IDs:', testData.content?.map((r: any) => r.id) || [])
+          }
+        } else {
+          console.log('🧪 TEST FAILED:', testResponse.status, testResponse.statusText)
+          const errorText = await testResponse.text()
+          console.log('🧪 ERROR RESPONSE:', errorText)
+        }
+      } catch (testError) {
+        console.log('🧪 TEST ERROR:', testError)
+      }
+      
+      // Test direct call to the specific reservation we know exists
+      try {
+        console.log('🧪 TESTING: Direct API call to /client/reservations/38...')
+        const token = localStorage.getItem('token')
+        const testResponse38 = await fetch('http://localhost:8080/api/client/reservations/38', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        })
+        console.log('🧪 TEST RESPONSE 38 STATUS:', testResponse38.status)
+        if (testResponse38.ok) {
+          const testData38 = await testResponse38.json()
+          console.log('🧪 TEST DATA 38:', testData38)
+        } else {
+          console.log('🧪 TEST 38 FAILED:', testResponse38.status, testResponse38.statusText)
+          const errorText38 = await testResponse38.text()
+          console.log('🧪 ERROR RESPONSE 38:', errorText38)
+        }
+      } catch (testError38) {
+        console.log('🧪 TEST ERROR 38:', testError38)
+      }
+      
       const [reservationResponse, feedbackResponse] = await Promise.all([
-        reservationApi.getMyReservations(),
+        reservationApi.getMyReservations(0, 100) // Load more reservations to get all pages
+          .then(data => {
+            console.log('✅ My Reservations API SUCCESS:', data)
+            console.log('✅ Reservations count:', data.content?.length || 0)
+            console.log('✅ Total elements:', data.totalElements)
+            console.log('✅ Sample reservation:', data.content?.[0])
+            
+            // Check if reservation 38 is now in the response
+            const reservation38 = data.content?.find((r: any) => r.id === 38)
+            if (reservation38) {
+              console.log('✅ FOUND RESERVATION 38 in API response:', reservation38)
+            } else {
+              console.log('❌ RESERVATION 38 STILL NOT FOUND in API response')
+              console.log('❌ Available reservation IDs:', data.content?.map((r: any) => r.id) || [])
+            }
+            
+            return data
+          })
+          .catch(error => {
+            console.error('❌ My Reservations API FAILED:', error)
+            throw error
+          }),
         feedbackApi.getUserFeedbacks()
+          .then(data => {
+            console.log('✅ My Feedbacks API SUCCESS:', data)
+            return data
+          })
+          .catch(error => {
+            console.error('❌ My Feedbacks API FAILED:', error)
+            throw error
+          })
       ])
+      
+      console.log('🔍 DEBUG: Setting reservations:', reservationResponse.content?.length || 0)
       setReservations(reservationResponse.content || [])
       setFeedbacks(feedbackResponse.content || [])
     } catch (error) {
-      console.error("Failed to fetch reservations:", error)
+      console.error("❌ CRITICAL: Failed to fetch reservations:", error)
       toast.error("Failed to load your reservations.")
     } finally {
       setLoading(false)

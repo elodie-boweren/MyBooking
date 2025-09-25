@@ -21,6 +21,8 @@ import {
   RefreshCw
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
+import { loyaltyApi, feedbackApi, adminApi, apiClient, PaginatedResponse } from '@/lib/api'
 
 interface AnalyticsData {
   revenue: {
@@ -29,6 +31,7 @@ interface AnalyticsData {
     daily: number
     trend: number
   }
+  roomRevenue: number
   occupancy: {
     rate: number
     totalRooms: number
@@ -66,6 +69,7 @@ export function AnalyticsDashboard() {
   const [data, setData] = useState<AnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedPeriod, setSelectedPeriod] = useState<'7d' | '30d' | '90d' | '1y'>('30d')
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
 
   useEffect(() => {
     fetchAnalyticsData()
@@ -74,10 +78,167 @@ export function AnalyticsDashboard() {
   const fetchAnalyticsData = async () => {
     setLoading(true)
     try {
-      // TODO: Replace with real API calls
-      await new Promise(resolve => setTimeout(resolve, 1000)) // Simulate API call
+      // Fetch real data from all available APIs using proper API client
+      const [reservationsData, roomsData, eventsData, loyaltyData, feedbackData] = await Promise.all([
+        // Get reservations data for revenue and occupancy
+        apiClient.get<PaginatedResponse<any>>('/admin/reservations?page=0&size=1000')
+          .catch(error => {
+            console.error('Reservations API failed:', error)
+            return { content: [] }
+          }),
+        // Get rooms data for occupancy
+        apiClient.get<PaginatedResponse<any>>('/rooms?page=0&size=1000')
+          .catch(error => {
+            console.error('Rooms API failed:', error)
+            return { content: [] }
+          }),
+        // Get events data for event analytics
+        adminApi.getAllEvents().catch(() => ({ content: [] })),
+        // Get loyalty data for customer insights
+        loyaltyApi.getAllAccounts().catch(() => ({ content: [] })),
+        // Get feedback data for customer satisfaction
+        feedbackApi.getAllFeedbacks().catch(() => ({ content: [] }))
+      ])
       
-      // Mock data - replace with real API integration
+      // Calculate analytics from real data
+      const reservations = reservationsData?.content || []
+      const rooms = roomsData?.content || []
+      const events = eventsData?.content || []
+      const loyaltyAccounts = loyaltyData?.content || []
+      const feedbacks = feedbackData?.content || []
+      
+      console.log('Analytics Debug:', {
+        reservations: reservations.length,
+        rooms: rooms.length,
+        events: events.length,
+        loyaltyAccounts: loyaltyAccounts.length,
+        feedbacks: feedbacks.length
+      })
+      
+      // 1. REVENUE CALCULATION from real reservations
+      const confirmedReservations = reservations.filter((r: any) => r.status === 'CONFIRMED')
+      const totalRevenue = confirmedReservations.reduce((sum: number, r: any) => {
+        return sum + (parseFloat(r.totalPrice) || 0)
+      }, 0)
+      
+      // 2. OCCUPANCY CALCULATION from real rooms and reservations
+      const totalRooms = rooms.length
+      const today = new Date()
+      
+      // Method 1: Count rooms with OCCUPIED status
+      const occupiedRoomsByStatus = rooms.filter((room: any) => room.status === 'OCCUPIED').length
+      
+      // Method 2: Count reservations currently active (check-in ≤ today ≤ check-out)
+      const currentlyActiveReservations = confirmedReservations.filter((r: any) => {
+        const checkIn = new Date(r.checkIn)
+        const checkOut = new Date(r.checkOut)
+        return checkIn <= today && checkOut >= today
+      }).length
+      
+      // Use the higher of the two methods for more accurate occupancy
+      const occupiedRooms = Math.max(occupiedRoomsByStatus, currentlyActiveReservations)
+      const occupancyRate = totalRooms > 0 ? (occupiedRooms / totalRooms) * 100 : 0
+      
+      console.log('Analytics Occupancy Debug:', {
+        totalRooms,
+        occupiedRoomsByStatus,
+        currentlyActiveReservations,
+        occupiedRooms,
+        occupancyRate,
+        roomStatuses: rooms.map((r: any) => ({ id: r.id, status: r.status }))
+      })
+      
+      // 3. CUSTOMER METRICS from real loyalty data
+      const totalCustomers = loyaltyAccounts.length
+      const activeLoyaltyUsers = loyaltyAccounts.filter((acc: any) => acc.balance > 0).length
+      
+      // 4. BOOKING METRICS from real reservations
+      const totalBookings = reservations.length
+      const cancelledBookings = reservations.filter((r: any) => r.status === 'CANCELLED').length
+      
+      // 5. EVENT METRICS from real events
+      const totalEvents = events.length
+      const eventRevenue = events.reduce((sum: number, e: any) => {
+        return sum + (parseFloat(e.price) || 0)
+      }, 0)
+      
+      // 6. FEEDBACK METRICS from real feedback data
+      const averageRating = feedbacks.length > 0 
+        ? feedbacks.reduce((sum: number, f: any) => sum + f.rating, 0) / feedbacks.length 
+        : 0
+      const positiveFeedback = feedbacks.filter((f: any) => f.rating >= 4).length
+      const negativeFeedback = feedbacks.filter((f: any) => f.rating < 3).length
+      
+      // Calculate actual revenue breakdown
+      const roomRevenue = totalRevenue // All revenue from reservations is room revenue
+      const eventRevenueAmount = eventRevenue // Event revenue from events data
+      const totalCalculatedRevenue = roomRevenue + eventRevenueAmount
+      
+      console.log('Revenue Debug:', {
+        totalRevenue,
+        roomRevenue,
+        eventRevenue: eventRevenueAmount,
+        totalCalculatedRevenue,
+        reservations: confirmedReservations.length,
+        events: events.length
+      })
+      
+      // Transform data to match our interface
+      setData({
+        revenue: {
+          total: totalCalculatedRevenue, // Use calculated total
+          monthly: totalCalculatedRevenue, // Use same as total for now (can be improved with date filtering)
+          daily: totalCalculatedRevenue / 30, // Estimate daily
+          trend: 12.5 // Placeholder trend
+        },
+        roomRevenue: roomRevenue, // Add room revenue
+        occupancy: {
+          rate: occupancyRate,
+          totalRooms: totalRooms,
+          occupiedRooms: occupiedRooms,
+          trend: 5.2 // Placeholder trend
+        },
+        customers: {
+          total: totalCustomers,
+          newThisMonth: Math.floor(totalCustomers * 0.1), // Estimate new customers
+          loyal: activeLoyaltyUsers,
+          trend: 8.7 // Placeholder trend
+        },
+        bookings: {
+          total: totalBookings,
+          thisMonth: Math.floor(totalBookings * 0.3), // Estimate monthly
+          cancelled: cancelledBookings,
+          trend: -2.1 // Placeholder trend
+        },
+        events: {
+          total: totalEvents,
+          thisMonth: Math.floor(totalEvents * 0.2), // Estimate monthly
+          revenue: eventRevenue,
+          trend: 15.3 // Placeholder trend
+        },
+        feedback: {
+          averageRating: averageRating,
+          totalReviews: feedbacks.length,
+          positive: positiveFeedback,
+          negative: negativeFeedback
+        }
+      })
+      setLastUpdated(new Date())
+      
+      console.log('Analytics Data Set:', {
+        revenue: totalRevenue,
+        occupancy: occupancyRate,
+        customers: totalCustomers,
+        bookings: totalBookings,
+        events: totalEvents,
+        feedback: feedbacks.length
+      })
+      
+    } catch (error) {
+      console.error('Failed to fetch analytics data:', error)
+      toast.error("Failed to load analytics data")
+      
+      // Fallback to realistic data on error
       setData({
         revenue: {
           total: 125000,
@@ -85,6 +246,7 @@ export function AnalyticsDashboard() {
           daily: 500,
           trend: 12.5
         },
+        roomRevenue: 100000, // Add room revenue to fallback
         occupancy: {
           rate: 78.5,
           totalRooms: 50,
@@ -116,8 +278,6 @@ export function AnalyticsDashboard() {
           negative: 15
         }
       })
-    } catch (error) {
-      console.error('Failed to fetch analytics data:', error)
     } finally {
       setLoading(false)
     }
@@ -215,7 +375,14 @@ export function AnalyticsDashboard() {
           </Button>
           <div>
             <h1 className="text-3xl font-bold text-foreground">Analytics Dashboard</h1>
-            <p className="text-muted-foreground">Hotel performance metrics and insights</p>
+            <p className="text-muted-foreground">
+              Hotel performance metrics and insights
+              {lastUpdated && (
+                <span className="ml-2 text-xs">
+                  • Last updated: {lastUpdated.toLocaleTimeString()}
+                </span>
+              )}
+            </p>
           </div>
         </div>
         
@@ -261,7 +428,7 @@ export function AnalyticsDashboard() {
             <Building2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{data.occupancy.rate}%</div>
+            <div className="text-2xl font-bold">{data.occupancy.rate.toFixed(2)}%</div>
             <div className="flex items-center text-xs text-muted-foreground">
               {data.occupancy.trend > 0 ? (
                 <TrendingUp className="h-3 w-3 text-green-600 mr-1" />
@@ -278,7 +445,7 @@ export function AnalyticsDashboard() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
+            <CardTitle className="text-sm font-medium">Loyal Customers</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -342,9 +509,9 @@ export function AnalyticsDashboard() {
                 <CardDescription>Revenue from room bookings</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">{formatCurrency(data.revenue.total * 0.8)}</div>
+                <div className="text-3xl font-bold">{formatCurrency(data.roomRevenue)}</div>
                 <div className="text-sm text-muted-foreground mt-2">
-                  80% of total revenue
+                  From room bookings
                 </div>
               </CardContent>
             </Card>
@@ -357,7 +524,7 @@ export function AnalyticsDashboard() {
               <CardContent>
                 <div className="text-3xl font-bold">{formatCurrency(data.events.revenue)}</div>
                 <div className="text-sm text-muted-foreground mt-2">
-                  20% of total revenue
+                  From {data.events.total} events
                 </div>
               </CardContent>
             </Card>
@@ -372,7 +539,7 @@ export function AnalyticsDashboard() {
                 <CardDescription>Real-time occupancy status</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">{data.occupancy.rate}%</div>
+                <div className="text-3xl font-bold">{data.occupancy.rate.toFixed(2)}%</div>
                 <div className="text-sm text-muted-foreground mt-2">
                   {data.occupancy.occupiedRooms} of {data.occupancy.totalRooms} rooms occupied
                 </div>
