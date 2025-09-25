@@ -35,6 +35,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { name: 'Users', href: '/admin/users', icon: Users },
     { name: 'Rooms', href: '/admin/rooms', icon: Building2 },
     { name: 'Reservations', href: '/admin/reservations', icon: Calendar },
+    { name: 'Events', href: '/admin/events', icon: Calendar },
     { name: 'Employees', href: '/admin/employees', icon: UserCheck },
     { name: 'Feedback', href: '/admin/feedback', icon: MessageSquare },
     { name: 'Loyalty', href: '/admin/loyalty', icon: Gift },

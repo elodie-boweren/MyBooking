@@ -4,6 +4,7 @@ import com.MyBooking.event.domain.Event;
 import com.MyBooking.event.repository.EventRepository;
 import com.MyBooking.installation.domain.Installation;
 import com.MyBooking.installation.domain.InstallationType;
+import com.MyBooking.installation.dto.InstallationResponseDto;
 import com.MyBooking.installation.repository.InstallationRepository;
 import com.MyBooking.common.exception.BusinessRuleException;
 import com.MyBooking.common.exception.NotFoundException;
@@ -88,13 +89,39 @@ public class InstallationService {
 
     @Transactional(readOnly = true)
     public Installation getInstallationById(Long installationId) {
-        return installationRepository.findById(installationId)
+        return installationRepository.findByIdWithoutEvents(installationId)
+                .orElseThrow(() -> new NotFoundException("Installation not found with ID: " + installationId));
+    }
+
+    @Transactional(readOnly = true)
+    public InstallationResponseDto getInstallationByIdForApi(Long installationId) {
+        return installationRepository.findByIdAsProjection(installationId)
                 .orElseThrow(() -> new NotFoundException("Installation not found with ID: " + installationId));
     }
 
     @Transactional(readOnly = true)
     public Page<Installation> getAllInstallations(Pageable pageable) {
-        return installationRepository.findAll(pageable);
+        return installationRepository.findAllWithoutEvents(pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public List<InstallationResponseDto> getAllInstallationsForApi() {
+        return installationRepository.findAllAsProjection();
+    }
+
+    public InstallationResponseDto convertToResponseDto(Installation installation) {
+        return new InstallationResponseDto(
+            installation.getId(),
+            installation.getName(),
+            installation.getDescription(),
+            installation.getInstallationType(),
+            installation.getCapacity(),
+            installation.getHourlyRate(),
+            installation.getCurrency(),
+            installation.getEquipment(),
+            installation.getCreatedAt(),
+            installation.getUpdatedAt()
+        );
     }
 
     // ==================== AVAILABILITY & CAPACITY MANAGEMENT ====================

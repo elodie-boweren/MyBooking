@@ -1,22 +1,16 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
-
-interface User {
-  id: string
-  name: string
-  email: string
-  avatar?: string
-  loyaltyPoints: number
-  role: "user" | "admin"
-}
+import { authApi } from "@/lib/api"
+import type { User } from "@/lib/api"
 
 interface AuthContextType {
   user: User | null
   login: (email: string, password: string) => Promise<boolean>
-  register: (name: string, email: string, password: string) => Promise<boolean>
+  register: (firstName: string, lastName: string, email: string, password: string) => Promise<boolean>
   logout: () => void
   isLoading: boolean
+  isAuthenticated: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -27,51 +21,73 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Check for existing session
-    const savedUser = localStorage.getItem("user")
-    if (savedUser) {
-      setUser(JSON.parse(savedUser))
+    const initializeAuth = async () => {
+      try {
+        const token = localStorage.getItem('token')
+        const userStr = localStorage.getItem('user')
+        
+        if (token && userStr) {
+          const user = JSON.parse(userStr)
+          setUser(user)
+          
+          // Optionally verify token is still valid by fetching user profile
+          // For now, we'll trust the stored user data to avoid unnecessary API calls
+          try {
+            // Only verify if we're in development or if the token is old
+            const tokenAge = Date.now() - (user.createdAt ? new Date(user.createdAt).getTime() : 0)
+            if (tokenAge > 24 * 60 * 60 * 1000) { // 24 hours
+              const response = await authApi.getProfile()
+              setUser(response)
+            }
+          } catch (error) {
+            console.log('Token verification failed, but keeping user logged in')
+            // Don't clear the session immediately, let the user try to use the app
+          }
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error)
+        setUser(null)
+      } finally {
+        setIsLoading(false)
+      }
     }
-    setIsLoading(false)
+
+    initializeAuth()
   }, [])
 
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true)
     try {
-      // Mock login - replace with actual API call
-      const mockUser: User = {
-        id: "1",
-        name: "John Doe",
-        email,
-        avatar: "/diverse-user-avatars.png",
-        loyaltyPoints: 1250,
-        role: "user",
-      }
-      setUser(mockUser)
-      localStorage.setItem("user", JSON.stringify(mockUser))
+      const response = await authApi.login({ email, password })
+      
+      // Store token and user data
+      localStorage.setItem('token', response.token)
+      localStorage.setItem('user', JSON.stringify(response.user))
+      
+      setUser(response.user)
       return true
     } catch (error) {
+      console.error('Login error:', error)
       return false
     } finally {
       setIsLoading(false)
     }
   }
 
-  const register = async (name: string, email: string, password: string): Promise<boolean> => {
+  const register = async (firstName: string, lastName: string, email: string, password: string): Promise<boolean> => {
     setIsLoading(true)
     try {
-      // Mock registration - replace with actual API call
-      const mockUser: User = {
-        id: "1",
-        name,
+      const response = await authApi.register({
+        firstName,
+        lastName,
         email,
-        avatar: "/diverse-user-avatars.png",
-        loyaltyPoints: 100, // Welcome bonus
-        role: "user",
-      }
-      setUser(mockUser)
-      localStorage.setItem("user", JSON.stringify(mockUser))
-      return true
+        password
+      })
+      
+      // Auto-login after registration
+      return await login(email, password)
     } catch (error) {
+      console.error('Registration error:', error)
       return false
     } finally {
       setIsLoading(false)
@@ -81,9 +97,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     setUser(null)
     localStorage.removeItem("user")
+    localStorage.removeItem("token")
   }
 
-  return <AuthContext.Provider value={{ user, login, register, logout, isLoading }}>{children}</AuthContext.Provider>
+  return <AuthContext.Provider value={{ user, login, register, logout, isLoading, isAuthenticated: !!user }}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {

@@ -21,20 +21,89 @@ import {
   BookOpen,
   MapPin,
   PartyPopper,
+  CreditCard,
+  MessageSquare,
+  Gift,
 } from "lucide-react"
-import { useAuth, useIsAdmin, useIsEmployee } from "@/lib/auth-context"
+import { useAuth } from "@/components/auth-provider"
+import { useIsAdmin, useIsEmployee } from "@/lib/auth-context"
+import { useState, useEffect } from "react"
+import { loyaltyApi } from "@/lib/api"
+import type { LoyaltyAccount } from "@/lib/api"
 
 export function Navigation() {
   const router = useRouter()
   const pathname = usePathname()
-  const { user, logout, isAuthenticated } = useAuth()
-  const isAdmin = useIsAdmin()
-  const isEmployee = useIsEmployee()
+  const { user, logout, isLoading, isAuthenticated } = useAuth()
+  const isAdmin = user?.role === 'ADMIN'
+  const isEmployee = user?.role === 'EMPLOYEE'
+  const [loyaltyAccount, setLoyaltyAccount] = useState<LoyaltyAccount | null>(null)
+  const [loyaltyLoading, setLoyaltyLoading] = useState(false)
+
+  // Debug authentication state
+  console.log('Navigation Debug:', {
+    isAuthenticated,
+    isLoading,
+    user: user ? { 
+      id: user.id, 
+      email: user.email, 
+      name: user.name,
+      role: user.role,
+      fullUser: user
+    } : null,
+    loyaltyAccount: loyaltyAccount ? { balance: loyaltyAccount.balance } : null,
+    loyaltyLoading
+  })
+  
+  // Debug loyalty points specifically
+  console.log('Loyalty Debug:', {
+    loyaltyAccount,
+    loyaltyLoading,
+    balance: loyaltyAccount?.balance,
+    pointsBalance: loyaltyAccount?.pointsBalance,
+    userRole: user?.role,
+    isClient: user?.role === 'CLIENT' || user?.role === 'client',
+    shouldFetch: user && (user.role === 'CLIENT' || user.role === 'client') && isAuthenticated
+  })
 
   const handleLogout = () => {
     logout()
     router.push("/login")
   }
+
+  // Fetch loyalty points for clients
+  useEffect(() => {
+    const fetchLoyaltyPoints = async () => {
+      console.log('fetchLoyaltyPoints called:', {
+        user: !!user,
+        userRole: user?.role,
+        isAuthenticated,
+        shouldFetch: user && (user.role === 'CLIENT' || user.role === 'client') && isAuthenticated
+      })
+      
+      if (user && (user.role === 'CLIENT' || user.role === 'client') && isAuthenticated) {
+        console.log('Fetching loyalty points...')
+        setLoyaltyLoading(true)
+        try {
+          const account = await loyaltyApi.getAccount()
+          console.log('Loyalty account fetched:', account)
+          setLoyaltyAccount(account)
+        } catch (error) {
+          console.error('Failed to fetch loyalty points:', error)
+          setLoyaltyAccount(null)
+        } finally {
+          setLoyaltyLoading(false)
+        }
+      } else {
+        console.log('Not fetching loyalty points - conditions not met')
+      }
+    }
+
+    // Only fetch if user is authenticated and not loading
+    if (isAuthenticated && !isLoading) {
+      fetchLoyaltyPoints()
+    }
+  }, [user, isAuthenticated, isLoading])
 
   const navItems = [
     { href: "/rooms", label: "Rooms", icon: CalendarDays },
@@ -79,20 +148,21 @@ export function Navigation() {
             <>
               <div className="hidden sm:flex items-center space-x-2 px-3 py-1 bg-secondary/10 rounded-full">
                 <Star className="h-4 w-4 text-secondary" />
-                <span className="text-sm font-medium text-secondary">0</span>
+                <span className="text-sm font-medium text-secondary">
+                  {loyaltyLoading ? "Loading..." : 
+                   loyaltyAccount ? loyaltyAccount.balance : 
+                   "0"}
+                </span>
               </div>
 
               <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage src="/placeholder.svg" alt={user.firstName} />
-                      <AvatarFallback>
-                        {user.firstName[0]}
-                        {user.lastName[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                  </Button>
+                <DropdownMenuTrigger className="relative h-10 w-10 rounded-full border-0 bg-transparent hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src="/placeholder.svg" alt={user.firstName || 'User'} />
+                    <AvatarFallback>
+                      {user.firstName ? user.firstName[0] : 'U'}
+                    </AvatarFallback>
+                  </Avatar>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-64" align="end" forceMount>
                   <div className="flex items-center justify-start gap-2 p-2">
@@ -100,11 +170,15 @@ export function Navigation() {
                       <p className="font-medium">
                         {user.firstName} {user.lastName}
                       </p>
-                      <p className="w-[200px] truncate text-sm text-muted-foreground">{user.email}</p>
+                      <p className="w-[200px] truncate text-sm text-muted-foreground">{user.email || 'No email'}</p>
                       <div className="flex items-center space-x-2 mt-2">
                         <Badge variant="secondary" className="flex items-center space-x-1">
                           <Star className="h-3 w-3" />
-                          <span>0 Points</span>
+                          <span>
+                            {loyaltyLoading ? "Loading..." : 
+                             loyaltyAccount ? `${loyaltyAccount.balance} Points` : 
+                             "0 Points"}
+                          </span>
                         </Badge>
                       </div>
                     </div>
@@ -129,6 +203,20 @@ export function Navigation() {
                 <Link href="/my-events" className="flex items-center">
                   <PartyPopper className="mr-2 h-4 w-4" />
                   <span>My Events</span>
+                </Link>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem asChild>
+                <Link href="/my-loyalty" className="flex items-center">
+                  <Gift className="mr-2 h-4 w-4" />
+                  <span>Loyalty Points</span>
+                </Link>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem asChild>
+                <Link href="/my-feedback" className="flex items-center">
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                  <span>My Feedback</span>
                 </Link>
               </DropdownMenuItem>
 

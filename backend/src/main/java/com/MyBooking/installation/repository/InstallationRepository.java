@@ -220,4 +220,34 @@ public interface InstallationRepository extends JpaRepository<Installation, Long
     List<Installation> findUsedInstallations();
     @Query("SELECT i FROM Installation i WHERE i.events IS NOT EMPTY")
     Page<Installation> findUsedInstallations(Pageable pageable);
+
+    // ==================== CUSTOM QUERIES FOR API RESPONSES ====================
+
+    // Find all installations without loading events (to avoid circular reference)
+    @Query("SELECT i FROM Installation i")
+    List<Installation> findAllWithoutEvents();
+    
+    // Find all installations without loading events (paginated)
+    @Query("SELECT i FROM Installation i")
+    Page<Installation> findAllWithoutEvents(Pageable pageable);
+    
+    // Find installation by ID without loading events
+    @Query("SELECT i FROM Installation i WHERE i.id = :id")
+    Optional<Installation> findByIdWithoutEvents(@Param("id") Long id);
+
+    // ==================== PROJECTION QUERIES FOR API RESPONSES ====================
+
+    // Get installation data as projection to avoid circular reference
+    @Query("SELECT new com.MyBooking.installation.dto.InstallationResponseDto(" +
+           "i.id, i.name, i.description, i.installationType, i.capacity, " +
+           "i.hourlyRate, i.currency, i.equipment, i.createdAt, i.updatedAt) " +
+           "FROM Installation i")
+    List<com.MyBooking.installation.dto.InstallationResponseDto> findAllAsProjection();
+    
+    // Get installation data as projection by ID
+    @Query("SELECT new com.MyBooking.installation.dto.InstallationResponseDto(" +
+           "i.id, i.name, i.description, i.installationType, i.capacity, " +
+           "i.hourlyRate, i.currency, i.equipment, i.createdAt, i.updatedAt) " +
+           "FROM Installation i WHERE i.id = :id")
+    Optional<com.MyBooking.installation.dto.InstallationResponseDto> findByIdAsProjection(@Param("id") Long id);
 }
