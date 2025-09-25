@@ -61,7 +61,7 @@ export default function AdminLoyaltyPage() {
   )
 
   const filteredTransactions = transactions.filter(transaction => {
-    if (selectedType !== "all" && transaction.transactionType !== selectedType) {
+    if (selectedType !== "all" && transaction.type !== selectedType) {
       return false
     }
     if (selectedPeriod !== "all") {
@@ -108,11 +108,11 @@ export default function AdminLoyaltyPage() {
   }
 
   const totalPointsEarned = transactions
-    .filter(t => t.transactionType === "EARN")
+    .filter(t => t.type === "EARN")
     .reduce((sum, t) => sum + t.points, 0)
 
   const totalPointsRedeemed = transactions
-    .filter(t => t.transactionType === "REDEEM")
+    .filter(t => t.type === "REDEEM")
     .reduce((sum, t) => sum + t.points, 0)
 
   const activeAccounts = accounts.filter(account => account.balance > 0).length
@@ -247,12 +247,12 @@ export default function AdminLoyaltyPage() {
                           <p className="text-lg font-semibold text-primary">{account.balance.toLocaleString()} points</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-sm text-muted-foreground">Total Earned</p>
-                          <p className="text-sm font-medium">{account.totalPointsEarned.toLocaleString()}</p>
+                          <p className="text-sm text-muted-foreground">Account ID</p>
+                          <p className="text-sm font-medium">#{account.id}</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-sm text-muted-foreground">Total Redeemed</p>
-                          <p className="text-sm font-medium">{account.totalPointsRedeemed.toLocaleString()}</p>
+                          <p className="text-sm text-muted-foreground">Created</p>
+                          <p className="text-sm font-medium">{new Date(account.createdAt).toLocaleDateString()}</p>
                         </div>
                       </div>
                     </div>
@@ -310,9 +310,9 @@ export default function AdminLoyaltyPage() {
                   {filteredTransactions.map((transaction) => (
                     <div key={transaction.id} className="flex items-center justify-between p-4 border rounded-lg">
                       <div className="flex items-center gap-3">
-                        {getTransactionIcon(transaction.transactionType)}
+                        {getTransactionIcon(transaction.type)}
                         <div>
-                          <p className="font-medium">{transaction.description}</p>
+                          <p className="font-medium">{transaction.type === "EARN" ? "Points Earned" : "Points Redeemed"}</p>
                           <p className="text-sm text-muted-foreground">
                             Client: {transaction.userName} ({transaction.userEmail})
                           </p>
@@ -323,12 +323,12 @@ export default function AdminLoyaltyPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
-                        {getTransactionBadge(transaction.transactionType)}
+                        {getTransactionBadge(transaction.type)}
                         <div className="text-right">
                           <p className={`font-semibold ${
-                            transaction.transactionType === "EARN" ? "text-green-600" : "text-red-600"
+                            transaction.type === "EARN" ? "text-green-600" : "text-red-600"
                           }`}>
-                            {transaction.transactionType === "EARN" ? "+" : "-"}{Math.abs(transaction.points)}
+                            {transaction.type === "EARN" ? "+" : "-"}{Math.abs(transaction.points)}
                           </p>
                           <p className="text-sm text-muted-foreground">points</p>
                         </div>

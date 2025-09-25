@@ -608,11 +608,9 @@ export interface FeedbackReply {
 export interface LoyaltyAccount {
   id: number
   userId: number
-  clientName: string
-  clientEmail: string
-  pointsBalance: number
-  totalPointsEarned: number
-  totalPointsRedeemed: number
+  userName: string
+  userEmail: string
+  balance: number
   createdAt: string
   updatedAt: string
 }
@@ -621,10 +619,13 @@ export interface LoyaltyAccount {
 export interface LoyaltyTransaction {
   id: number
   accountId: number
-  transactionType: "EARN" | "REDEEM"
+  userId: number
+  userName: string
+  userEmail: string
+  type: "EARN" | "REDEEM"
   points: number
-  description: string
   reservationId?: number
+  reservationNumber?: string
   createdAt: string
 }
 
@@ -1284,8 +1285,8 @@ export const loyaltyApi = {
   },
 
   // Get loyalty transactions for current user
-  getTransactions: async (): Promise<LoyaltyTransaction[]> => {
-    return apiClient.get<LoyaltyTransaction[]>(API_ENDPOINTS.LOYALTY.TRANSACTIONS)
+  getTransactions: async (): Promise<PaginatedResponse<LoyaltyTransaction>> => {
+    return apiClient.get<PaginatedResponse<LoyaltyTransaction>>(API_ENDPOINTS.LOYALTY.TRANSACTIONS)
   },
 
   // Get loyalty statistics

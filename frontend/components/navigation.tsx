@@ -19,7 +19,6 @@ import {
   Settings,
   Star,
   BookOpen,
-  MapPin,
   PartyPopper,
   CreditCard,
   MessageSquare,
@@ -108,7 +107,6 @@ export function Navigation() {
   const navItems = [
     { href: "/rooms", label: "Rooms", icon: CalendarDays },
     { href: "/events", label: "Events", icon: PartyPopper },
-    { href: "/facilities", label: "Facilities", icon: MapPin },
     ...(isAdmin ? [{ href: "/admin", label: "Admin", icon: LayoutDashboard }] : []),
   ]
 
