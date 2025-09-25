@@ -1330,13 +1330,13 @@ export const feedbackApi = {
   },
 
   // Admin: Get all feedbacks
-  getAllFeedbacks: async (): Promise<Feedback[]> => {
-    return apiClient.get<Feedback[]>(API_ENDPOINTS.ADMIN_FEEDBACK.ALL)
+  getAllFeedbacks: async (): Promise<PaginatedResponse<Feedback>> => {
+    return apiClient.get<PaginatedResponse<Feedback>>(API_ENDPOINTS.ADMIN_FEEDBACK.ALL)
   },
 
   // Admin: Reply to feedback
   replyToFeedback: async (feedbackId: number, reply: string): Promise<Feedback> => {
-    return apiClient.put<Feedback>(API_ENDPOINTS.ADMIN_FEEDBACK.REPLY(feedbackId.toString()), { reply })
+    return apiClient.post<Feedback>(`/feedback-replies/feedback/${feedbackId}`, { message: reply })
   }
 }
 

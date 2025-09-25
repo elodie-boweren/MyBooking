@@ -43,10 +43,11 @@ export default function AdminFeedbackPage() {
       try {
         setLoading(true)
         const response = await feedbackApi.getAllFeedbacks()
-        setFeedbacks(response)
+        setFeedbacks(response.content || [])
       } catch (error) {
         console.error('Failed to fetch feedbacks:', error)
         toast.error("Failed to load feedbacks")
+        setFeedbacks([])
       } finally {
         setLoading(false)
       }
@@ -63,8 +64,8 @@ export default function AdminFeedbackPage() {
     
     const matchesRating = selectedRating === "all" || feedback.rating.toString() === selectedRating
     const matchesStatus = selectedStatus === "all" || 
-      (selectedStatus === "replied" && feedback.adminReply) ||
-      (selectedStatus === "pending" && !feedback.adminReply)
+      (selectedStatus === "replied" && feedback.replies && feedback.replies.length > 0) ||
+      (selectedStatus === "pending" && (!feedback.replies || feedback.replies.length === 0))
     
     return matchesSearch && matchesRating && matchesStatus
   })
@@ -81,7 +82,7 @@ export default function AdminFeedbackPage() {
   }
 
   const getStatusBadge = (feedback: Feedback) => {
-    if (feedback.adminReply) {
+    if (feedback.replies && feedback.replies.length > 0) {
       return <Badge className="bg-green-100 text-green-800">Replied</Badge>
     }
     return <Badge variant="secondary">Pending</Badge>
@@ -101,7 +102,7 @@ export default function AdminFeedbackPage() {
       
       // Refresh feedbacks
       const response = await feedbackApi.getAllFeedbacks()
-      setFeedbacks(response)
+      setFeedbacks(response.content || [])
     } catch (error) {
       console.error("Failed to send reply:", error)
       toast.error("Failed to send reply. Please try again.")
@@ -112,7 +113,7 @@ export default function AdminFeedbackPage() {
 
   const openReplyModal = (feedback: Feedback) => {
     setSelectedFeedback(feedback)
-    setReplyText(feedback.adminReply || "")
+    setReplyText("") // Always start with empty text for new replies
     setIsReplyModalOpen(true)
   }
 
@@ -120,8 +121,8 @@ export default function AdminFeedbackPage() {
   const averageRating = feedbacks.length > 0 
     ? (feedbacks.reduce((sum, f) => sum + f.rating, 0) / feedbacks.length).toFixed(1)
     : "0.0"
-  const pendingReplies = feedbacks.filter(f => !f.adminReply).length
-  const repliedCount = feedbacks.filter(f => f.adminReply).length
+  const pendingReplies = feedbacks.filter(f => !f.replies || f.replies.length === 0).length
+  const repliedCount = feedbacks.filter(f => f.replies && f.replies.length > 0).length
 
   if (loading) {
     return (
@@ -284,13 +285,25 @@ export default function AdminFeedbackPage() {
                       </div>
                     )}
 
-                    {feedback.adminReply && (
-                      <div className="bg-blue-50 p-4 rounded-lg">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Reply className="h-4 w-4 text-blue-600" />
-                          <span className="text-sm font-medium text-blue-800">Admin Reply:</span>
-                        </div>
-                        <p className="text-sm text-blue-700">{feedback.adminReply}</p>
+                    {feedback.replies && feedback.replies.length > 0 && (
+                      <div className="space-y-2">
+                        {feedback.replies.map((reply, index) => (
+                          <div key={reply.id} className="bg-blue-50 p-4 rounded-lg">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Reply className="h-4 w-4 text-blue-600" />
+                              <span className="text-sm font-medium text-blue-800">
+                                Admin Reply {feedback.replies.length > 1 ? `#${index + 1}` : ''}:
+                              </span>
+                              <span className="text-xs text-blue-600">
+                                by {reply.adminUserName}
+                              </span>
+                            </div>
+                            <p className="text-sm text-blue-700">{reply.message}</p>
+                            <p className="text-xs text-blue-600 mt-1">
+                              {format(new Date(reply.createdAt), "MMM dd, yyyy 'at' HH:mm")}
+                            </p>
+                          </div>
+                        ))}
                       </div>
                     )}
 
@@ -301,7 +314,7 @@ export default function AdminFeedbackPage() {
                         onClick={() => openReplyModal(feedback)}
                       >
                         <Reply className="h-4 w-4 mr-2" />
-                        {feedback.adminReply ? "Edit Reply" : "Reply"}
+                        {feedback.replies && feedback.replies.length > 0 ? "Add Reply" : "Reply"}
                       </Button>
                     </div>
                   </div>
@@ -318,7 +331,7 @@ export default function AdminFeedbackPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Reply className="h-5 w-5 text-blue-600" />
-              {selectedFeedback?.adminReply ? "Edit Reply" : "Reply to Feedback"}
+              Reply to Feedback
             </DialogTitle>
             <DialogDescription>
               Respond to {selectedFeedback?.userName}'s feedback
