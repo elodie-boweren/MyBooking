@@ -14,7 +14,7 @@ import {
   AlertCircle
 } from 'lucide-react'
 import { COMPONENT_TEMPLATES } from '@/lib/style-constants'
-import { apiClient, API_ENDPOINTS, adminApi, loyaltyApi, feedbackApi, authApi } from '@/lib/api'
+import { apiClient, API_ENDPOINTS, adminApi, loyaltyApi, feedbackApi, authApi, PaginatedResponse } from '@/lib/api'
 
 interface DashboardStats {
   revenue: {
@@ -55,45 +55,87 @@ export function DashboardOverview() {
       setLoading(true)
       setError(null)
 
-      // Use the EXACT same approach as analytics dashboard with better error handling
+      // Use the existing API client infrastructure for proper error handling and CORS
+      console.log('🔍 DEBUG: Starting API calls...')
+      console.log('API Base URL:', process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api")
+      
+      // Test direct API call to see what's happening
+      try {
+        console.log('🧪 TESTING: Direct API call to reservations...')
+        const testResponse = await fetch('http://localhost:8080/api/admin/reservations?page=0&size=10')
+        console.log('🧪 TEST RESPONSE STATUS:', testResponse.status)
+        if (testResponse.ok) {
+          const testData = await testResponse.json()
+          console.log('🧪 TEST DATA:', testData)
+          console.log('🧪 TEST CONTENT LENGTH:', testData.content?.length || 0)
+        } else {
+          console.log('🧪 TEST FAILED:', testResponse.status, testResponse.statusText)
+        }
+      } catch (testError) {
+        console.log('🧪 TEST ERROR:', testError)
+      }
+      
+      // Test API client call to see what's different
+      try {
+        console.log('🧪 TESTING: API Client call to reservations...')
+        const apiClientResponse = await apiClient.get<PaginatedResponse<any>>('/admin/reservations?page=0&size=10')
+        console.log('🧪 API CLIENT RESPONSE:', apiClientResponse)
+        console.log('🧪 API CLIENT CONTENT LENGTH:', apiClientResponse.content?.length || 0)
+      } catch (apiClientError) {
+        console.log('🧪 API CLIENT ERROR:', apiClientError)
+      }
+      
       const [reservationsData, roomsData, loyaltyData, feedbackData, usersData] = await Promise.all([
         // Get reservations data for revenue and occupancy
-        fetch('/api/admin/reservations?page=0&size=1000')
-          .then(res => {
-            console.log('Reservations API response status:', res.status)
-            if (!res.ok) throw new Error(`HTTP ${res.status}`)
-            return res.json()
+        apiClient.get<PaginatedResponse<any>>('/admin/reservations?page=0&size=1000')
+          .then(data => {
+            console.log('✅ Reservations API SUCCESS:', data)
+            return data
           })
           .catch(error => {
-            console.error('Reservations API failed:', error)
+            console.error('❌ Reservations API FAILED:', error)
             return { content: [] }
           }),
         // Get rooms data for occupancy
-        fetch('/api/rooms?page=0&size=1000')
-          .then(res => {
-            console.log('Rooms API response status:', res.status)
-            if (!res.ok) throw new Error(`HTTP ${res.status}`)
-            return res.json()
+        apiClient.get<PaginatedResponse<any>>('/rooms?page=0&size=1000')
+          .then(data => {
+            console.log('✅ Rooms API SUCCESS:', data)
+            return data
           })
           .catch(error => {
-            console.error('Rooms API failed:', error)
+            console.error('❌ Rooms API FAILED:', error)
             return { content: [] }
           }),
         // Get loyalty data for customer insights
-        loyaltyApi.getAllAccounts().catch(error => {
-          console.error('Loyalty API failed:', error)
-          return { content: [] }
-        }),
+        loyaltyApi.getAllAccounts()
+          .then(data => {
+            console.log('✅ Loyalty API SUCCESS:', data)
+            return data
+          })
+          .catch(error => {
+            console.error('❌ Loyalty API FAILED:', error)
+            return { content: [] }
+          }),
         // Get feedback data for customer satisfaction
-        feedbackApi.getAllFeedbacks().catch(error => {
-          console.error('Feedback API failed:', error)
-          return { content: [] }
-        }),
+        feedbackApi.getAllFeedbacks()
+          .then(data => {
+            console.log('✅ Feedback API SUCCESS:', data)
+            return data
+          })
+          .catch(error => {
+            console.error('❌ Feedback API FAILED:', error)
+            return { content: [] }
+          }),
         // Get all users data for accurate user counts
-        authApi.getAllUsers().catch(error => {
-          console.error('Users API failed:', error)
-          return []
-        })
+        authApi.getAllUsers()
+          .then(data => {
+            console.log('✅ Users API SUCCESS:', data)
+            return data
+          })
+          .catch(error => {
+            console.error('❌ Users API FAILED:', error)
+            return []
+          })
       ])
 
       // Calculate real metrics from backend data
@@ -115,8 +157,10 @@ export function DashboardOverview() {
         rooms: rooms.length,
         loyaltyAccounts: loyaltyAccounts.length,
         feedbacks: feedbacks.length,
+        allUsers: allUsers.length,
         sampleReservation: reservations[0],
-        sampleRoom: rooms[0]
+        sampleRoom: rooms[0],
+        sampleUser: allUsers[0]
       })
 
       // 1. REVENUE CALCULATION from real reservations
@@ -202,7 +246,10 @@ export function DashboardOverview() {
 
       // If critical data is missing (reservations and rooms), use realistic fallback data
       if (reservations.length === 0 && rooms.length === 0) {
-        console.warn('Critical APIs (reservations/rooms) returned empty data, using fallback data')
+        console.warn('🚨 CRITICAL: APIs returned empty data, using fallback data')
+        console.warn('Reservations count:', reservations.length)
+        console.warn('Rooms count:', rooms.length)
+        console.warn('This means the API calls are failing or returning empty data')
         const fallbackStats: DashboardStats = {
           revenue: {
             today: 1250,
@@ -233,7 +280,10 @@ export function DashboardOverview() {
 
       // If we have very little data, also use fallback for better user experience
       if (totalRevenue === 0 && totalRooms === 0) {
-        console.warn('Insufficient data for meaningful metrics, using fallback data')
+        console.warn('🚨 INSUFFICIENT DATA: Revenue and rooms are zero, using fallback data')
+        console.warn('Total revenue:', totalRevenue)
+        console.warn('Total rooms:', totalRooms)
+        console.warn('This means either no reservations or price calculation failed')
         const fallbackStats: DashboardStats = {
           revenue: {
             today: 1250,
@@ -263,6 +313,18 @@ export function DashboardOverview() {
       }
 
       // Transform data to match our interface
+      console.log('✅ SUCCESS: Using real data from APIs')
+      console.log('Real data summary:', {
+        totalRevenue,
+        todayRevenue,
+        totalRooms,
+        occupiedRooms,
+        totalUsers,
+        clients,
+        employees,
+        admins
+      })
+      
       const dashboardStats: DashboardStats = {
         revenue: {
           today: todayRevenue,

@@ -22,7 +22,7 @@ import {
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { loyaltyApi, feedbackApi, adminApi } from '@/lib/api'
+import { loyaltyApi, feedbackApi, adminApi, apiClient, PaginatedResponse } from '@/lib/api'
 
 interface AnalyticsData {
   revenue: {
@@ -77,12 +77,20 @@ export function AnalyticsDashboard() {
   const fetchAnalyticsData = async () => {
     setLoading(true)
     try {
-      // Fetch real data from all available APIs
+      // Fetch real data from all available APIs using proper API client
       const [reservationsData, roomsData, eventsData, loyaltyData, feedbackData] = await Promise.all([
         // Get reservations data for revenue and occupancy
-        adminApi.getAllReservations().catch(() => ({ content: [] })),
+        apiClient.get<PaginatedResponse<any>>('/admin/reservations?page=0&size=1000')
+          .catch(error => {
+            console.error('Reservations API failed:', error)
+            return { content: [] }
+          }),
         // Get rooms data for occupancy
-        adminApi.getAllRooms().catch(() => ({ content: [] })),
+        apiClient.get<PaginatedResponse<any>>('/rooms?page=0&size=1000')
+          .catch(error => {
+            console.error('Rooms API failed:', error)
+            return { content: [] }
+          }),
         // Get events data for event analytics
         adminApi.getAllEvents().catch(() => ({ content: [] })),
         // Get loyalty data for customer insights
