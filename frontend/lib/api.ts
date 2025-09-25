@@ -1316,6 +1316,79 @@ export const loyaltyApi = {
   }
 }
 
+// ==================== ANALYTICS API ====================
+
+// ==================== ADMIN API ====================
+
+export const adminApi = {
+  // Get all reservations (admin)
+  getAllReservations: async (page: number = 0, size: number = 1000): Promise<PaginatedResponse<any>> => {
+    return apiClient.get<PaginatedResponse<any>>(`/admin/reservations?page=${page}&size=${size}`)
+  },
+
+  // Get all rooms (admin)
+  getAllRooms: async (page: number = 0, size: number = 1000): Promise<PaginatedResponse<any>> => {
+    return apiClient.get<PaginatedResponse<any>>(`/rooms?page=${page}&size=${size}`)
+  },
+
+  // Get all events (admin)
+  getAllEvents: async (page: number = 0, size: number = 1000): Promise<PaginatedResponse<any>> => {
+    return apiClient.get<PaginatedResponse<any>>(`/admin/events?page=${page}&size=${size}`)
+  },
+
+  // Get event statistics (admin)
+  getEventStatistics: async (): Promise<any> => {
+    return apiClient.get<any>('/admin/events/statistics')
+  }
+}
+
+export const analyticsApi = {
+  // Get dashboard data
+  getDashboardData: async (): Promise<any> => {
+    return apiClient.get<any>('/admin/analytics/dashboard')
+  },
+
+  // Get revenue analytics
+  getRevenueAnalytics: async (startDate: string, endDate: string): Promise<any> => {
+    return apiClient.get<any>(`/admin/analytics/revenue?startDate=${startDate}&endDate=${endDate}`)
+  },
+
+  // Get revenue trends
+  getRevenueTrends: async (months: number = 12): Promise<any> => {
+    return apiClient.get<any>(`/admin/analytics/revenue/trends?months=${months}`)
+  },
+
+  // Get occupancy metrics
+  getOccupancyMetrics: async (startDate: string, endDate: string): Promise<any> => {
+    return apiClient.get<any>(`/admin/analytics/occupancy?startDate=${startDate}&endDate=${endDate}`)
+  },
+
+  // Get customer insights
+  getCustomerInsights: async (): Promise<any> => {
+    return apiClient.get<any>('/admin/analytics/customers')
+  },
+
+  // Get employee performance
+  getEmployeePerformance: async (): Promise<any> => {
+    return apiClient.get<any>('/admin/analytics/employees/performance')
+  },
+
+  // Get employee productivity
+  getEmployeeProductivity: async (): Promise<any> => {
+    return apiClient.get<any>('/admin/analytics/employees/productivity')
+  },
+
+  // Get operational KPIs
+  getOperationalKPIs: async (): Promise<any> => {
+    return apiClient.get<any>('/admin/analytics/kpis')
+  },
+
+  // Get system performance
+  getSystemPerformance: async (): Promise<any> => {
+    return apiClient.get<any>('/admin/analytics/system-performance')
+  }
+}
+
 // ==================== FEEDBACK API ====================
 
 export const feedbackApi = {
