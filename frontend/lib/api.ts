@@ -1040,6 +1040,16 @@ export const authApi = {
   // Update notification preferences
   updateNotificationPreferences: async (preferences: any): Promise<void> => {
     return apiClient.put<void>(API_ENDPOINTS.AUTH.NOTIFICATION_PREFERENCES, preferences)
+  },
+
+  // Get all users (Admin only)
+  getAllUsers: async (): Promise<User[]> => {
+    return apiClient.get<User[]>(API_ENDPOINTS.ADMIN_USERS.ALL)
+  },
+
+  // Get users by role (Admin only)
+  getUsersByRole: async (role: string): Promise<User[]> => {
+    return apiClient.get<User[]>(`${API_ENDPOINTS.ADMIN_USERS.ALL}/role/${role}`)
   }
 }
 

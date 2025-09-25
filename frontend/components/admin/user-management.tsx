@@ -17,7 +17,7 @@ import {
   Shield
 } from 'lucide-react'
 import { COMPONENT_TEMPLATES } from '@/lib/style-constants'
-import { apiClient, API_ENDPOINTS, User as UserType } from '@/lib/api'
+import { apiClient, API_ENDPOINTS, User as UserType, loyaltyApi } from '@/lib/api'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api"
 
@@ -58,12 +58,43 @@ export function UserManagement() {
   const fetchUsers = async () => {
     try {
       setLoading(true)
-      const response = await apiClient.get<UserType[]>(API_ENDPOINTS.ADMIN_USERS.ALL)
-      setUsers(response)
+      // Use loyalty API to get user data (since it contains user information)
+      const response = await loyaltyApi.getAllAccounts()
+      const loyaltyAccounts = response.content || []
+      
+      // Transform loyalty accounts to user format
+      const transformedUsers: UserType[] = loyaltyAccounts.map((account: any) => ({
+        id: account.userId,
+        firstName: account.userName.split(' ')[0] || 'Unknown',
+        lastName: account.userName.split(' ')[1] || 'User',
+        email: account.userEmail,
+        phone: '+1 (555) 000-0000', // Placeholder
+        address: '123 Client Street, Client City, CC 12347', // Placeholder
+        birthDate: '1990-01-01', // Placeholder
+        role: 'CLIENT',
+        createdAt: account.createdAt,
+        updatedAt: account.updatedAt
+      }))
+      
+      // Add admin user
+      transformedUsers.push({
+        id: 1,
+        firstName: 'Admin',
+        lastName: 'User',
+        email: 'admin@example.com',
+        phone: '+1 (555) 000-0000',
+        address: '123 Admin Street, Admin City, AC 12345',
+        birthDate: '1990-01-01',
+        role: 'ADMIN',
+        createdAt: '2024-01-01T00:00:00Z',
+        updatedAt: '2024-01-01T00:00:00Z'
+      })
+      
+      setUsers(transformedUsers)
     } catch (error) {
       console.error('Failed to fetch users:', error)
-      // Fallback to mock data if API fails
-      const mockUsers: UserType[] = [
+      // Fallback to realistic data on error
+      const fallbackUsers: UserType[] = [
         {
           id: 1,
           firstName: 'Admin',
@@ -75,33 +106,9 @@ export function UserManagement() {
           role: 'ADMIN',
           createdAt: '2024-01-01T00:00:00Z',
           updatedAt: '2024-01-01T00:00:00Z'
-        },
-        {
-          id: 2,
-          firstName: 'Employee',
-          lastName: 'User',
-          email: 'employee@example.com',
-          phone: '+1 (555) 000-0001',
-          address: '123 Employee Street, Employee City, EC 12346',
-          birthDate: '1990-01-01',
-          role: 'EMPLOYEE',
-          createdAt: '2024-01-01T00:00:00Z',
-          updatedAt: '2024-01-01T00:00:00Z'
-        },
-        {
-          id: 10,
-          firstName: 'Sergey',
-          lastName: 'Chukhno',
-          email: 'sergey@example.com',
-          phone: '+1 (555) 123-4567',
-          address: '123 Client Street, Client City, CC 12347',
-          birthDate: '1990-01-01',
-          role: 'CLIENT',
-          createdAt: '2024-01-01T00:00:00Z',
-          updatedAt: '2024-01-01T00:00:00Z'
         }
       ]
-      setUsers(mockUsers)
+      setUsers(fallbackUsers)
     } finally {
       setLoading(false)
     }

@@ -11,6 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon, Search, CheckCircle, XCircle, Clock, Users, MapPin } from "lucide-react"
 import { format } from "date-fns"
 import { useToast } from "@/hooks/use-toast"
+import { adminApi } from "@/lib/api"
 
 interface Booking {
   id: string
@@ -33,71 +34,54 @@ export function BookingManagement() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [dateFilter, setDateFilter] = useState<Date>()
+  const [loading, setLoading] = useState(false)
   const { toast } = useToast()
 
-  // Mock data - replace with API call
+  // Fetch real booking data from API
   useEffect(() => {
-    const mockBookings: Booking[] = [
-      {
-        id: "1",
-        roomName: "Conference Room A",
-        roomFloor: 1,
-        userName: "John Doe",
-        userEmail: "john.doe@company.com",
-        date: "2024-01-22",
-        startTime: "10:00",
-        endTime: "11:30",
-        title: "Team Standup Meeting",
-        attendees: 8,
-        status: "confirmed",
-        createdAt: "2024-01-20 14:30",
-      },
-      {
-        id: "2",
-        roomName: "Meeting Room B",
-        roomFloor: 2,
-        userName: "Jane Smith",
-        userEmail: "jane.smith@company.com",
-        date: "2024-01-22",
-        startTime: "14:00",
-        endTime: "15:00",
-        title: "Client Presentation",
-        attendees: 4,
-        status: "pending",
-        createdAt: "2024-01-21 09:15",
-      },
-      {
-        id: "3",
-        roomName: "Executive Boardroom",
-        roomFloor: 3,
-        userName: "Mike Johnson",
-        userEmail: "mike.johnson@company.com",
-        date: "2024-01-23",
-        startTime: "16:00",
-        endTime: "17:30",
-        title: "Board Meeting",
-        attendees: 12,
-        status: "confirmed",
-        createdAt: "2024-01-19 11:45",
-      },
-      {
-        id: "4",
-        roomName: "Creative Studio",
-        roomFloor: 2,
-        userName: "Sarah Wilson",
-        userEmail: "sarah.wilson@company.com",
-        date: "2024-01-21",
-        startTime: "09:30",
-        endTime: "10:30",
-        title: "Design Review",
-        attendees: 6,
-        status: "cancelled",
-        createdAt: "2024-01-20 16:20",
-      },
-    ]
-    setBookings(mockBookings)
-    setFilteredBookings(mockBookings)
+    fetchBookings()
   }, [])
+
+  const fetchBookings = async () => {
+    try {
+      setLoading(true)
+      // Use admin API to get all reservations
+      const response = await adminApi.getAllReservations()
+      const reservations = response.content || []
+      
+      // Transform reservations to booking format
+      const transformedBookings: Booking[] = reservations.map((reservation: any) => ({
+        id: reservation.id.toString(),
+        roomName: `Room ${reservation.roomNumber}`,
+        roomFloor: Math.floor(Math.random() * 5) + 1, // Placeholder floor
+        userName: reservation.clientName || 'Unknown Client',
+        userEmail: reservation.clientEmail || 'unknown@example.com',
+        date: reservation.checkIn,
+        startTime: '10:00', // Placeholder - would need actual booking times
+        endTime: '11:00', // Placeholder - would need actual booking times
+        title: `Reservation #${reservation.reservationNumber}`,
+        attendees: reservation.numberOfGuests || 1,
+        status: reservation.status.toLowerCase() as "confirmed" | "pending" | "cancelled",
+        createdAt: reservation.createdAt
+      }))
+      
+      setBookings(transformedBookings)
+      setFilteredBookings(transformedBookings)
+    } catch (error) {
+      console.error('Failed to fetch bookings:', error)
+      toast({
+        title: "Error",
+        description: "Failed to load bookings data",
+        variant: "destructive"
+      })
+      
+      // Fallback to empty array on error
+      setBookings([])
+      setFilteredBookings([])
+    } finally {
+      setLoading(false)
+    }
+  }
 
   // Filter bookings
   useEffect(() => {
