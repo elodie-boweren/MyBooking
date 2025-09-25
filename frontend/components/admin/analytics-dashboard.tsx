@@ -123,12 +123,29 @@ export function AnalyticsDashboard() {
       // 2. OCCUPANCY CALCULATION from real rooms and reservations
       const totalRooms = rooms.length
       const today = new Date()
-      const occupiedRooms = confirmedReservations.filter((r: any) => {
+      
+      // Method 1: Count rooms with OCCUPIED status
+      const occupiedRoomsByStatus = rooms.filter((room: any) => room.status === 'OCCUPIED').length
+      
+      // Method 2: Count reservations currently active (check-in ≤ today ≤ check-out)
+      const currentlyActiveReservations = confirmedReservations.filter((r: any) => {
         const checkIn = new Date(r.checkIn)
         const checkOut = new Date(r.checkOut)
         return checkIn <= today && checkOut >= today
       }).length
+      
+      // Use the higher of the two methods for more accurate occupancy
+      const occupiedRooms = Math.max(occupiedRoomsByStatus, currentlyActiveReservations)
       const occupancyRate = totalRooms > 0 ? (occupiedRooms / totalRooms) * 100 : 0
+      
+      console.log('Analytics Occupancy Debug:', {
+        totalRooms,
+        occupiedRoomsByStatus,
+        currentlyActiveReservations,
+        occupiedRooms,
+        occupancyRate,
+        roomStatuses: rooms.map((r: any) => ({ id: r.id, status: r.status }))
+      })
       
       // 3. CUSTOMER METRICS from real loyalty data
       const totalCustomers = loyaltyAccounts.length
@@ -394,7 +411,7 @@ export function AnalyticsDashboard() {
             <Building2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{data.occupancy.rate}%</div>
+            <div className="text-2xl font-bold">{data.occupancy.rate.toFixed(2)}%</div>
             <div className="flex items-center text-xs text-muted-foreground">
               {data.occupancy.trend > 0 ? (
                 <TrendingUp className="h-3 w-3 text-green-600 mr-1" />
@@ -411,7 +428,7 @@ export function AnalyticsDashboard() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
+            <CardTitle className="text-sm font-medium">Loyal Customers</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -505,7 +522,7 @@ export function AnalyticsDashboard() {
                 <CardDescription>Real-time occupancy status</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">{data.occupancy.rate}%</div>
+                <div className="text-3xl font-bold">{data.occupancy.rate.toFixed(2)}%</div>
                 <div className="text-sm text-muted-foreground mt-2">
                   {data.occupancy.occupiedRooms} of {data.occupancy.totalRooms} rooms occupied
                 </div>

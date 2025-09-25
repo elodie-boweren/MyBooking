@@ -55,7 +55,7 @@ export function DashboardOverview() {
       setLoading(true)
       setError(null)
 
-      // Use the existing API client infrastructure for proper error handling and CORS
+      // Use the existing API client infrastructure for proper error handling
       console.log('🔍 DEBUG: Starting API calls...')
       console.log('API Base URL:', process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api")
       
@@ -189,12 +189,29 @@ export function DashboardOverview() {
       // 2. OCCUPANCY CALCULATION from real rooms and reservations
       const totalRooms = rooms.length
       const currentDate = new Date()
-      const occupiedRooms = confirmedReservations.filter((r: any) => {
+      
+      // Method 1: Count rooms with OCCUPIED status
+      const occupiedRoomsByStatus = rooms.filter((room: any) => room.status === 'OCCUPIED').length
+      
+      // Method 2: Count reservations currently active (check-in ≤ today ≤ check-out)
+      const currentlyActiveReservations = confirmedReservations.filter((r: any) => {
         const checkIn = new Date(r.checkIn)
         const checkOut = new Date(r.checkOut)
         return checkIn <= currentDate && checkOut >= currentDate
       }).length
+      
+      // Use the higher of the two methods for more accurate occupancy
+      const occupiedRooms = Math.max(occupiedRoomsByStatus, currentlyActiveReservations)
       const occupancyRate = totalRooms > 0 ? (occupiedRooms / totalRooms) * 100 : 0
+      
+      console.log('Occupancy Debug:', {
+        totalRooms,
+        occupiedRoomsByStatus,
+        currentlyActiveReservations,
+        occupiedRooms,
+        occupancyRate,
+        roomStatuses: rooms.map((r: any) => ({ id: r.id, status: r.status }))
+      })
 
       // 3. USER METRICS from real user data
       const totalUsers = allUsers.length
