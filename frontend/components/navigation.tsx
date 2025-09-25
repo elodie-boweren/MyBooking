@@ -16,7 +16,6 @@ import {
   LayoutDashboard,
   LogOut,
   User,
-  Settings,
   Star,
   BookOpen,
   PartyPopper,
@@ -46,7 +45,7 @@ export function Navigation() {
     user: user ? { 
       id: user.id, 
       email: user.email, 
-      name: user.name,
+      name: user.firstName + ' ' + user.lastName,
       role: user.role,
       fullUser: user
     } : null,
@@ -59,10 +58,9 @@ export function Navigation() {
     loyaltyAccount,
     loyaltyLoading,
     balance: loyaltyAccount?.balance,
-    pointsBalance: loyaltyAccount?.pointsBalance,
     userRole: user?.role,
-    isClient: user?.role === 'CLIENT' || user?.role === 'client',
-    shouldFetch: user && (user.role === 'CLIENT' || user.role === 'client') && isAuthenticated
+    isClient: user?.role === 'CLIENT',
+    shouldFetch: user && user.role === 'CLIENT' && isAuthenticated
   })
 
   const handleLogout = () => {
@@ -77,10 +75,10 @@ export function Navigation() {
         user: !!user,
         userRole: user?.role,
         isAuthenticated,
-        shouldFetch: user && (user.role === 'CLIENT' || user.role === 'client') && isAuthenticated
+        shouldFetch: user && user.role === 'CLIENT' && isAuthenticated
       })
       
-      if (user && (user.role === 'CLIENT' || user.role === 'client') && isAuthenticated) {
+      if (user && user.role === 'CLIENT' && isAuthenticated) {
         console.log('Fetching loyalty points...')
         setLoyaltyLoading(true)
         try {
@@ -209,12 +207,6 @@ export function Navigation() {
                   <Gift className="mr-2 h-4 w-4" />
                   <span>Loyalty Points</span>
                 </Link>
-              </DropdownMenuItem>
-
-
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Settings</span>
               </DropdownMenuItem>
 
               <DropdownMenuSeparator />

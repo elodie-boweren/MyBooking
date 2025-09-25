@@ -156,8 +156,9 @@ export const API_ENDPOINTS = {
     LOGIN: "/auth/login",
     REGISTER: "/auth/register",
     PROFILE: "/auth/profile",
-        CHANGE_PASSWORD: "/auth/change-password",
-      },
+    CHANGE_PASSWORD: "/auth/change-password",
+    NOTIFICATION_PREFERENCES: "/auth/notification-preferences",
+  },
 
       // Admin User Management
       ADMIN_USERS: {
@@ -1029,6 +1030,16 @@ export const authApi = {
   // Change password
   changePassword: async (passwordData: { currentPassword: string; newPassword: string }): Promise<void> => {
     return apiClient.put<void>(API_ENDPOINTS.AUTH.CHANGE_PASSWORD, passwordData)
+  },
+
+  // Update user profile
+  updateProfile: async (profileData: Partial<User>): Promise<User> => {
+    return apiClient.put<User>(API_ENDPOINTS.AUTH.PROFILE, profileData)
+  },
+
+  // Update notification preferences
+  updateNotificationPreferences: async (preferences: any): Promise<void> => {
+    return apiClient.put<void>(API_ENDPOINTS.AUTH.NOTIFICATION_PREFERENCES, preferences)
   }
 }
 
