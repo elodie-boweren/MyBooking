@@ -1,243 +1,306 @@
 "use client"
 
-import { useState } from "react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Calendar, Clock, MapPin, Users, Edit3, Trash2, Eye, CheckCircle, XCircle, AlertCircle } from "lucide-react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { 
+  ArrowLeft, 
+  CalendarIcon, 
+  Users, 
+  MapPin, 
+  Clock, 
+  Star,
+  MessageSquare,
+  CheckCircle,
+  XCircle,
+  Eye,
+  Reply
+} from "lucide-react"
+import Link from "next/link"
+import { reservationApi, feedbackApi } from "@/lib/api"
+import type { ReservationResponse, FeedbackResponse } from "@/lib/api"
+import { toast } from "sonner"
+import { format } from "date-fns"
 
 export default function MyReservationsPage() {
-  const [activeTab, setActiveTab] = useState("upcoming")
+  const [reservations, setReservations] = useState<ReservationResponse[]>([])
+  const [loading, setLoading] = useState(true)
+  const [statusFilter, setStatusFilter] = useState<string>("all")
+  const [selectedReservation, setSelectedReservation] = useState<ReservationResponse | null>(null)
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false)
+  const [feedbackData, setFeedbackData] = useState({
+    rating: 5,
+    comment: ""
+  })
+  const [submittingFeedback, setSubmittingFeedback] = useState(false)
 
-  const upcomingReservations = [
-    {
-      id: "1",
-      roomName: "Modern Conference Room A",
-      roomImage: "/modern-conference-room.png",
-      date: "2024-01-15",
-      time: "09:00 - 11:00",
-      duration: "2 hours",
-      attendees: 8,
-      purpose: "Team Sprint Planning",
-      status: "confirmed",
-      location: "Floor 3, Building A",
-    },
-    {
-      id: "2",
-      roomName: "Executive Boardroom",
-      roomImage: "/executive-boardroom.png",
-      date: "2024-01-18",
-      time: "14:00 - 16:30",
-      duration: "2.5 hours",
-      attendees: 12,
-      purpose: "Quarterly Review Meeting",
-      status: "confirmed",
-      location: "Floor 5, Building A",
-    },
-    {
-      id: "3",
-      roomName: "Creative Workspace",
-      roomImage: "/creative-workspace.png",
-      date: "2024-01-22",
-      time: "10:00 - 12:00",
-      duration: "2 hours",
-      attendees: 6,
-      purpose: "Design Workshop",
-      status: "pending",
-      location: "Floor 2, Building B",
-    },
-  ]
-
-  const pastReservations = [
-    {
-      id: "4",
-      roomName: "Small Meeting Room B",
-      roomImage: "/small-meeting-room.png",
-      date: "2024-01-10",
-      time: "15:00 - 16:00",
-      duration: "1 hour",
-      attendees: 4,
-      purpose: "Client Call",
-      status: "completed",
-      location: "Floor 2, Building A",
-    },
-    {
-      id: "5",
-      roomName: "Training Room",
-      roomImage: "/modern-training-room.png",
-      date: "2024-01-08",
-      time: "09:00 - 17:00",
-      duration: "8 hours",
-      attendees: 20,
-      purpose: "New Employee Orientation",
-      status: "completed",
-      location: "Floor 1, Building C",
-    },
-  ]
-
-  const cancelledReservations = [
-    {
-      id: "6",
-      roomName: "Modern Conference Room A",
-      roomImage: "/modern-conference-room.png",
-      date: "2024-01-12",
-      time: "13:00 - 15:00",
-      duration: "2 hours",
-      attendees: 6,
-      purpose: "Project Kickoff",
-      status: "cancelled",
-      location: "Floor 3, Building A",
-      cancelReason: "Meeting postponed",
-    },
-  ]
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "confirmed":
-        return (
-          <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
-            <CheckCircle className="h-3 w-3 mr-1" />
-            Confirmed
-          </Badge>
-        )
-      case "pending":
-        return (
-          <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">
-            <AlertCircle className="h-3 w-3 mr-1" />
-            Pending
-          </Badge>
-        )
-      case "completed":
-        return (
-          <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">
-            <CheckCircle className="h-3 w-3 mr-1" />
-            Completed
-          </Badge>
-        )
-      case "cancelled":
-        return (
-          <Badge className="bg-red-100 text-red-800 hover:bg-red-100">
-            <XCircle className="h-3 w-3 mr-1" />
-            Cancelled
-          </Badge>
-        )
-      default:
-        return <Badge variant="secondary">{status}</Badge>
+  const loadReservations = async () => {
+    setLoading(true)
+    try {
+      const response = await reservationApi.getMyReservations()
+      setReservations(response.content || [])
+    } catch (error) {
+      console.error("Failed to fetch reservations:", error)
+      toast.error("Failed to load your reservations.")
+    } finally {
+      setLoading(false)
     }
   }
 
-  const ReservationCard = ({ reservation, showActions = true }: { reservation: any; showActions?: boolean }) => (
-    <Card className="hover:shadow-md transition-shadow">
-      <CardContent className="p-6">
-        <div className="flex items-start space-x-4">
-          <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-            <img
-              src={reservation.roomImage || "/placeholder.svg"}
-              alt={reservation.roomName}
-              className="w-full h-full object-cover"
-            />
-          </div>
+  useEffect(() => {
+    loadReservations()
+  }, [])
 
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between">
-              <div className="space-y-1">
-                <h3 className="font-semibold text-lg">{reservation.roomName}</h3>
-                <p className="text-muted-foreground">{reservation.purpose}</p>
-              </div>
-              {getStatusBadge(reservation.status)}
-            </div>
+  const filteredReservations = reservations.filter(reservation => {
+    if (statusFilter !== "all" && reservation.status !== statusFilter) {
+      return false
+    }
+    return true
+  })
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 text-sm">
-              <div className="flex items-center space-x-2">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span>{reservation.date}</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Clock className="h-4 w-4 text-muted-foreground" />
-                <span>{reservation.time}</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Users className="h-4 w-4 text-muted-foreground" />
-                <span>{reservation.attendees} people</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <MapPin className="h-4 w-4 text-muted-foreground" />
-                <span>{reservation.location}</span>
-              </div>
-            </div>
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "CONFIRMED":
+        return <Badge className="bg-green-100 text-green-800">Confirmed</Badge>
+      case "PENDING":
+        return <Badge variant="secondary">Pending</Badge>
+      case "CANCELLED":
+        return <Badge variant="destructive">Cancelled</Badge>
+      default:
+        return <Badge variant="outline">{status}</Badge>
+    }
+  }
 
-            {reservation.cancelReason && (
-              <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-700">
-                <strong>Cancellation reason:</strong> {reservation.cancelReason}
-              </div>
-            )}
+  const isPastReservation = (checkOut: string) => {
+    return new Date(checkOut) < new Date()
+  }
 
-            {showActions && reservation.status !== "completed" && reservation.status !== "cancelled" && (
-              <div className="flex items-center space-x-2 mt-4">
-                <Button size="sm" variant="outline">
-                  <Eye className="h-4 w-4 mr-2" />
-                  View Details
-                </Button>
-                <Button size="sm" variant="outline">
-                  <Edit3 className="h-4 w-4 mr-2" />
-                  Modify
-                </Button>
-                <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700 bg-transparent">
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Cancel
-                </Button>
-              </div>
-            )}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  )
+  const canLeaveFeedback = (reservation: ReservationResponse) => {
+    return isPastReservation(reservation.checkOut) && reservation.status === "CONFIRMED"
+  }
+
+  const handleFeedbackSubmit = async () => {
+    if (!selectedReservation) return
+
+    setSubmittingFeedback(true)
+    try {
+      await feedbackApi.createFeedback({
+        reservationId: selectedReservation.id,
+        rating: feedbackData.rating,
+        comment: feedbackData.comment
+      })
+      
+      toast.success("Feedback submitted successfully!")
+      setIsFeedbackModalOpen(false)
+      setFeedbackData({ rating: 5, comment: "" })
+      loadReservations() // Refresh to show feedback
+    } catch (error) {
+      console.error("Failed to submit feedback:", error)
+      toast.error("Failed to submit feedback. Please try again.")
+    } finally {
+      setSubmittingFeedback(false)
+    }
+  }
+
+  const openFeedbackModal = (reservation: ReservationResponse) => {
+    setSelectedReservation(reservation)
+    setIsFeedbackModalOpen(true)
+  }
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <div className="text-center py-8">Loading your reservations...</div>
+      </div>
+    )
+  }
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground">My Reservations</h1>
-        <p className="text-muted-foreground mt-2">Manage your room bookings and view reservation history</p>
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <Link href="/">
+            <Button variant="outline" size="sm">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Home
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">My Reservations</h1>
+            <p className="text-muted-foreground mt-2">View and manage your room reservations</p>
+          </div>
+        </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="upcoming">Upcoming ({upcomingReservations.length})</TabsTrigger>
-          <TabsTrigger value="past">Past ({pastReservations.length})</TabsTrigger>
-          <TabsTrigger value="cancelled">Cancelled ({cancelledReservations.length})</TabsTrigger>
-        </TabsList>
+      {/* Filters */}
+      <div className="flex gap-4 mb-6">
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="Filter by Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="CONFIRMED">Confirmed</SelectItem>
+            <SelectItem value="PENDING">Pending</SelectItem>
+            <SelectItem value="CANCELLED">Cancelled</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-        <TabsContent value="upcoming" className="space-y-4">
-          {upcomingReservations.length > 0 ? (
-            upcomingReservations.map((reservation) => (
-              <ReservationCard key={reservation.id} reservation={reservation} />
-            ))
-          ) : (
-            <Card>
-              <CardContent className="text-center py-12">
-                <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">No upcoming reservations</h3>
-                <p className="text-muted-foreground mb-4">You don't have any upcoming room bookings.</p>
-                <Button>Book a Room</Button>
+      {filteredReservations.length === 0 ? (
+        <div className="text-center py-16">
+          <CalendarIcon className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+          <h3 className="text-xl font-semibold">No reservations found</h3>
+          <p className="text-muted-foreground mt-2">You haven't made any reservations yet. <Link href="/rooms" className="text-primary hover:underline">Browse our rooms</Link> to get started!</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredReservations.map((reservation) => (
+            <Card key={reservation.id} className="flex flex-col">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg">Room {reservation.roomNumber}</CardTitle>
+                  {getStatusBadge(reservation.status)}
+                </div>
+                <CardDescription className="text-sm text-muted-foreground">
+                  {reservation.roomType}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex-grow space-y-3 text-sm">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <CalendarIcon className="h-4 w-4 text-primary" />
+                  <span>{format(new Date(reservation.checkIn), "MMM dd, yyyy")} - {format(new Date(reservation.checkOut), "MMM dd, yyyy")}</span>
+                </div>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Users className="h-4 w-4 text-primary" />
+                  <span>{reservation.numberOfGuests} guest{reservation.numberOfGuests > 1 ? 's' : ''}</span>
+                </div>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <MapPin className="h-4 w-4 text-primary" />
+                  <span>{reservation.installationName}</span>
+                </div>
+                <div className="flex items-center justify-between pt-2 border-t border-border">
+                  <span className="text-muted-foreground">Total Price:</span>
+                  <span className="font-semibold text-lg text-foreground">{reservation.totalPrice} {reservation.currency}</span>
+                </div>
+                
+                {/* Feedback Section */}
+                {canLeaveFeedback(reservation) && (
+                  <div className="pt-3 border-t border-border">
+                    {reservation.feedback ? (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Star className="h-4 w-4 text-yellow-500" />
+                          <span className="text-sm font-medium">Your Rating: {reservation.feedback.rating}/5</span>
+                        </div>
+                        {reservation.feedback.comment && (
+                          <p className="text-sm text-muted-foreground">{reservation.feedback.comment}</p>
+                        )}
+                        {reservation.feedback.adminReply && (
+                          <div className="bg-blue-50 p-2 rounded text-sm">
+                            <div className="flex items-center gap-1 mb-1">
+                              <Reply className="h-3 w-3 text-blue-600" />
+                              <span className="font-medium text-blue-800">Admin Reply:</span>
+                            </div>
+                            <p className="text-blue-700">{reservation.feedback.adminReply}</p>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openFeedbackModal(reservation)}
+                        className="w-full"
+                      >
+                        <Star className="h-4 w-4 mr-2" />
+                        Leave Feedback
+                      </Button>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
-          )}
-        </TabsContent>
-
-        <TabsContent value="past" className="space-y-4">
-          {pastReservations.map((reservation) => (
-            <ReservationCard key={reservation.id} reservation={reservation} showActions={false} />
           ))}
-        </TabsContent>
+        </div>
+      )}
 
-        <TabsContent value="cancelled" className="space-y-4">
-          {cancelledReservations.map((reservation) => (
-            <ReservationCard key={reservation.id} reservation={reservation} showActions={false} />
-          ))}
-        </TabsContent>
-      </Tabs>
+      {/* Feedback Modal */}
+      <Dialog open={isFeedbackModalOpen} onOpenChange={setIsFeedbackModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Star className="h-5 w-5 text-yellow-500" />
+              Leave Feedback
+            </DialogTitle>
+            <DialogDescription>
+              Share your experience about your stay in Room {selectedReservation?.roomNumber}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="rating">Rating</Label>
+              <div className="flex items-center gap-2">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setFeedbackData(prev => ({ ...prev, rating: star }))}
+                    className="text-2xl focus:outline-none"
+                  >
+                    <Star 
+                      className={`h-8 w-8 ${
+                        star <= feedbackData.rating 
+                          ? 'text-yellow-500 fill-current' 
+                          : 'text-gray-300'
+                      }`} 
+                    />
+                  </button>
+                ))}
+                <span className="ml-2 text-sm text-muted-foreground">
+                  {feedbackData.rating}/5
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="comment">Comment (Optional)</Label>
+              <Textarea
+                id="comment"
+                placeholder="Tell us about your experience..."
+                value={feedbackData.comment}
+                onChange={(e) => setFeedbackData(prev => ({ ...prev, comment: e.target.value }))}
+                className="min-h-[100px]"
+              />
+            </div>
+
+            <div className="flex gap-3 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setIsFeedbackModalOpen(false)}
+                className="flex-1"
+                disabled={submittingFeedback}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleFeedbackSubmit}
+                className="flex-1"
+                disabled={submittingFeedback}
+              >
+                {submittingFeedback ? "Submitting..." : "Submit Feedback"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

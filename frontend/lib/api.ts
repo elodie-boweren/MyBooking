@@ -1291,6 +1291,16 @@ export const loyaltyApi = {
   // Get loyalty statistics
   getStatistics: async (): Promise<any> => {
     return apiClient.get<any>(API_ENDPOINTS.LOYALTY.STATISTICS)
+  },
+
+  // Admin: Get all loyalty accounts
+  getAllAccounts: async (): Promise<LoyaltyAccount[]> => {
+    return apiClient.get<LoyaltyAccount[]>(API_ENDPOINTS.ADMIN_LOYALTY.ACCOUNTS)
+  },
+
+  // Admin: Get all loyalty transactions
+  getAllTransactions: async (): Promise<LoyaltyTransaction[]> => {
+    return apiClient.get<LoyaltyTransaction[]>(API_ENDPOINTS.ADMIN_LOYALTY.TRANSACTIONS)
   }
 }
 
@@ -1305,6 +1315,16 @@ export const feedbackApi = {
   // Create feedback
   createFeedback: async (request: CreateFeedbackRequest): Promise<Feedback> => {
     return apiClient.post<Feedback>(API_ENDPOINTS.FEEDBACK.CREATE, request)
+  },
+
+  // Admin: Get all feedbacks
+  getAllFeedbacks: async (): Promise<Feedback[]> => {
+    return apiClient.get<Feedback[]>(API_ENDPOINTS.ADMIN_FEEDBACK.ALL)
+  },
+
+  // Admin: Reply to feedback
+  replyToFeedback: async (feedbackId: number, reply: string): Promise<Feedback> => {
+    return apiClient.put<Feedback>(API_ENDPOINTS.ADMIN_FEEDBACK.REPLY(feedbackId.toString()), { reply })
   }
 }
 

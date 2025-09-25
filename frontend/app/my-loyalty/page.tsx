@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ArrowLeft, Star, TrendingUp, Award, Download, Plus, Minus } from "lucide-react"
+import { ArrowLeft, Star, TrendingUp, Award, Download, Plus, Minus, Gift } from "lucide-react"
 import Link from "next/link"
 import { loyaltyApi } from "@/lib/api"
 import type { LoyaltyAccount, LoyaltyTransaction } from "@/lib/api"
@@ -108,7 +108,7 @@ export default function MyLoyaltyPage() {
               <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-2">
                 <Star className="h-6 w-6 text-primary" />
               </div>
-              <CardTitle className="text-2xl">{loyaltyAccount.pointsBalance.toLocaleString()}</CardTitle>
+              <CardTitle className="text-2xl">{loyaltyAccount.balance.toLocaleString()}</CardTitle>
               <CardDescription>Current Balance</CardDescription>
             </CardHeader>
           </Card>

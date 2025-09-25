@@ -213,12 +213,6 @@ export function Navigation() {
                 </Link>
               </DropdownMenuItem>
 
-              <DropdownMenuItem asChild>
-                <Link href="/my-feedback" className="flex items-center">
-                  <MessageSquare className="mr-2 h-4 w-4" />
-                  <span>My Feedback</span>
-                </Link>
-              </DropdownMenuItem>
 
               <DropdownMenuItem>
                 <Settings className="mr-2 h-4 w-4" />
