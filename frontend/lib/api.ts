@@ -1320,8 +1320,8 @@ export const loyaltyApi = {
 
 export const feedbackApi = {
   // Get user's feedback
-  getUserFeedbacks: async (): Promise<Feedback[]> => {
-    return apiClient.get<Feedback[]>(API_ENDPOINTS.FEEDBACK.MY)
+  getUserFeedbacks: async (): Promise<PaginatedResponse<Feedback>> => {
+    return apiClient.get<PaginatedResponse<Feedback>>(API_ENDPOINTS.FEEDBACK.MY)
   },
 
   // Create feedback

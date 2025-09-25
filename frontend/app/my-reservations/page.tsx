@@ -30,6 +30,7 @@ import { format } from "date-fns"
 
 export default function MyReservationsPage() {
   const [reservations, setReservations] = useState<ReservationResponse[]>([])
+  const [feedbacks, setFeedbacks] = useState<FeedbackResponse[]>([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [selectedReservation, setSelectedReservation] = useState<ReservationResponse | null>(null)
@@ -43,8 +44,12 @@ export default function MyReservationsPage() {
   const loadReservations = async () => {
     setLoading(true)
     try {
-      const response = await reservationApi.getMyReservations()
-      setReservations(response.content || [])
+      const [reservationResponse, feedbackResponse] = await Promise.all([
+        reservationApi.getMyReservations(),
+        feedbackApi.getUserFeedbacks()
+      ])
+      setReservations(reservationResponse.content || [])
+      setFeedbacks(feedbackResponse.content || [])
     } catch (error) {
       console.error("Failed to fetch reservations:", error)
       toast.error("Failed to load your reservations.")
@@ -83,6 +88,14 @@ export default function MyReservationsPage() {
     return isPastReservation(reservation.checkOut) && reservation.status === "CONFIRMED"
   }
 
+  const getFeedbackForReservation = (reservationId: number) => {
+    return feedbacks.find(feedback => feedback.reservationId === reservationId)
+  }
+
+  const hasFeedback = (reservation: ReservationResponse) => {
+    return getFeedbackForReservation(reservation.id) !== undefined
+  }
+
   const handleFeedbackSubmit = async () => {
     if (!selectedReservation) return
 
@@ -97,10 +110,22 @@ export default function MyReservationsPage() {
       toast.success("Feedback submitted successfully!")
       setIsFeedbackModalOpen(false)
       setFeedbackData({ rating: 5, comment: "" })
-      loadReservations() // Refresh to show feedback
-    } catch (error) {
+      setSelectedReservation(null)
+      
+      // Refresh both reservations and feedback data
+      const [reservationResponse, feedbackResponse] = await Promise.all([
+        reservationApi.getMyReservations(),
+        feedbackApi.getUserFeedbacks()
+      ])
+      setReservations(reservationResponse.content || [])
+      setFeedbacks(feedbackResponse.content || [])
+    } catch (error: any) {
       console.error("Failed to submit feedback:", error)
-      toast.error("Failed to submit feedback. Please try again.")
+      if (error.message && error.message.includes("already exists")) {
+        toast.error("You have already submitted feedback for this reservation")
+      } else {
+        toast.error("Failed to submit feedback. Please try again.")
+      }
     } finally {
       setSubmittingFeedback(false)
     }
@@ -190,25 +215,42 @@ export default function MyReservationsPage() {
                 {/* Feedback Section */}
                 {canLeaveFeedback(reservation) && (
                   <div className="pt-3 border-t border-border">
-                    {reservation.feedback ? (
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <Star className="h-4 w-4 text-yellow-500" />
-                          <span className="text-sm font-medium">Your Rating: {reservation.feedback.rating}/5</span>
-                        </div>
-                        {reservation.feedback.comment && (
-                          <p className="text-sm text-muted-foreground">{reservation.feedback.comment}</p>
-                        )}
-                        {reservation.feedback.adminReply && (
-                          <div className="bg-blue-50 p-2 rounded text-sm">
-                            <div className="flex items-center gap-1 mb-1">
-                              <Reply className="h-3 w-3 text-blue-600" />
-                              <span className="font-medium text-blue-800">Admin Reply:</span>
+                    {hasFeedback(reservation) ? (
+                      (() => {
+                        const feedback = getFeedbackForReservation(reservation.id)!
+                        return (
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <Star className="h-4 w-4 text-yellow-500" />
+                              <span className="text-sm font-medium">Your Rating: {feedback.rating}/5</span>
                             </div>
-                            <p className="text-blue-700">{reservation.feedback.adminReply}</p>
+                            {feedback.comment && (
+                              <p className="text-sm text-muted-foreground">{feedback.comment}</p>
+                            )}
+                            {feedback.replies && feedback.replies.length > 0 && (
+                              <div className="space-y-2">
+                                {feedback.replies.map((reply, index) => (
+                                  <div key={reply.id} className="bg-blue-50 p-3 rounded text-sm">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <Reply className="h-3 w-3 text-blue-600" />
+                                      <span className="font-medium text-blue-800">
+                                        Admin Response {feedback.replies.length > 1 ? `#${index + 1}` : ''}:
+                                      </span>
+                                      <span className="text-xs text-blue-600">
+                                        by {reply.adminUserName}
+                                      </span>
+                                    </div>
+                                    <p className="text-blue-700">{reply.message}</p>
+                                    <p className="text-xs text-blue-600 mt-1">
+                                      {format(new Date(reply.createdAt), "MMM dd, yyyy 'at' HH:mm")}
+                                    </p>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
+                        )
+                      })()
                     ) : (
                       <Button
                         variant="outline"
