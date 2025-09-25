@@ -18,7 +18,8 @@ import {
   Car,
   Coffee,
   CreditCard,
-  CheckCircle
+  CheckCircle,
+  XCircle
 } from 'lucide-react'
 import { COMPONENT_TEMPLATES } from '@/lib/style-constants'
 import { apiClient, API_ENDPOINTS, Room } from '@/lib/api'
@@ -66,6 +67,18 @@ export function RoomSearch({ onRoomSelect }: RoomSearchProps) {
     fetchAllRooms()
   }, [])
 
+  // Check if a room is available for specific dates
+  const isRoomAvailableForDates = async (roomId: number, checkIn: string, checkOut: string): Promise<boolean> => {
+    try {
+      // Use the backend availability check endpoint
+      const response = await apiClient.get<any>(`/rooms/${roomId}/availability?checkIn=${checkIn}&checkOut=${checkOut}`)
+      return response.available || false
+    } catch (error) {
+      console.error('Failed to check room availability:', error)
+      return true // Default to available if check fails
+    }
+  }
+
   const fetchAllRooms = async () => {
     try {
       setLoading(true)
@@ -83,7 +96,8 @@ export function RoomSearch({ onRoomSelect }: RoomSearchProps) {
       const allRooms = Array.isArray(roomsData) ? roomsData : []
       
       // Filter out OUT_OF_SERVICE rooms for client interface - clients should only see bookable rooms
-      let availableRooms = allRooms.filter((room: Room) => room.status === 'AVAILABLE')
+      // NOTE: We don't filter by OCCUPIED status here because rooms can be available for different dates
+      let availableRooms = allRooms.filter((room: Room) => room.status !== 'OUT_OF_SERVICE')
       
       // Apply additional client-side filtering
       if (searchParams.maxPrice) {
@@ -273,7 +287,8 @@ export function RoomSearch({ onRoomSelect }: RoomSearchProps) {
       const allRooms = Array.isArray(roomsData) ? roomsData : []
       
       // Filter out OUT_OF_SERVICE rooms for client interface - clients should only see bookable rooms
-      let availableRooms = allRooms.filter((room: Room) => room.status === 'AVAILABLE')
+      // NOTE: We don't filter by OCCUPIED status here because rooms can be available for different dates
+      let availableRooms = allRooms.filter((room: Room) => room.status !== 'OUT_OF_SERVICE')
       
       // Apply additional client-side filtering
       if (searchParams.maxPrice) {
@@ -549,6 +564,27 @@ export function RoomSearch({ onRoomSelect }: RoomSearchProps) {
                       <p className="text-sm text-muted-foreground">
                         {getRoomTypeName(room.roomType)}
                       </p>
+                      {/* Room availability status indicator */}
+                      <div className="flex items-center space-x-2 mt-1">
+                        {room.status === 'OCCUPIED' ? (
+                          <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">
+                            Currently Occupied
+                          </span>
+                        ) : room.status === 'OUT_OF_SERVICE' ? (
+                          <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">
+                            Out of Service
+                          </span>
+                        ) : (
+                          <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                            Available
+                          </span>
+                        )}
+                        {room.status === 'OCCUPIED' && (
+                          <span className="text-xs text-muted-foreground">
+                            (Available for other dates)
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </CardHeader>
@@ -579,13 +615,24 @@ export function RoomSearch({ onRoomSelect }: RoomSearchProps) {
                     )}
                   </div>
                   <div className="mt-4">
-                    <Button 
-                      className="w-full"
-                      onClick={() => handleBookRoom(room)}
-                    >
-                      <CreditCard className="h-4 w-4 mr-2" />
-                      Book Now
-                    </Button>
+                    {room.status === 'OUT_OF_SERVICE' ? (
+                      <Button 
+                        className="w-full"
+                        disabled
+                        variant="outline"
+                      >
+                        <XCircle className="h-4 w-4 mr-2" />
+                        Out of Service
+                      </Button>
+                    ) : (
+                      <Button 
+                        className="w-full"
+                        onClick={() => handleBookRoom(room)}
+                      >
+                        <CreditCard className="h-4 w-4 mr-2" />
+                        {room.status === 'OCCUPIED' ? 'Check Availability' : 'Book Now'}
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>
