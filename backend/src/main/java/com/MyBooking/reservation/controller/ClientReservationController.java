@@ -43,7 +43,15 @@ public class ClientReservationController {
             @Valid @RequestBody ReservationCreateRequestDto request) {
         try {
             Long clientId = extractUserIdFromToken(authHeader);
-            ReservationResponseDto response = reservationService.createReservation(request, clientId);
+            
+            // Use points redemption method if points are being used
+            ReservationResponseDto response;
+            if (request.getPointsUsed() != null && request.getPointsUsed() > 0) {
+                response = reservationService.createReservationWithPoints(request, clientId);
+            } else {
+                response = reservationService.createReservation(request, clientId);
+            }
+            
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (BusinessRuleException e) {
             e.printStackTrace();

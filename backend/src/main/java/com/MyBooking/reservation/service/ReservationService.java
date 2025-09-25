@@ -617,6 +617,22 @@ public class ReservationService {
     }
 
     /**
+     * Create reservation with points redemption from DTO (Client controller)
+     */
+    public ReservationResponseDto createReservationWithPoints(ReservationCreateRequestDto request, Long clientId) {
+        Reservation reservation = createReservationWithPoints(
+            clientId,
+            request.getRoomId(), 
+            request.getCheckIn(), 
+            request.getCheckOut(), 
+            request.getNumberOfGuests(), 
+            request.getCurrency(),
+            request.getPointsUsed()
+        );
+        return convertToResponseDto(reservation);
+    }
+
+    /**
      * Get reservations by client ID with pagination (returns DTOs)
      */
     @Transactional(readOnly = true)

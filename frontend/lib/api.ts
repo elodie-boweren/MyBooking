@@ -1638,3 +1638,76 @@ export const eventBookingApi = {
     return apiClient.get<PaginatedResponse<EventBookingResponse>>(url)
   }
 }
+
+// ==================== RESERVATION API ====================
+
+// Reservation Interfaces
+export interface CreateReservationRequest {
+  roomId: number
+  checkIn: string
+  checkOut: string
+  numberOfGuests: number
+  pointsUsed?: number
+  currency?: string
+}
+
+export interface ReservationResponse {
+  id: number
+  roomId: number
+  roomNumber: string
+  roomType: string
+  checkIn: string
+  checkOut: string
+  numberOfGuests: number
+  totalPrice: number
+  currency: string
+  status: 'PENDING' | 'CONFIRMED' | 'CANCELLED'
+  pointsUsed?: number
+  pointsDiscount?: number
+  clientId: number
+  createdAt: string
+  updatedAt: string
+}
+
+// Reservation API
+export const reservationApi = {
+  // Create reservation
+  createReservation: async (request: CreateReservationRequest): Promise<ReservationResponse> => {
+    return apiClient.post<ReservationResponse>(API_ENDPOINTS.CLIENT_RESERVATIONS.CREATE, request)
+  },
+
+  // Get my reservations
+  getMyReservations: async (page: number = 0, size: number = 10): Promise<PaginatedResponse<ReservationResponse>> => {
+    return apiClient.get<PaginatedResponse<ReservationResponse>>(`${API_ENDPOINTS.CLIENT_RESERVATIONS.MY}?page=${page}&size=${size}`)
+  },
+
+  // Get reservation by ID
+  getReservationById: async (reservationId: number): Promise<ReservationResponse> => {
+    return apiClient.get<ReservationResponse>(API_ENDPOINTS.CLIENT_RESERVATIONS.GET(reservationId.toString()))
+  },
+
+  // Cancel reservation
+  cancelReservation: async (reservationId: number, reason?: string): Promise<ReservationResponse> => {
+    const url = reason 
+      ? `${API_ENDPOINTS.CLIENT_RESERVATIONS.CANCEL(reservationId.toString())}?reason=${encodeURIComponent(reason)}`
+      : API_ENDPOINTS.CLIENT_RESERVATIONS.CANCEL(reservationId.toString())
+    return apiClient.put<ReservationResponse>(url, {})
+  },
+
+  // Search reservations
+  searchReservations: async (criteria: any): Promise<PaginatedResponse<ReservationResponse>> => {
+    const params = new URLSearchParams()
+    if (criteria.status) params.append('status', criteria.status)
+    if (criteria.fromDate) params.append('fromDate', criteria.fromDate)
+    if (criteria.toDate) params.append('toDate', criteria.toDate)
+    if (criteria.page) params.append('page', criteria.page.toString())
+    if (criteria.size) params.append('size', criteria.size.toString())
+    
+    const queryString = params.toString()
+    const url = queryString 
+      ? `${API_ENDPOINTS.CLIENT_RESERVATIONS.SEARCH}?${queryString}`
+      : API_ENDPOINTS.CLIENT_RESERVATIONS.MY
+    
+    return apiClient.get<PaginatedResponse<ReservationResponse>>(url)
+  }
+}
